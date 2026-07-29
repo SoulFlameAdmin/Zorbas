@@ -203,68 +203,25 @@ a:focus-visible {
 
 .logo-stage {
   position: relative;
-  padding: 34px 48px 44px;
+  padding: 0;
   overflow: hidden;
   text-align: center;
-  background:
-    linear-gradient(rgba(251, 246, 233, .96), rgba(251, 246, 233, .96)),
-    repeating-linear-gradient(0deg, transparent 0 4px, rgba(6, 26, 71, .035) 4px 5px);
-  border: 12px solid var(--aegean);
+  background: var(--aegean);
+  border: 0;
 }
 
 .logo-stage::before,
 .logo-stage::after {
-  position: absolute;
-  width: 86px;
-  height: 86px;
-  content: "";
-  border-color: var(--aegean-mid);
-  opacity: .18;
-}
-
-.logo-stage::before {
-  top: 36px;
-  left: 30px;
-  border-top: 3px solid;
-  border-left: 3px solid;
-}
-
-.logo-stage::after {
-  right: 30px;
-  bottom: 34px;
-  border-right: 3px solid;
-  border-bottom: 3px solid;
-}
-
-.greek-band {
-  height: 14px;
-  margin: 0 auto 28px;
-  background-color: var(--aegean);
-  background-image:
-    linear-gradient(90deg, var(--paper) 2px, transparent 2px),
-    linear-gradient(var(--paper) 2px, transparent 2px),
-    linear-gradient(90deg, transparent 8px, var(--paper) 8px 10px, transparent 10px),
-    linear-gradient(transparent 8px, var(--paper) 8px 10px, transparent 10px);
-  background-position: 0 0, 0 0, 10px -6px, -6px 10px;
-  background-size: 20px 20px;
-  border: 2px solid var(--aegean);
-}
-
-.greek-band-bottom {
-  margin: 28px auto 0;
-  transform: rotate(180deg);
+  display: none;
 }
 
 .logo-frame {
-  width: min(920px, 90%);
-  margin: 0 auto;
-  padding: 7px;
+  width: 100%;
+  margin: 0;
+  padding: 0;
   background: var(--aegean);
-  border: 2px solid var(--aegean);
-  box-shadow:
-    0 0 0 4px var(--paper),
-    0 0 0 6px var(--aegean),
-    0 13px 30px rgba(6, 26, 71, .16);
+  border: 0;
+  box-shadow: none;
 }
 
 .logo-frame img {
@@ -274,8 +231,10 @@ a:focus-visible {
 }
 
 .menu-heading {
-  width: min(880px, 100%);
-  margin: 34px auto 0;
+  width: 100%;
+  margin: 0;
+  padding: 48px 14px 38px;
+  text-align: center;
 }
 
 .menu-heading p {
@@ -306,53 +265,30 @@ a:focus-visible {
 }
 
 .temple-menu {
-  margin: 38px 28px;
+  margin: 0;
   display: grid;
-  grid-template-columns: 84px minmax(0, 1fr) 84px;
+  grid-template-columns: 14% minmax(0, 1fr) 14%;
   align-items: stretch;
-  gap: 14px;
+  gap: 0;
+  background: var(--paper);
+}
+
+.temple-content {
+  min-width: 0;
 }
 
 .greek-column {
   min-height: 100%;
   display: grid;
-  grid-template-rows: 68px minmax(150px, 1fr) 54px;
+  grid-template-rows: minmax(150px, 1fr) 54px;
   color: var(--aegean);
   filter: drop-shadow(0 7px 5px rgba(6, 26, 71, .14));
 }
 
-.column-capital {
-  position: relative;
-  align-self: end;
-  height: 68px;
-  border-top: 7px double currentColor;
-  border-bottom: 4px solid currentColor;
-}
-
-.column-capital::before,
-.column-capital::after {
-  position: absolute;
-  top: 18px;
-  width: 24px;
-  height: 24px;
-  content: "";
-  border: 6px double currentColor;
-  border-radius: 50%;
-  background: var(--paper);
-}
-
-.column-capital::before {
-  left: 4px;
-}
-
-.column-capital::after {
-  right: 4px;
-}
-
 .column-shaft {
-  width: 56%;
+  width: 50%;
   height: 100%;
-  margin: 0 auto;
+  margin: 0;
   background:
     repeating-linear-gradient(
       90deg,
@@ -361,6 +297,14 @@ a:focus-visible {
     );
   border-right: 3px solid var(--aegean);
   border-left: 3px solid var(--aegean);
+}
+
+.greek-column-left .column-shaft {
+  margin-left: auto;
+}
+
+.greek-column-right .column-shaft {
+  margin-right: auto;
 }
 
 .column-base {
@@ -389,14 +333,10 @@ a:focus-visible {
   left: 3px;
 }
 
-.greek-column-right {
-  transform: scaleX(-1);
-}
-
 .printed-menu {
   position: relative;
   min-height: 460px;
-  margin: 0;
+  margin: 0 0 38px;
   padding: 54px 52px;
   background:
     linear-gradient(rgba(251, 246, 233, .88), rgba(251, 246, 233, .88)),
@@ -743,8 +683,7 @@ a:focus-visible {
   }
 
   .logo-stage {
-    padding-right: 34px;
-    padding-left: 34px;
+    padding: 0;
   }
 
   .menu-sections {
@@ -752,8 +691,8 @@ a:focus-visible {
   }
 
   .temple-menu {
-    grid-template-columns: 68px minmax(0, 1fr) 68px;
-    gap: 10px;
+    grid-template-columns: 14% minmax(0, 1fr) 14%;
+    gap: 0;
   }
 }
 
@@ -775,13 +714,13 @@ a:focus-visible {
   }
 
   .logo-stage {
-    border-width: 8px;
+    border: 0;
   }
 
   .temple-menu {
-    margin: 24px 14px;
-    grid-template-columns: 54px minmax(0, 1fr) 54px;
-    gap: 8px;
+    margin: 0;
+    grid-template-columns: 14% minmax(0, 1fr) 14%;
+    gap: 0;
   }
 
   .printed-menu {
@@ -790,19 +729,7 @@ a:focus-visible {
   }
 
   .greek-column {
-    grid-template-rows: 54px minmax(120px, 1fr) 44px;
-  }
-
-  .column-capital {
-    height: 54px;
-  }
-
-  .column-capital::before,
-  .column-capital::after {
-    top: 14px;
-    width: 17px;
-    height: 17px;
-    border-width: 4px;
+    grid-template-rows: minmax(120px, 1fr) 44px;
   }
 
   .column-base {
@@ -905,29 +832,18 @@ a:focus-visible {
   }
 
   .logo-stage {
-    padding: 24px 18px 32px;
-  }
-
-  .greek-band {
-    margin-bottom: 22px;
-  }
-
-  .greek-band-bottom {
-    margin-top: 22px;
-    margin-bottom: 0;
+    padding: 0;
   }
 
   .logo-frame {
-    width: calc(100% - 14px);
-    padding: 4px;
-    box-shadow:
-      0 0 0 2px var(--paper),
-      0 0 0 4px var(--aegean),
-      0 9px 20px rgba(6, 26, 71, .15);
+    width: 100%;
+    padding: 0;
+    box-shadow: none;
   }
 
   .menu-heading {
-    margin-top: 27px;
+    margin: 0;
+    padding: 34px 8px 30px;
   }
 
   .menu-heading p {
@@ -944,9 +860,9 @@ a:focus-visible {
   }
 
   .temple-menu {
-    margin: 14px 4px;
-    grid-template-columns: 32px minmax(0, 1fr) 32px;
-    gap: 3px;
+    margin: 0;
+    grid-template-columns: 14% minmax(0, 1fr) 14%;
+    gap: 0;
   }
 
   .printed-menu {
@@ -957,34 +873,12 @@ a:focus-visible {
   }
 
   .greek-column {
-    grid-template-rows: 39px minmax(100px, 1fr) 34px;
+    grid-template-rows: minmax(100px, 1fr) 34px;
     filter: drop-shadow(0 4px 3px rgba(6, 26, 71, .12));
   }
 
-  .column-capital {
-    height: 39px;
-    border-top-width: 5px;
-    border-bottom-width: 3px;
-  }
-
-  .column-capital::before,
-  .column-capital::after {
-    top: 10px;
-    width: 10px;
-    height: 10px;
-    border-width: 3px;
-  }
-
-  .column-capital::before {
-    left: 1px;
-  }
-
-  .column-capital::after {
-    right: 1px;
-  }
-
   .column-shaft {
-    width: 54%;
+    width: 50%;
     border-right-width: 2px;
     border-left-width: 2px;
     background:
