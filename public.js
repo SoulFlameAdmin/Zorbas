@@ -33,7 +33,7 @@ document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click'
   const destination = b.dataset.open === 'menuDialog'
     ? '/menu.html'
     : b.dataset.open === 'pickupDialog'
-      ? '/menu.html#cart'
+      ? '/cart.html'
       : null;
   runPageTransition(() => {
     if (destination) {

@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="bg">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#122418">
+  <meta name="description" content="Количка за поръчка от Zorbas — вземане и плащане на място.">
+  <title>Вашата поръчка · Zorbas</title>
+  <link rel="manifest" href="/manifest.webmanifest?v=launch8">
+  <link rel="icon" type="image/png" href="/icon-192.png?v=tower6">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=tower6">
+  <link rel="stylesheet" href="/menu.css?v=20260729-pen2">
+</head>
+<body class="cart-page with-app-navigation">
+  <main class="restaurant-app cart-app">
+    <header class="subpage-header">
+      <nav class="menu-nav subpage-nav" aria-label="Основна навигация">
+        <div class="nav-leading">
+          <a class="back-button" href="/menu.html" aria-label="Назад към менюто">←</a>
+          <a class="brand-link brand-link-dark" href="/" aria-label="Към началната страница">
+            <img src="/icon-192.png?v=tower6" alt="" width="36" height="36">
+            <span>Zorbas</span>
+          </a>
+        </div>
+        <div class="nav-pages nav-pages-dark" aria-label="Страници">
+          <a href="/">Начало</a>
+          <a href="/menu.html">Меню</a>
+          <a class="active" href="/cart.html" aria-current="page">Количка <b data-cart-count>0</b></a>
+        </div>
+        <div class="nav-actions">
+          <a class="nav-action nav-action-dark nav-phone" href="tel:+359892332017" aria-label="Обади се на Zorbas">089 233 2017</a>
+          <button class="nav-action nav-action-dark install-action" type="button" data-install-pwa>⬇ Изтегли</button>
+        </div>
+      </nav>
+    </header>
+
+    <section class="cart-screen" aria-labelledby="cartTitle">
+      <header class="cart-screen-heading">
+        <div>
+          <p class="section-kicker">ЗА ВКЪЩИ</p>
+          <h1 id="cartTitle">Вашата поръчка</h1>
+        </div>
+        <span class="pickup-badge">Вземане от място</span>
+      </header>
+
+      <div class="cart-page-grid">
+        <section class="cart-card" aria-label="Продукти в количката">
+          <div class="cart-loading" id="cartLoading" role="status">Зареждаме количката…</div>
+
+          <div class="empty-cart empty-cart-page" id="cartEmpty" hidden>
+            <span aria-hidden="true">＋</span>
+            <p>Количката е празна.</p>
+            <small>Върни се в менюто и добави продукт с бутона +.</small>
+            <a class="secondary-action" href="/menu.html">← КЪМ МЕНЮТО</a>
+          </div>
+
+          <div class="cart-content" id="cartContent" hidden>
+            <div class="cart-items cart-items-page" id="cartItems"></div>
+            <div class="cart-total cart-total-page">
+              <span>Общо</span>
+              <strong id="cartTotal">0.00 лв.</strong>
+            </div>
+            <p class="price-note" id="priceNote" hidden>Цената на някои продукти ще бъде потвърдена на място.</p>
+            <a class="continue-shopping" href="/menu.html">← Добави още продукти</a>
+          </div>
+        </section>
+
+        <section class="checkout-card" id="checkoutPanel" aria-label="Данни за поръчката" hidden>
+          <h2>Данни за вземане</h2>
+          <form class="pickup-form pickup-form-page" id="pickupForm">
+            <label>
+              <span>Име</span>
+              <input name="name" autocomplete="name" required placeholder="Вашето име">
+            </label>
+            <label>
+              <span>Телефон</span>
+              <input name="phone" type="tel" autocomplete="tel" inputmode="tel" required placeholder="08…">
+            </label>
+            <label>
+              <span>Час за вземане</span>
+              <input name="ready" type="datetime-local" required>
+            </label>
+            <label>
+              <span>Бележка към поръчката</span>
+              <textarea name="note" rows="3" placeholder="Например: без лук"></textarea>
+            </label>
+
+            <div class="payment-card">
+              <span aria-hidden="true">✓</span>
+              <div>
+                <strong>Плащане на място</strong>
+                <small>Поръчката се приготвя за пакет и се взема от ресторанта.</small>
+              </div>
+            </div>
+
+            <button class="submit-order" type="submit">ПОРЪЧАЙ ЗА ВЗЕМАНЕ</button>
+            <p class="order-help">С изпращането заявяваш подготовка на поръчката. Няма онлайн плащане.</p>
+          </form>
+        </section>
+      </div>
+
+      <div class="order-success order-success-page" id="pickupSuccess" hidden aria-live="polite"></div>
+    </section>
+
+    <footer class="menu-footer">
+      <div>
+        <strong>Zorbas</strong>
+        <span>бул. „Панайот Хитов“ 1 · Сливен</span>
+      </div>
+      <a href="tel:+359892332017">089 233 2017</a>
+    </footer>
+  </main>
+
+  <nav class="app-bottom-nav" aria-label="Навигация">
+    <a href="/">
+      <span aria-hidden="true">⌂</span>
+      <small>Начало</small>
+    </a>
+    <a href="/menu.html">
+      <span aria-hidden="true">☰</span>
+      <small>Меню</small>
+    </a>
+    <a class="active" href="/cart.html" aria-current="page">
+      <span class="bottom-cart-icon" aria-hidden="true">▢</span>
+      <small>Количка</small>
+      <b data-cart-count>0</b>
+    </a>
+  </nav>
+
+  <script src="/config.js?v=20260729-pwa8"></script>
+  <script src="/cart.js?v=20260729-pen2"></script>
+</body>
+</html>

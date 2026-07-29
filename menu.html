@@ -9,18 +9,26 @@
   <link rel="manifest" href="/manifest.webmanifest?v=launch8">
   <link rel="icon" type="image/png" href="/icon-192.png?v=tower6">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=tower6">
-  <link rel="stylesheet" href="/menu.css?v=20260729-pen1">
+  <link rel="stylesheet" href="/menu.css?v=20260729-pen2">
 </head>
-<body>
-  <main class="restaurant-app">
+<body class="with-app-navigation">
+  <main class="restaurant-app menu-app">
     <header class="menu-navbar">
       <nav class="menu-nav" aria-label="Основна навигация">
-        <a class="brand-link" href="/" aria-label="Към началната страница">
-          <img src="/icon-192.png?v=tower6" alt="" width="36" height="36">
-          <span>Zorbas</span>
-        </a>
+        <div class="nav-leading">
+          <a class="back-button back-button-light" href="/" aria-label="Назад към началната страница">←</a>
+          <a class="brand-link" href="/" aria-label="Към началната страница">
+            <img src="/icon-192.png?v=tower6" alt="" width="36" height="36">
+            <span>Zorbas</span>
+          </a>
+        </div>
+        <div class="nav-pages" aria-label="Страници">
+          <a href="/">Начало</a>
+          <a class="active" href="/menu.html" aria-current="page">Меню</a>
+          <a href="/cart.html">Количка <b data-cart-count>0</b></a>
+        </div>
         <div class="nav-actions">
-          <a class="nav-action" href="tel:+359892332017" aria-label="Обади се на Zorbas">089 233 2017</a>
+          <a class="nav-action nav-phone" href="tel:+359892332017" aria-label="Обади се на Zorbas">089 233 2017</a>
           <button class="nav-action install-action" type="button" data-install-pwa>⬇ Изтегли</button>
         </div>
       </nav>
@@ -37,76 +45,17 @@
         <h2 id="menuTitle">Какво ти се хапва?</h2>
         <p>Разгледай спокойно или добави с <b>+</b> за вземане от ресторанта.</p>
       </div>
-      <button class="cart-shortcut" id="cartShortcut" type="button" aria-label="Към количката">
+      <a class="cart-shortcut" id="cartShortcut" href="/cart.html" aria-label="Отвори количката">
         <span>Количка</span>
         <b id="shortcutCount">0</b>
-      </button>
+      </a>
     </section>
 
-    <div class="order-layout">
-      <section class="catalog-panel" aria-label="Продукти">
-        <div class="category-tabs" id="menuTabs" aria-label="Категории"></div>
-        <div class="menu-state" id="menuState" role="status">Зареждаме менюто…</div>
-        <div class="menu-list" id="menuList"></div>
-      </section>
-
-      <aside class="order-panel" id="cart" aria-labelledby="cartTitle">
-        <header class="order-heading">
-          <div>
-            <p class="section-kicker">ЗА ВКЪЩИ</p>
-            <h2 id="cartTitle">Вашата поръчка</h2>
-          </div>
-          <span class="pickup-badge">Вземане от място</span>
-        </header>
-
-        <div class="empty-cart" id="cartEmpty">
-          <span aria-hidden="true">＋</span>
-          <p>Добави продукт от менюто.</p>
-          <small>Можеш и само да разглеждаш — поръчка се изпраща едва след потвърждение.</small>
-        </div>
-
-        <div class="cart-content" id="cartContent" hidden>
-          <div class="cart-items" id="cartItems"></div>
-          <div class="cart-total">
-            <span>Общо</span>
-            <strong id="cartTotal">0.00 лв.</strong>
-          </div>
-          <p class="price-note" id="priceNote" hidden>Цената на някои продукти ще бъде потвърдена на място.</p>
-
-          <form class="pickup-form" id="pickupForm">
-            <label>
-              <span>Име</span>
-              <input name="name" autocomplete="name" required placeholder="Вашето име">
-            </label>
-            <label>
-              <span>Телефон</span>
-              <input name="phone" type="tel" autocomplete="tel" inputmode="tel" required placeholder="08…">
-            </label>
-            <label>
-              <span>Час за вземане</span>
-              <input name="ready" type="datetime-local" required>
-            </label>
-            <label>
-              <span>Бележка към поръчката</span>
-              <textarea name="note" rows="3" placeholder="Например: без лук"></textarea>
-            </label>
-
-            <div class="payment-card">
-              <span aria-hidden="true">✓</span>
-              <div>
-                <strong>Плащане на място</strong>
-                <small>Поръчката се приготвя за пакет и се взема от ресторанта.</small>
-              </div>
-            </div>
-
-            <button class="submit-order" type="submit">ПОРЪЧАЙ ЗА ВЗЕМАНЕ</button>
-            <p class="order-help">С изпращането заявяваш подготовка на поръчката. Няма онлайн плащане.</p>
-          </form>
-        </div>
-
-        <div class="order-success" id="pickupSuccess" hidden aria-live="polite"></div>
-      </aside>
-    </div>
+    <section class="catalog-panel catalog-panel-wide" aria-label="Продукти">
+      <div class="category-tabs" id="menuTabs" aria-label="Категории"></div>
+      <div class="menu-state" id="menuState" role="status">Зареждаме менюто…</div>
+      <div class="menu-list menu-list-wide" id="menuList"></div>
+    </section>
 
     <footer class="menu-footer">
       <div>
@@ -117,13 +66,29 @@
     </footer>
   </main>
 
-  <button class="mobile-cart-bar" id="mobileCartBar" type="button" hidden>
+  <a class="mobile-cart-bar" id="mobileCartBar" href="/cart.html" hidden>
     <span><b id="mobileCartCount">0</b> продукта</span>
     <strong id="mobileCartTotal">0.00 лв.</strong>
     <span>Към количката →</span>
-  </button>
+  </a>
+
+  <nav class="app-bottom-nav" aria-label="Навигация">
+    <a href="/">
+      <span aria-hidden="true">⌂</span>
+      <small>Начало</small>
+    </a>
+    <a class="active" href="/menu.html" aria-current="page">
+      <span aria-hidden="true">☰</span>
+      <small>Меню</small>
+    </a>
+    <a href="/cart.html">
+      <span class="bottom-cart-icon" aria-hidden="true">▢</span>
+      <small>Количка</small>
+      <b data-cart-count>0</b>
+    </a>
+  </nav>
 
   <script src="/config.js?v=20260729-pwa8"></script>
-  <script src="/menu.js?v=20260729-pen1"></script>
+  <script src="/menu.js?v=20260729-pen2"></script>
 </body>
 </html>
