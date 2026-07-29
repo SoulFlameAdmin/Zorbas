@@ -4,9 +4,7 @@
   const Z = window.Zorbas;
   const STORAGE_KEY = 'zorbas_takeaway_cart_v1';
   let catalog = {categories: [], items: []};
-  let activeCategory = 'all';
 
-  const menuTabs = document.getElementById('menuTabs');
   const menuState = document.getElementById('menuState');
   const menuSections = document.getElementById('menuSections');
 
@@ -33,48 +31,11 @@
     });
   }
 
-  function categoryHasItems(id) {
-    return catalog.items.some(item => item.category_id === id);
-  }
-
   function priceText(item) {
     return item.price_pending ? 'Цена на място' : Z.money(item.price);
   }
 
-  function renderTabs() {
-    const categories = catalog.categories.filter(category => categoryHasItems(category.id));
-    const tabs = [{id: 'all', name: 'Цялото меню'}, ...categories];
-
-    menuTabs.innerHTML = tabs.map(tab => `
-      <button
-        class="browse-tab ${activeCategory === tab.id ? 'active' : ''}"
-        type="button"
-        data-category="${Z.esc(tab.id)}"
-        aria-pressed="${activeCategory === tab.id}">
-        ${Z.esc(tab.name)}
-      </button>
-    `).join('');
-
-    menuTabs.querySelectorAll('[data-category]').forEach(button => {
-      button.addEventListener('click', () => {
-        activeCategory = button.dataset.category;
-        renderTabs();
-        renderMenu();
-        document.getElementById('printedMenu').scrollIntoView({behavior: 'smooth', block: 'start'});
-      });
-    });
-  }
-
   function menuGroups() {
-    if (activeCategory !== 'all') {
-      const category = catalog.categories.find(entry => entry.id === activeCategory);
-      return [{
-        id: activeCategory,
-        name: category?.name || 'Меню',
-        items: catalog.items.filter(item => item.category_id === activeCategory)
-      }];
-    }
-
     const groups = catalog.categories
       .map(category => ({
         id: category.id,
@@ -146,7 +107,6 @@
         categories: Array.isArray(data?.categories) ? data.categories : [],
         items: Array.isArray(data?.items) ? data.items : []
       };
-      renderTabs();
       renderMenu();
     } catch (error) {
       menuState.textContent = 'Менюто не можа да се зареди. Опитайте отново след малко.';
