@@ -10,10 +10,28 @@ let pickupCart = [];
 let preorderCart = [];
 
 Z.registerPwa();
+const pageLoader = document.getElementById('pageLoader');
+let pageTransitionBusy = false;
+function runPageTransition(action){
+  if(pageTransitionBusy)return;
+  pageTransitionBusy=true;
+  pageLoader.classList.remove('is-hidden');
+  pageLoader.classList.add('is-visible');
+  document.body.classList.add('page-transitioning');
+  setTimeout(action,320);
+  setTimeout(()=>{
+    pageLoader.classList.remove('is-visible');
+    pageLoader.classList.add('is-hidden');
+    document.body.classList.remove('page-transitioning');
+    pageTransitionBusy=false;
+  },700);
+}
+window.addEventListener('load',()=>setTimeout(()=>pageLoader.classList.add('is-hidden'),700));
+
 document.querySelectorAll('[data-install-pwa]').forEach(b => b.addEventListener('click', Z.installPwa));
-document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => document.getElementById(b.dataset.open).showModal()));
-document.querySelectorAll('dialog .close').forEach(b => b.addEventListener('click', () => b.closest('dialog').close()));
-document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d) d.close(); }));
+document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => runPageTransition(() => document.getElementById(b.dataset.open).showModal())));
+document.querySelectorAll('dialog .close').forEach(b => b.addEventListener('click', () => runPageTransition(() => b.closest('dialog').close())));
+document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d) runPageTransition(() => d.close()); }));
 
 async function boot() {
   try {
