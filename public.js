@@ -32,6 +32,7 @@ document.querySelectorAll('[data-install-pwa]').forEach(b => b.addEventListener(
 document.querySelectorAll('[data-open]').forEach(b => b.addEventListener('click', () => runPageTransition(() => document.getElementById(b.dataset.open).showModal())));
 document.querySelectorAll('dialog .close').forEach(b => b.addEventListener('click', () => runPageTransition(() => b.closest('dialog').close())));
 document.querySelectorAll('dialog').forEach(d => d.addEventListener('click', e => { if (e.target === d) runPageTransition(() => d.close()); }));
+document.querySelectorAll('a[href^="/"]').forEach(a => a.addEventListener('click', e => { e.preventDefault(); runPageTransition(() => { location.href = a.href; }); }));
 
 async function boot() {
   try {
