@@ -187,7 +187,7 @@
         <p>Код: <b>${Z.esc(result.code)}</b><br>
         Готова за: ${Z.formatDate(result.ready_at)}<br>
         Плащане при вземане от Zorbas.</p>
-        <a class="secondary-action success-action" href="/menu.html">← ОБРАТНО КЪМ МЕНЮТО</a>
+        <a class="secondary-action success-action" href="/order.html">← ОБРАТНО КЪМ ПОРЪЧКАТА</a>
       `;
       cart = [];
       pickupForm.reset();

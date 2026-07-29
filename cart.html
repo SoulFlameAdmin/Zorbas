@@ -9,14 +9,14 @@
   <link rel="manifest" href="/manifest.webmanifest?v=launch8">
   <link rel="icon" type="image/png" href="/icon-192.png?v=tower6">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=tower6">
-  <link rel="stylesheet" href="/menu.css?v=20260729-pen2">
+  <link rel="stylesheet" href="/menu.css?v=20260729-pen3">
 </head>
 <body class="cart-page with-app-navigation">
   <main class="restaurant-app cart-app">
     <header class="subpage-header">
       <nav class="menu-nav subpage-nav" aria-label="Основна навигация">
         <div class="nav-leading">
-          <a class="back-button" href="/menu.html" aria-label="Назад към менюто">←</a>
+          <a class="back-button" href="/order.html" aria-label="Назад към поръчката">←</a>
           <a class="brand-link brand-link-dark" href="/" aria-label="Към началната страница">
             <img src="/icon-192.png?v=tower6" alt="" width="36" height="36">
             <span>Zorbas</span>
@@ -25,6 +25,7 @@
         <div class="nav-pages nav-pages-dark" aria-label="Страници">
           <a href="/">Начало</a>
           <a href="/menu.html">Меню</a>
+          <a href="/order.html">Поръчай</a>
           <a class="active" href="/cart.html" aria-current="page">Количка <b data-cart-count>0</b></a>
         </div>
         <div class="nav-actions">
@@ -51,7 +52,7 @@
             <span aria-hidden="true">＋</span>
             <p>Количката е празна.</p>
             <small>Върни се в менюто и добави продукт с бутона +.</small>
-            <a class="secondary-action" href="/menu.html">← КЪМ МЕНЮТО</a>
+            <a class="secondary-action" href="/order.html">← КЪМ ПОРЪЧКАТА</a>
           </div>
 
           <div class="cart-content" id="cartContent" hidden>
@@ -61,7 +62,7 @@
               <strong id="cartTotal">0.00 лв.</strong>
             </div>
             <p class="price-note" id="priceNote" hidden>Цената на някои продукти ще бъде потвърдена на място.</p>
-            <a class="continue-shopping" href="/menu.html">← Добави още продукти</a>
+            <a class="continue-shopping" href="/order.html">← Добави още продукти</a>
           </div>
         </section>
 
@@ -120,6 +121,10 @@
       <span aria-hidden="true">☰</span>
       <small>Меню</small>
     </a>
+    <a href="/order.html">
+      <span aria-hidden="true">↗</span>
+      <small>Поръчай</small>
+    </a>
     <a class="active" href="/cart.html" aria-current="page">
       <span class="bottom-cart-icon" aria-hidden="true">▢</span>
       <small>Количка</small>
@@ -128,6 +133,6 @@
   </nav>
 
   <script src="/config.js?v=20260729-pwa8"></script>
-  <script src="/cart.js?v=20260729-pen2"></script>
+  <script src="/cart.js?v=20260729-cart2"></script>
 </body>
 </html>

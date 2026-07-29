@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="bg">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#122418">
+  <meta name="description" content="Поръчай храна за вкъщи от ресторант Zorbas в Сливен. Вземане и плащане на място.">
+  <title>Поръчай за вкъщи · Zorbas</title>
+  <link rel="manifest" href="/manifest.webmanifest?v=launch8">
+  <link rel="icon" type="image/png" href="/icon-192.png?v=tower6">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=tower6">
+  <link rel="stylesheet" href="/menu.css?v=20260729-pen3">
+</head>
+<body class="with-app-navigation">
+  <main class="restaurant-app menu-app">
+    <header class="menu-navbar">
+      <nav class="menu-nav" aria-label="Основна навигация">
+        <div class="nav-leading">
+          <a class="back-button back-button-light" href="/menu.html" aria-label="Назад към менюто">←</a>
+          <a class="brand-link" href="/" aria-label="Към началната страница">
+            <img src="/icon-192.png?v=tower6" alt="" width="36" height="36">
+            <span>Zorbas</span>
+          </a>
+        </div>
+        <div class="nav-pages" aria-label="Страници">
+          <a href="/">Начало</a>
+          <a href="/menu.html">Меню</a>
+          <a class="active" href="/order.html" aria-current="page">Поръчай</a>
+          <a href="/cart.html">Количка <b data-cart-count>0</b></a>
+        </div>
+        <div class="nav-actions">
+          <a class="nav-action nav-phone" href="tel:+359892332017" aria-label="Обади се на Zorbas">089 233 2017</a>
+          <button class="nav-action install-action" type="button" data-install-pwa>⬇ Изтегли</button>
+        </div>
+      </nav>
+      <div class="navbar-text">
+        <p class="eyebrow">RESTAURANT</p>
+        <h1>Zorbas</h1>
+        <p>Greek Grill House · Sliven</p>
+      </div>
+    </header>
+
+    <section class="menu-intro" aria-labelledby="menuTitle">
+      <div>
+        <p class="section-kicker">ПОРЪЧАЙ ЗА ВКЪЩИ</p>
+        <h2 id="menuTitle">Какво ти се хапва?</h2>
+        <p>Разгледай спокойно или добави с <b>+</b> за вземане от ресторанта.</p>
+      </div>
+      <a class="cart-shortcut" id="cartShortcut" href="/cart.html" aria-label="Отвори количката">
+        <span>Количка</span>
+        <b id="shortcutCount">0</b>
+      </a>
+    </section>
+
+    <section class="catalog-panel catalog-panel-wide" aria-label="Продукти">
+      <div class="category-tabs" id="menuTabs" aria-label="Категории"></div>
+      <div class="menu-state" id="menuState" role="status">Зареждаме менюто…</div>
+      <div class="menu-list menu-list-wide" id="menuList"></div>
+    </section>
+
+    <footer class="menu-footer">
+      <div>
+        <strong>Zorbas</strong>
+        <span>бул. „Панайот Хитов“ 1 · Сливен</span>
+      </div>
+      <a href="tel:+359892332017">089 233 2017</a>
+    </footer>
+  </main>
+
+  <a class="mobile-cart-bar" id="mobileCartBar" href="/cart.html" hidden>
+    <span><b id="mobileCartCount">0</b> продукта</span>
+    <strong id="mobileCartTotal">0.00 лв.</strong>
+    <span>Към количката →</span>
+  </a>
+
+  <nav class="app-bottom-nav" aria-label="Навигация">
+    <a href="/">
+      <span aria-hidden="true">⌂</span>
+      <small>Начало</small>
+    </a>
+    <a href="/menu.html">
+      <span aria-hidden="true">☰</span>
+      <small>Меню</small>
+    </a>
+    <a class="active" href="/order.html" aria-current="page">
+      <span aria-hidden="true">↗</span>
+      <small>Поръчай</small>
+    </a>
+    <a href="/cart.html">
+      <span class="bottom-cart-icon" aria-hidden="true">▢</span>
+      <small>Количка</small>
+      <b data-cart-count>0</b>
+    </a>
+  </nav>
+
+  <script src="/config.js?v=20260729-pwa8"></script>
+  <script src="/order.js?v=20260729-order1"></script>
+</body>
+</html>
