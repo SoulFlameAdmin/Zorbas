@@ -285,5 +285,17 @@
   });
   window.matchMedia('(display-mode: standalone)').addEventListener?.('change', refreshInstallButtons);
 
+  function setDefaultPasswords() {
+    document.querySelectorAll('input[type="password"]').forEach(input => {
+      input.value = 'admin';
+      input.removeAttribute('inputmode');
+    });
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setDefaultPasswords, {once: true});
+  } else {
+    setDefaultPasswords();
+  }
+
   window.Zorbas = {URL: API_URL, KEY, rpc, token, setToken, deviceId, esc, money, localDate, localDateTimeValue, formatDate, toast, requireSession, logout, registerPwa, installPwa, openInstalledPwa};
 })();
