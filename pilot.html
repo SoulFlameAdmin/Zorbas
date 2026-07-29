@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ZORBAS Greek Grill House — резервации, меню и вземане от място.">
+  <meta name="theme-color" content="#597aaf">
+  <title>ZORBAS · Pilot</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Caesar+Dressing&family=Forum&family=Manrope:wght@300;400;500;600&family=Ruslan+Display&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --aegean: #597aaf;
+      --aegean-deep: #48699d;
+      --paper: #f2eee6;
+      --white: #fffdf8;
+      --ink: #10131a;
+      --muted: #94989f;
+      --line: rgba(255,255,255,.32);
+      --ease: cubic-bezier(.76,0,.24,1);
+    }
+    * { box-sizing: border-box; }
+    html, body { width:100%; min-height:100%; margin:0; }
+    body {
+      overflow-x:hidden;
+      background:var(--aegean);
+      color:var(--white);
+      font-family:"Manrope",sans-serif;
+      -webkit-font-smoothing:antialiased;
+    }
+    button, input, select, textarea { font:inherit; }
+    button, a { -webkit-tap-highlight-color:transparent; }
+    button { color:inherit; }
+    a { color:inherit; text-decoration:none; }
+    .hero {
+      position:relative;
+      min-height:100dvh;
+      overflow:hidden;
+      display:grid;
+      place-items:center;
+      padding:130px clamp(24px,5vw,80px) 62px;
+      isolation:isolate;
+    }
+    .hero::before {
+      content:"";
+      position:absolute;
+      inset:0;
+      z-index:-2;
+      background:
+        linear-gradient(rgba(8,7,5,.48),rgba(8,7,5,.62)),
+        url("https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=2200&q=90") center/cover no-repeat;
+      transform:scale(1.04);
+      animation:breathe 14s ease-in-out infinite alternate;
+    }
+    .hero::after {
+      content:"";
+      position:absolute;
+      inset:auto -10vw -32vh auto;
+      width:65vh;
+      height:65vh;
+      border:1px solid rgba(255,255,255,.1);
+      border-radius:50%;
+      z-index:-1;
+    }
+    @keyframes breathe { to { transform:scale(1.09); } }
+    .header {
+      position:absolute;
+      top:0; left:0; right:0;
+      z-index:5;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      padding:30px clamp(24px,5vw,80px);
+    }
+    .brand { display:grid; justify-items:center; text-transform:uppercase; }
+    .brand span {
+      font-family:"Ruslan Display",sans-serif;
+      font-size:8px;
+      letter-spacing:.32em;
+    }
+    .brand strong {
+      font-family:"Caesar Dressing",cursive;
+      font-size:clamp(44px,5vw,66px);
+      line-height:.82;
+      font-weight:400;
+    }
+    .top-actions { display:flex; gap:12px; align-items:center; padding-top:13px; }
+    .ghost {
+      min-height:42px;
+      padding:0 18px;
+      border:1px solid var(--line);
+      border-radius:999px;
+      background:rgba(255,255,255,.08);
+      backdrop-filter:blur(10px);
+      cursor:pointer;
+    }
+    .hero-inner { width:min(1280px,100%); text-align:center; }
+    .address {
+      margin:0 0 clamp(30px,5vh,56px);
+      font-family:"Forum",serif;
+      font-size:clamp(16px,1.4vw,24px);
+      font-weight:600;
+    }
+    .main-actions {
+      display:grid;
+      grid-template-columns:repeat(4,minmax(0,1fr));
+      gap:clamp(14px,2vw,30px);
+      align-items:stretch;
+    }
+    .main-action {
+      position:relative;
+      min-height:220px;
+      padding:28px 20px;
+      border:1px solid rgba(255,255,255,.27);
+      background:rgba(20,25,33,.18);
+      backdrop-filter:blur(12px);
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      gap:12px;
+      cursor:pointer;
+      transition:transform .25s ease, background .25s ease, border-color .25s ease;
+    }
+    .main-action:hover, .main-action:focus-visible {
+      transform:translateY(-6px);
+      background:rgba(255,255,255,.14);
+      border-color:rgba(255,255,255,.62);
+    }
+    .main-action strong {
+      font-family:"Ruslan Display",sans-serif;
+      font-size:clamp(30px,3.2vw,56px);
+      font-weight:400;
+      line-height:.95;
+    }
+    .main-action small {
+      max-width:200px;
+      font-size:10px;
+      line-height:1.5;
+      letter-spacing:.14em;
+      text-transform:uppercase;
+      opacity:.75;
+    }
+    .package-mini {
+      width:64px; height:64px;
+      opacity:.9;
+      margin-bottom:2px;
+    }
+    .pickup-action { background:rgba(195,198,203,.13); }
+    .pickup-action::after {
+      content:"НОВО";
+      position:absolute;
+      top:14px; right:14px;
+      padding:6px 8px;
+      border-radius:999px;
+      background:rgba(255,255,255,.88);
+      color:var(--ink);
+      font-size:8px;
+      font-weight:700;
+      letter-spacing:.16em;
+    }
+    .footer-note {
+      position:absolute;
+      left:clamp(24px,5vw,80px);
+      bottom:28px;
+      margin:0;
+      font-size:9px;
+      letter-spacing:.2em;
+      opacity:.65;
+    }
+    dialog {
+      width:min(680px,calc(100% - 28px));
+      max-height:calc(100dvh - 28px);
+      padding:0;
+      border:0;
+      border-radius:22px;
+      background:var(--paper);
+      color:var(--ink);
+      box-shadow:0 30px 90px rgba(0,0,0,.38);
+      overflow:auto;
+    }
+    dialog::backdrop { background:rgba(8,10,15,.72); backdrop-filter:blur(7px); }
+    .dialog-inner { position:relative; padding:clamp(26px,5vw,52px); }
+    .close {
+      position:absolute;
+      top:18px; right:18px;
+      width:42px; height:42px;
+      border:1px solid rgba(16,19,26,.18);
+      border-radius:50%;
+      background:transparent;
+      color:var(--ink);
+      font-size:24px;
+      cursor:pointer;
+    }
+    .kicker {
+      margin:0 0 18px;
+      font-size:9px;
+      letter-spacing:.28em;
+      font-weight:700;
+    }
+    dialog h2 {
+      margin:0 0 12px;
+      font-family:"Forum",serif;
+      font-size:clamp(46px,9vw,76px);
+      line-height:.92;
+      font-weight:400;
+    }
+    .lead-dark {
+      margin:0 0 24px;
+      color:rgba(16,19,26,.68);
+      line-height:1.75;
+      font-size:13px;
+    }
+    .pickup-box {
+      display:grid;
+      grid-template-columns:150px 1fr;
+      gap:30px;
+      align-items:center;
+      margin:22px 0 28px;
+      padding:24px;
+      border:1px solid rgba(16,19,26,.14);
+      background:#e1e2e4;
+    }
+    .package-large { width:100%; max-width:140px; }
+    .pickup-box h3 {
+      margin:0 0 4px;
+      font-family:"Forum",serif;
+      font-size:40px;
+      font-weight:400;
+    }
+    .pickup-box p {
+      margin:0;
+      font-size:11px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:#555b63;
+    }
+    .ellipsis-link {
+      display:inline-flex;
+      margin-top:14px;
+      padding:0;
+      border:0;
+      border-bottom:1px solid currentColor;
+      background:transparent;
+      color:var(--ink);
+      font-weight:600;
+      cursor:pointer;
+    }
+    .poll { display:none; margin-top:26px; }
+    .poll.is-open { display:block; }
+    .poll-head { display:flex; align-items:end; justify-content:space-between; gap:20px; }
+    .poll-number {
+      font-family:"Forum",serif;
+      font-size:62px;
+      line-height:1;
+    }
+    .poll-number span { font-size:26px; }
+    .progress {
+      height:13px;
+      margin:14px 0 10px;
+      border-radius:999px;
+      background:rgba(16,19,26,.12);
+      overflow:hidden;
+    }
+    .progress > div {
+      width:0%;
+      height:100%;
+      border-radius:inherit;
+      background:var(--aegean);
+      transition:width .7s var(--ease);
+    }
+    .poll-meta {
+      display:flex;
+      justify-content:space-between;
+      gap:20px;
+      font-size:11px;
+      color:rgba(16,19,26,.62);
+    }
+    .vote-button {
+      width:100%;
+      min-height:58px;
+      margin-top:20px;
+      border:0;
+      background:var(--aegean);
+      color:var(--white);
+      font-weight:700;
+      letter-spacing:.08em;
+      cursor:pointer;
+    }
+    .vote-button[disabled] { opacity:.55; cursor:default; }
+    form { display:grid; grid-template-columns:1fr 1fr; gap:15px; }
+    label { display:grid; gap:7px; }
+    label span {
+      font-size:9px;
+      font-weight:700;
+      letter-spacing:.16em;
+      text-transform:uppercase;
+    }
+    input, select, textarea {
+      width:100%;
+      min-height:48px;
+      border:1px solid rgba(16,19,26,.18);
+      background:rgba(255,255,255,.56);
+      color:var(--ink);
+      padding:0 13px;
+      outline:none;
+    }
+    textarea { min-height:84px; padding-top:12px; resize:vertical; }
+    .full { grid-column:1/-1; }
+    .submit {
+      min-height:54px;
+      border:0;
+      background:var(--aegean);
+      color:var(--white);
+      cursor:pointer;
+      font-weight:700;
+    }
+    .status { min-height:20px; margin:14px 0 0; font-size:12px; }
+    .menu-list { display:grid; gap:10px; margin-top:24px; }
+    .menu-row {
+      display:grid;
+      grid-template-columns:1fr auto;
+      gap:16px;
+      padding:16px 0;
+      border-bottom:1px solid rgba(16,19,26,.12);
+    }
+    .menu-row h3 { margin:0 0 5px; font-family:"Forum",serif; font-size:26px; }
+    .menu-row p { margin:0; font-size:11px; color:rgba(16,19,26,.6); }
+    .price { font-weight:700; white-space:nowrap; }
+    .empty { padding:20px; background:rgba(16,19,26,.05); font-size:12px; line-height:1.6; }
+    @media (max-width:900px) {
+      .main-actions { grid-template-columns:repeat(2,1fr); }
+    }
+    @media (max-width:620px) {
+      .hero { padding-top:120px; }
+      .top-actions .ghost:first-child { display:none; }
+      .main-actions { grid-template-columns:1fr 1fr; gap:10px; }
+      .main-action { min-height:170px; padding:20px 10px; }
+      .main-action strong { font-size:30px; }
+      .main-action small { font-size:8px; }
+      .package-mini { width:50px; height:50px; }
+      .pickup-box { grid-template-columns:90px 1fr; gap:18px; padding:18px; }
+      .pickup-box h3 { font-size:31px; }
+      form { grid-template-columns:1fr; }
+      .full { grid-column:auto; }
+      .footer-note { display:none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="hero">
+    <header class="header">
+      <a class="brand" href="./" aria-label="Zorbas начало">
+        <span>RESTAURANT</span>
+        <strong>ZORBAS</strong>
+      </a>
+      <div class="top-actions">
+        <a class="ghost" href="tel:+359876765929">087 676 5929</a>
+        <a class="ghost" href="./">Сегашен сайт</a>
+      </div>
+    </header>
+
+    <section class="hero-inner">
+      <p class="address">Ресторант Zorbas · бул. „Панайот Хитов“ 1 · Сливен</p>
+      <nav class="main-actions" aria-label="Основни действия">
+        <button class="main-action" type="button" data-open="menuDialog">
+          <strong>МЕНЮ</strong>
+          <small>Подбрани гръцки вкусове</small>
+        </button>
+        <button class="main-action" type="button" data-open="reservationDialog">
+          <strong>РЕЗЕРВАЦИЯ</strong>
+          <small>Заявка директно към Zorbas</small>
+        </button>
+        <a class="main-action" href="./#gallery">
+          <strong>СНИМКИ</strong>
+          <small>Атмосферата на ресторанта</small>
+        </a>
+        <button class="main-action pickup-action" type="button" data-open="takeawayDialog">
+          <svg class="package-mini" viewBox="0 0 100 100" aria-hidden="true">
+            <path fill="#a9adb3" d="M20 32 50 17l30 15v39L50 86 20 71Z"/>
+            <path fill="#c7c9cd" d="m20 32 30 16 30-16-30-15Z"/>
+            <path fill="#858b93" d="M50 48v38l30-15V32Z"/>
+            <path fill="none" stroke="#f4f4f4" stroke-width="4" d="M36 25 66 41"/>
+          </svg>
+          <strong>ЗА ВКЪЩИ</strong>
+          <small>Вземане от място</small>
+        </button>
+      </nav>
+    </section>
+    <p class="footer-note">ZORBAS · GREEK GRILL HOUSE · PILOT BY SOULFLAME</p>
+  </main>
+
+  <dialog id="takeawayDialog">
+    <div class="dialog-inner">
+      <button class="close" type="button" aria-label="Затвори">×</button>
+      <p class="kicker">ЗА ВКЪЩИ</p>
+      <h2>Вкусът на Zorbas.<br>Където пожелаеш.</h2>
+      <div class="pickup-box">
+        <svg class="package-large" viewBox="0 0 100 100" aria-label="Сив пакет за храна">
+          <path fill="#a9adb3" d="M20 32 50 17l30 15v39L50 86 20 71Z"/>
+          <path fill="#c7c9cd" d="m20 32 30 16 30-16-30-15Z"/>
+          <path fill="#858b93" d="M50 48v38l30-15V32Z"/>
+          <path fill="none" stroke="#f4f4f4" stroke-width="4" d="M36 25 66 41"/>
+        </svg>
+        <div>
+          <h3>За вкъщи</h3>
+          <p>Вземане от място</p>
+          <button class="ellipsis-link" id="showPoll" type="button">Доставки… за сега</button>
+        </div>
+      </div>
+      <p class="lead-dark">Поръчваш и взимаш готовата храна от ресторанта. Когато интересът за доставки стигне 100%, Zorbas получава ясен сигнал да стартира услугата.</p>
+
+      <section class="poll" id="deliveryPoll">
+        <div class="poll-head">
+          <div>
+            <p class="kicker">ДО 100% ЗА ДОСТАВКИ</p>
+            <div class="poll-number"><strong id="pollPercent">0</strong><span>%</span></div>
+          </div>
+          <div aria-hidden="true" style="font-size:52px">👍</div>
+        </div>
+        <div class="progress" aria-label="Напредък за доставки">
+          <div id="pollBar"></div>
+        </div>
+        <div class="poll-meta">
+          <span><strong id="pollVotes">0</strong> гласа</span>
+          <span>цел: <strong id="pollGoal">100</strong></span>
+        </div>
+        <button class="vote-button" id="voteButton" type="button">👍 ИСКАМ ДОСТАВКИ</button>
+        <p class="status" id="pollStatus"></p>
+      </section>
+    </div>
+  </dialog>
+
+  <dialog id="reservationDialog">
+    <div class="dialog-inner">
+      <button class="close" type="button" aria-label="Затвори">×</button>
+      <p class="kicker">РЕЗЕРВАЦИЯ</p>
+      <h2>Запази своята маса.</h2>
+      <p class="lead-dark">Заявката се записва в системата на Zorbas. Екипът потвърждава по телефон.</p>
+      <form id="reservationForm">
+        <label>
+          <span>Име</span>
+          <input name="name" autocomplete="name" required placeholder="Вашето име">
+        </label>
+        <label>
+          <span>Телефон</span>
+          <input name="phone" type="tel" autocomplete="tel" required placeholder="08xx xxx xxx">
+        </label>
+        <label>
+          <span>Дата</span>
+          <input name="date" type="date" required>
+        </label>
+        <label>
+          <span>Час</span>
+          <input name="time" type="time" required>
+        </label>
+        <label>
+          <span>Гости</span>
+          <select name="guests" required>
+            <option value="">Избери</option>
+            <option value="1">1 гост</option>
+            <option value="2">2 гости</option>
+            <option value="3">3 гости</option>
+            <option value="4">4 гости</option>
+            <option value="5">5 гости</option>
+            <option value="6">6 гости</option>
+            <option value="7">7 гости</option>
+            <option value="8">8+ гости</option>
+          </select>
+        </label>
+        <label>
+          <span>Продължителност</span>
+          <select name="duration">
+            <option value="90">1 ч. 30 мин.</option>
+            <option value="120" selected>2 часа</option>
+            <option value="150">2 ч. 30 мин.</option>
+            <option value="180">3 часа</option>
+          </select>
+        </label>
+        <label class="full">
+          <span>Бележка</span>
+          <textarea name="note" placeholder="Детски стол, повод, предпочитана зона…"></textarea>
+        </label>
+        <button class="submit full" type="submit">ИЗПРАТИ ЗАЯВКА</button>
+      </form>
+      <p class="status" id="reservationStatus"></p>
+    </div>
+  </dialog>
+
+  <dialog id="menuDialog">
+    <div class="dialog-inner">
+      <button class="close" type="button" aria-label="Затвори">×</button>
+      <p class="kicker">МЕНЮ</p>
+      <h2>От кухнята.</h2>
+      <p class="lead-dark">Менюто вече може да се управлява от Zorbas без програмист. След добавяне на реалните артикули тук автоматично ще излизат име, описание и цена.</p>
+      <div class="menu-list" id="menuList">
+        <div class="empty">Зареждане на менюто…</div>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    const SUPABASE_URL = "https://frhletkiuupgksmgxoxc.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_JQPnalB8jOs639_PWoR6mA_AOk11xWC";
+
+    async function rpc(name, payload = {}) {
+      const response = await fetch(`${SUPABASE_URL}/rest/v1/rpc/${name}`, {
+        method: "POST",
+        headers: {
+          "apikey": SUPABASE_KEY,
+          "Authorization": `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.message || "Възникна грешка.");
+      }
+      return response.json();
+    }
+
+    function getDeviceId() {
+      let id = localStorage.getItem("zorbas_device_id");
+      if (!id) {
+        id = crypto.randomUUID ? crypto.randomUUID() :
+          `${Date.now()}-${Math.random().toString(16).slice(2)}-${Math.random().toString(16).slice(2)}`;
+        localStorage.setItem("zorbas_device_id", id);
+      }
+      return id;
+    }
+
+    document.querySelectorAll("[data-open]").forEach((button) => {
+      button.addEventListener("click", () => {
+        document.getElementById(button.dataset.open).showModal();
+      });
+    });
+
+    document.querySelectorAll("dialog .close").forEach((button) => {
+      button.addEventListener("click", () => button.closest("dialog").close());
+    });
+
+    document.querySelectorAll("dialog").forEach((dialog) => {
+      dialog.addEventListener("click", (event) => {
+        if (event.target === dialog) dialog.close();
+      });
+    });
+
+    const poll = document.getElementById("deliveryPoll");
+    const pollPercent = document.getElementById("pollPercent");
+    const pollVotes = document.getElementById("pollVotes");
+    const pollGoal = document.getElementById("pollGoal");
+    const pollBar = document.getElementById("pollBar");
+    const pollStatus = document.getElementById("pollStatus");
+    const voteButton = document.getElementById("voteButton");
+
+    function renderPoll(data) {
+      const percent = Number(data?.percent || 0);
+      const votes = Number(data?.votes || 0);
+      const goal = Number(data?.goal || 100);
+      pollPercent.textContent = percent;
+      pollVotes.textContent = votes;
+      pollGoal.textContent = goal;
+      pollBar.style.width = `${Math.min(100, percent)}%`;
+
+      if (percent >= 100) {
+        pollStatus.textContent = "Стигнахме 100%. Време е Zorbas да стартира доставки.";
+        voteButton.disabled = true;
+        voteButton.textContent = "ЦЕЛТА Е ДОСТИГНАТА";
+      } else if (localStorage.getItem("zorbas_delivery_voted") === "1") {
+        voteButton.disabled = true;
+        voteButton.textContent = "ГЛАСЪТ ТИ Е ОТЧЕТЕН";
+      }
+    }
+
+    async function loadPoll() {
+      try {
+        const data = await rpc("zorbas_poll_status");
+        renderPoll(data);
+      } catch (error) {
+        pollStatus.textContent = "Не успяхме да заредим гласовете.";
+      }
+    }
+
+    document.getElementById("showPoll").addEventListener("click", () => {
+      poll.classList.add("is-open");
+      loadPoll();
+    });
+
+    voteButton.addEventListener("click", async () => {
+      voteButton.disabled = true;
+      pollStatus.textContent = "Отчитаме гласа…";
+      try {
+        const data = await rpc("zorbas_vote_delivery", { p_device_id: getDeviceId() });
+        localStorage.setItem("zorbas_delivery_voted", "1");
+        renderPoll(data);
+        pollStatus.textContent = data.accepted
+          ? "Гласът ти е отчетен. Благодарим."
+          : "От това устройство вече има глас.";
+      } catch (error) {
+        voteButton.disabled = false;
+        pollStatus.textContent = error.message;
+      }
+    });
+
+    const reservationForm = document.getElementById("reservationForm");
+    const reservationStatus = document.getElementById("reservationStatus");
+    const dateInput = reservationForm.elements.date;
+    dateInput.min = new Date().toISOString().slice(0, 10);
+
+    reservationForm.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const submit = reservationForm.querySelector(".submit");
+      const data = new FormData(reservationForm);
+      submit.disabled = true;
+      reservationStatus.textContent = "Записваме заявката…";
+      try {
+        await rpc("zorbas_submit_reservation_local", {
+          p_customer_name: data.get("name"),
+          p_customer_phone: data.get("phone"),
+          p_guests: Number(data.get("guests")),
+          p_date: data.get("date"),
+          p_time: data.get("time"),
+          p_duration_minutes: Number(data.get("duration")),
+          p_note: data.get("note") || null
+        });
+        reservationStatus.textContent = "Заявката е записана. Zorbas ще потвърди по телефон.";
+        reservationForm.reset();
+        dateInput.min = new Date().toISOString().slice(0, 10);
+      } catch (error) {
+        reservationStatus.textContent = error.message || "Неуспешно изпращане.";
+      } finally {
+        submit.disabled = false;
+      }
+    });
+
+    async function loadMenu() {
+      const list = document.getElementById("menuList");
+      try {
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/zorbas_menu_items?select=name,short_description,price&active=eq.true&order=sort_order.asc,name.asc`,
+          {
+            headers: {
+              "apikey": SUPABASE_KEY,
+              "Authorization": `Bearer ${SUPABASE_KEY}`
+            }
+          }
+        );
+        if (!response.ok) throw new Error();
+        const items = await response.json();
+        if (!items.length) {
+          list.innerHTML = '<div class="empty">Базата е готова. Следва да въведем реалното меню на Zorbas и да зададем за всяко ястие станция: скара, картофи, риба, пържено или салати.</div>';
+          return;
+        }
+        list.innerHTML = items.map((item) => `
+          <article class="menu-row">
+            <div>
+              <h3>${escapeHtml(item.name)}</h3>
+              <p>${escapeHtml(item.short_description || "")}</p>
+            </div>
+            <span class="price">${Number(item.price).toFixed(2)} лв.</span>
+          </article>
+        `).join("");
+      } catch {
+        list.innerHTML = '<div class="empty">Менюто временно не може да се зареди.</div>';
+      }
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+      })[char]);
+    }
+
+    loadPoll();
+    loadMenu();
+  </script>
+</body>
+</html>
