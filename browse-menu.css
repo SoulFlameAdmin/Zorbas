@@ -11,6 +11,16 @@
   --muted: #667083;
   --white: #fff;
   --gold: #c49b42;
+  --column-flutes: linear-gradient(
+    90deg,
+    var(--aegean) 0 12.5%,
+    transparent 12.5% 28.75%,
+    var(--aegean) 28.75% 41.25%,
+    transparent 41.25% 58.75%,
+    var(--aegean) 58.75% 70%,
+    transparent 70% 86.25%,
+    var(--aegean) 86.25% 100%
+  );
 }
 
 * {
@@ -212,10 +222,27 @@ a:focus-visible {
 
 .logo-stage::before,
 .logo-stage::after {
-  display: none;
+  position: absolute;
+  z-index: 0;
+  top: 35.9%;
+  bottom: -2px;
+  width: 5.14%;
+  display: block;
+  content: "";
+  background: var(--column-flutes);
+}
+
+.logo-stage::before {
+  left: 8.53%;
+}
+
+.logo-stage::after {
+  right: 8.85%;
 }
 
 .logo-frame {
+  position: relative;
+  z-index: 1;
   width: 100%;
   margin: 0;
   padding: 0;
@@ -287,21 +314,16 @@ a:focus-visible {
 }
 
 .column-shaft {
-  width: 50%;
+  width: 37%;
   height: 100%;
   margin: 0;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      var(--aegean) 0 2px,
-      rgba(29, 92, 168, .1) 2px 7px
-    );
-  border-right: 3px solid var(--aegean);
-  border-left: 3px solid var(--aegean);
+  background: var(--column-flutes);
+  border: 0;
 }
 
 .greek-column-left .column-shaft {
   margin-left: auto;
+  margin-right: 2%;
 }
 
 .greek-column-right .column-shaft {
@@ -879,15 +901,9 @@ a:focus-visible {
   }
 
   .column-shaft {
-    width: 50%;
-    border-right-width: 2px;
-    border-left-width: 2px;
-    background:
-      repeating-linear-gradient(
-        90deg,
-        var(--aegean) 0 1px,
-        rgba(29, 92, 168, .1) 1px 4px
-      );
+    width: 37%;
+    border: 0;
+    background: var(--column-flutes);
   }
 
   .column-base {
