@@ -2,6 +2,7 @@
   const URL = 'https://frhletkiuupgksmgxoxc.supabase.co';
   const KEY = 'sb_publishable_JQPnalB8jOs639_PWoR6mA_AOk11xWC';
   const tokenKey = 'zorbas_staff_token_v3';
+  const pwaInstalledKey = 'zorbas_pwa_installed_v1';
   let installPrompt = null;
 
   async function rpc(name, payload = {}) {
@@ -71,23 +72,129 @@
     setToken('');
     location.reload();
   }
-  function registerPwa() {
-    if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
+  function isStandalone() {
+    return window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
   }
-  async function installPwa() {
-    if (installPrompt) {
-      installPrompt.prompt();
-      await installPrompt.userChoice;
-      installPrompt = null;
+  function setInstallButtons(label, disabled = false) {
+    document.querySelectorAll('[data-install-pwa]').forEach(btn => {
+      btn.hidden = false;
+      btn.disabled = disabled;
+      btn.textContent = label;
+      btn.setAttribute('aria-label', label.replace(/^[^\p{L}\p{N}]+/u, ''));
+    });
+  }
+  function refreshInstallButtons() {
+    if (isStandalone()) {
+      setInstallButtons('✓ Изтеглено', true);
       return;
     }
-    toast('От менюто на браузъра избери „Инсталирай приложението“ или „Добави към началния екран“.');
+    if (localStorage.getItem(pwaInstalledKey) === '1') {
+      setInstallButtons('↗ Отвори Zorbas');
+      return;
+    }
+    setInstallButtons('⬇ Изтегли');
+  }
+  function refreshPwaMetadata() {
+    const manifest = document.querySelector('link[rel="manifest"]');
+    if (manifest) manifest.href = '/manifest.webmanifest?v=tower6';
+    const favicon = document.querySelector('link[rel~="icon"]') || document.createElement('link');
+    favicon.rel = 'icon';
+    favicon.type = 'image/png';
+    favicon.href = '/icon-192.png?v=tower6';
+    if (!favicon.parentNode) document.head.appendChild(favicon);
+    let appleIcon = document.querySelector('link[rel="apple-touch-icon"]');
+    if (!appleIcon) {
+      appleIcon = document.createElement('link');
+      appleIcon.rel = 'apple-touch-icon';
+      document.head.appendChild(appleIcon);
+    }
+    appleIcon.href = '/apple-touch-icon.png?v=tower6';
+    let appleTitle = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    if (!appleTitle) {
+      appleTitle = document.createElement('meta');
+      appleTitle.name = 'apple-mobile-web-app-title';
+      document.head.appendChild(appleTitle);
+    }
+    appleTitle.content = 'Zorbas';
+    let appleCapable = document.querySelector('meta[name="apple-mobile-web-app-capable"]');
+    if (!appleCapable) {
+      appleCapable = document.createElement('meta');
+      appleCapable.name = 'apple-mobile-web-app-capable';
+      document.head.appendChild(appleCapable);
+    }
+    appleCapable.content = 'yes';
+  }
+  function registerPwa() {
+    refreshPwaMetadata();
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js', {updateViaCache: 'none'})
+        .then(registration => registration.update())
+        .catch(() => {});
+    }
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', refreshInstallButtons, {once: true});
+    } else {
+      refreshInstallButtons();
+    }
+  }
+  function openInstalledPwa() {
+    if (isStandalone()) {
+      refreshInstallButtons();
+      return;
+    }
+    const target = new URL('/?source=pwa-open', location.origin);
+    if (/Android/i.test(navigator.userAgent)) {
+      const fallback = encodeURIComponent(target.href);
+      location.href = `intent://${location.host}/?source=pwa-open#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=${fallback};end`;
+      return;
+    }
+    location.assign(target.href);
+  }
+  async function installPwa() {
+    if (isStandalone()) {
+      refreshInstallButtons();
+      toast('Zorbas вече е отворено като приложение.', 'success');
+      return;
+    }
+    if (localStorage.getItem(pwaInstalledKey) === '1' && !installPrompt) {
+      openInstalledPwa();
+      return;
+    }
+    if (installPrompt) {
+      const promptEvent = installPrompt;
+      installPrompt = null;
+      setInstallButtons('Изтегля се…', true);
+      await promptEvent.prompt();
+      const choice = await promptEvent.userChoice;
+      if (choice.outcome === 'accepted') {
+        setInstallButtons('Изтегля се…', true);
+        toast('Zorbas се изтегля…', 'success');
+      } else {
+        localStorage.removeItem(pwaInstalledKey);
+        refreshInstallButtons();
+      }
+      return;
+    }
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+      toast('На iPhone натисни Споделяне → „Добави към Начален екран“.');
+      return;
+    }
+    toast('Отвори сайта в Chrome и натисни отново „Изтегли“.');
   }
   window.addEventListener('beforeinstallprompt', event => {
     event.preventDefault();
     installPrompt = event;
-    document.querySelectorAll('[data-install-pwa]').forEach(btn => btn.hidden = false);
+    localStorage.removeItem(pwaInstalledKey);
+    refreshInstallButtons();
   });
+  window.addEventListener('appinstalled', () => {
+    installPrompt = null;
+    localStorage.setItem(pwaInstalledKey, '1');
+    setInstallButtons('↗ Отвори Zorbas');
+    toast('Изтеглено ✓ Отварям Zorbas…', 'success');
+    setTimeout(openInstalledPwa, 600);
+  });
+  window.matchMedia('(display-mode: standalone)').addEventListener?.('change', refreshInstallButtons);
 
-  window.Zorbas = {URL, KEY, rpc, token, setToken, deviceId, esc, money, localDate, localDateTimeValue, formatDate, toast, requireSession, logout, registerPwa, installPwa};
+  window.Zorbas = {URL, KEY, rpc, token, setToken, deviceId, esc, money, localDate, localDateTimeValue, formatDate, toast, requireSession, logout, registerPwa, installPwa, openInstalledPwa};
 })();
