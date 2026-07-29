@@ -16,8 +16,13 @@
       display: none !important;
     }
 
+    .logo-frame {
+      margin-bottom: -8px;
+    }
+
     .temple-menu {
       grid-template-columns: 16% minmax(0, 1fr) 16% !important;
+      margin-top: -10px;
     }
 
     .column-shaft {
@@ -53,14 +58,42 @@
   <main class="browse-shell">
     <section class="logo-stage" aria-labelledby="menuTitle">
       <div class="logo-frame">
-        <canvas
-          class="logo-art"
-          id="cleanZorbasLogo"
-          width="1536"
-          height="465"
-          role="img"
-          aria-label="Zorbas Greek Grill House">
-        </canvas>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1536 465" role="img" aria-labelledby="title desc">
+          <title id="title">Zorbas Greek Grill House</title>
+          <desc id="desc">Clean frameless Zorbas logo with two Greek columns</desc>
+          <g fill="none" stroke="#061a47" stroke-linecap="square" stroke-linejoin="miter">
+            <path stroke-width="14" d="M105 106 C105 72 150 65 164 91 C174 112 148 127 132 111 C119 98 130 82 145 83"/>
+            <path stroke-width="14" d="M274 106 C274 72 229 65 215 91 C205 112 231 127 247 111 C260 98 249 82 234 83"/>
+            <path stroke-width="12" d="M128 123 H251 M139 139 H240"/>
+            <rect x="145" y="143" width="96" height="18" fill="#061a47" stroke="none"/>
+
+            <path stroke-width="14" d="M1262 106 C1262 72 1307 65 1321 91 C1331 112 1305 127 1289 111 C1276 98 1287 82 1302 83"/>
+            <path stroke-width="14" d="M1431 106 C1431 72 1386 65 1372 91 C1362 112 1388 127 1404 111 C1417 98 1406 82 1391 83"/>
+            <path stroke-width="12" d="M1285 123 H1408 M1296 139 H1397"/>
+            <rect x="1302" y="143" width="96" height="18" fill="#061a47" stroke="none"/>
+
+            <path stroke-width="11" d="M166 161 V465 M187 161 V465 M208 161 V465 M229 161 V465"/>
+            <path stroke-width="11" d="M1291 161 V465 M1312 161 V465 M1333 161 V465 M1354 161 V465"/>
+
+            <g transform="translate(85 0) scale(.86 1)">
+              <path stroke-width="26" d="M373 78 H502 L375 231 H510"/>
+              <path stroke-width="25" d="M581 77 L655 154 L581 232 L507 154 Z"/>
+              <path stroke-width="25" d="M718 231 V78 H785 L842 130 L785 180 H718 M774 177 L842 231"/>
+              <path stroke-width="25" d="M895 231 V78 H955 L1010 126 L956 156 H895 M956 156 L1017 197 L958 231 H895"/>
+              <path stroke-width="25" d="M1070 231 L1137 78 L1204 231 M1098 177 H1177"/>
+              <path stroke-width="25" d="M1322 82 H1227 L1284 151 L1227 226 H1326"/>
+              <path stroke-width="9" d="M360 279 H1176"/>
+            </g>
+          </g>
+
+          <text x="768" y="370"
+                fill="#061a47"
+                text-anchor="middle"
+                font-family="Arial, Helvetica, sans-serif"
+                font-size="65"
+                font-weight="400"
+                letter-spacing="8">Greek Grill House</text>
+        </svg>
       </div>
     </section>
 
@@ -135,94 +168,6 @@
     </a>
   </nav>
 
-  <script>
-    (() => {
-      const canvas = document.getElementById('cleanZorbasLogo');
-      const context = canvas?.getContext('2d', { willReadFrequently: true });
-      if (!canvas || !context) return;
-
-      const source = new Image();
-      source.decoding = 'async';
-
-      source.addEventListener('load', () => {
-        const width = source.naturalWidth || 1536;
-        const height = source.naturalHeight || 465;
-
-        canvas.width = width;
-        canvas.height = height;
-        context.clearRect(0, 0, width, height);
-        context.drawImage(source, 0, 0, width, height);
-
-        let imageData;
-        try {
-          imageData = context.getImageData(0, 0, width, height);
-        } catch (error) {
-          console.error('Zorbas logo processing failed:', error);
-          return;
-        }
-
-        const pixels = imageData.data;
-        const inside = (x, y, left, top, right, bottom) =>
-          x >= left * width && x < right * width && y >= top * height && y < bottom * height;
-
-        for (let y = 0; y < height; y += 1) {
-          for (let x = 0; x < width; x += 1) {
-            const index = (y * width + x) * 4;
-            const keep =
-              inside(x, y, 0.178, 0.142, 0.825, 0.860) ||
-              inside(x, y, 0.058, 0.142, 0.188, 0.400) ||
-              inside(x, y, 0.789, 0.142, 0.935, 0.400);
-
-            if (!keep) {
-              pixels[index + 3] = 0;
-              continue;
-            }
-
-            const luminance =
-              0.2126 * pixels[index] +
-              0.7152 * pixels[index + 1] +
-              0.0722 * pixels[index + 2];
-            let alpha = Math.round(((210 - luminance) / 95) * 255);
-            alpha = Math.max(0, Math.min(255, alpha));
-            if (alpha < 45) alpha = 0;
-
-            pixels[index] = 6;
-            pixels[index + 1] = 26;
-            pixels[index + 2] = 71;
-            pixels[index + 3] = alpha;
-          }
-        }
-
-        context.clearRect(0, 0, width, height);
-        context.putImageData(imageData, 0, 0);
-        context.fillStyle = '#061a47';
-
-        const shaftTop = Math.round(height * 0.354);
-        const flutes = [
-          [0.1087, 0.1141],
-          [0.1221, 0.1275],
-          [0.1373, 0.1427],
-          [0.1515, 0.1569],
-          [0.8387, 0.8449],
-          [0.8538, 0.8583],
-          [0.8681, 0.8726],
-          [0.8815, 0.8870]
-        ];
-
-        flutes.forEach(([start, end]) => {
-          const left = Math.round(width * start);
-          const fluteWidth = Math.max(1, Math.round(width * (end - start)));
-          context.fillRect(left, shaftTop, fluteWidth, height - shaftTop);
-        });
-      });
-
-      source.addEventListener('error', () => {
-        console.error('Zorbas source logo could not be loaded.');
-      });
-
-      source.src = '/zorbas-menu-logo.jpg?v=20260729-clean2';
-    })();
-  </script>
   <script src="/config.js?v=20260729-pwa8"></script>
   <script src="/browse-menu.js?v=20260729-aegean4"></script>
 </body>
