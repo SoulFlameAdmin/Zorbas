@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-      href="https://fonts.googleapis.com/css2?family=Forum&family=Manrope:wght@300;400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Caesar+Dressing&family=Forum&family=Manrope:wght@300;400;500;600&family=Ruslan+Display&display=swap"
       rel="stylesheet"
     >
     <style>
@@ -125,6 +125,7 @@ a {
 .wordmark {
   position: relative;
   display: grid;
+  justify-items: center;
   width: max-content;
   padding: 0;
   border: 0;
@@ -135,34 +136,28 @@ a {
   color: var(--white);
 }
 
-.wordmark span,
-.wordmark small {
+.wordmark span {
+  font-family: "Ruslan Display", sans-serif;
   font-size: 8px;
   letter-spacing: 0.32em;
   font-weight: 500;
 }
 
 .wordmark span {
-  margin-left: 73px;
-  margin-bottom: -2px;
+  margin: 0 0 2px;
 }
 
 .wordmark strong {
-  font-family: "Forum", serif;
-  font-size: clamp(42px, 4vw, 59px);
+  font-family: "Caesar Dressing", cursive;
+  font-size: clamp(44px, 4vw, 64px);
   line-height: 0.82;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.02em;
   font-weight: 400;
 }
 
 .wordmark strong::before,
 .wordmark strong::after {
-  content: "";
-  position: absolute;
-  top: 27px;
-  width: 34px;
-  height: 1px;
-  background: currentColor;
+  display: none;
 }
 
 .wordmark strong::before {
@@ -173,11 +168,6 @@ a {
 .wordmark strong::after {
   right: -15px;
   transform: rotate(-56deg);
-}
-
-.wordmark small {
-  margin-top: 7px;
-  opacity: 0.72;
 }
 
 .header-actions {
@@ -408,12 +398,79 @@ h2 em {
 
 .home-shade {
   background: linear-gradient(
-      90deg,
-      rgba(7, 10, 17, 0.86) 0%,
-      rgba(7, 10, 17, 0.44) 50%,
-      rgba(7, 10, 17, 0.18) 100%
-    ),
-    linear-gradient(0deg, rgba(7, 10, 17, 0.6) 0%, transparent 50%);
+    180deg,
+    rgba(8, 7, 5, 0.48) 0%,
+    rgba(8, 7, 5, 0.56) 100%
+  );
+}
+
+.home-index {
+  position: absolute;
+  z-index: 3;
+  top: 51%;
+  left: 50%;
+  width: calc(100% - (2 * var(--page-pad)));
+  max-width: 1500px;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.home-index-address {
+  margin: 0 0 clamp(30px, 4vh, 52px);
+  font-family: "Forum", serif;
+  font-size: clamp(15px, 1.35vw, 24px);
+  font-weight: 600;
+  color: var(--white);
+}
+
+.home-index-links {
+  display: grid;
+  grid-template-columns: 0.8fr 1.55fr 0.9fr;
+  align-items: center;
+  gap: clamp(24px, 3.7vw, 72px);
+}
+
+.home-index-link {
+  position: relative;
+  padding: 0 0 18px;
+  border: 0;
+  color: var(--white);
+  background: transparent;
+  font-family: "Ruslan Display", sans-serif;
+  font-size: clamp(48px, 5.25vw, 92px);
+  font-weight: 400;
+  line-height: 0.95;
+  letter-spacing: 0.015em;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 240ms ease,
+    transform 240ms ease;
+}
+
+.home-index-link::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 1px;
+  margin: auto;
+  background: currentColor;
+  transition: width 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.home-index-link:hover,
+.home-index-link:focus-visible {
+  color: var(--sand);
+  transform: translateY(-4px);
+}
+
+.home-index-link:hover::after,
+.home-index-link:focus-visible::after,
+.home-index-link.is-underlined::after {
+  width: 100%;
 }
 
 .home-copy {
@@ -1390,6 +1447,62 @@ h2 em {
   }
 }
 
+@media (max-width: 900px) {
+  .home-index-links {
+    gap: 22px;
+  }
+
+  .home-index-link {
+    font-size: clamp(34px, 6.4vw, 58px);
+  }
+
+  .wordmark span {
+    margin: 0 0 2px;
+  }
+}
+
+@media (max-width: 680px) {
+  .wordmark span {
+    margin: 0 0 2px;
+    font-size: 7px;
+  }
+
+  .wordmark strong {
+    font-size: 38px;
+  }
+
+  .home-shade {
+    background: linear-gradient(
+      180deg,
+      rgba(8, 7, 5, 0.5) 0%,
+      rgba(8, 7, 5, 0.62) 100%
+    );
+  }
+
+  .home-index {
+    top: 54%;
+    width: calc(100% - 48px);
+  }
+
+  .home-index-address {
+    max-width: 280px;
+    margin: 0 auto 34px;
+    font-size: 12px;
+    line-height: 1.45;
+  }
+
+  .home-index-links {
+    grid-template-columns: 1fr;
+    gap: 17px;
+  }
+
+  .home-index-link {
+    justify-self: center;
+    padding-bottom: 9px;
+    font-size: clamp(38px, 12vw, 54px);
+  }
+}
+
 </style>
   </head>
   <body>
@@ -1402,9 +1515,8 @@ h2 em {
         data-view="home"
         aria-label="Начало"
       >
-        <span>РЕСТОРАНТ</span>
-        <strong>ЗОРБАС</strong>
-        <small>GREEK GRILL HOUSE · СЛИВЕН</small>
+        <span>RESTAURANT</span>
+        <strong>ZORBAS</strong>
       </button>
 
       <div class="header-actions">
@@ -1432,7 +1544,12 @@ h2 em {
       </div>
     </header>
 
-    <nav class="menu-overlay" id="site-menu" inert>
+    <nav
+      class="menu-overlay"
+      id="site-menu"
+      aria-label="Пълна навигация"
+      inert
+    >
       <div class="menu-orbit" aria-hidden="true">З</div>
       <p class="menu-kicker">ИЗБЕРИ ПОСОКА</p>
       <div class="menu-links">
@@ -1462,35 +1579,30 @@ h2 em {
       <section class="view view-home is-active" id="home" data-title="Начало">
         <div class="home-photo" aria-hidden="true"></div>
         <div class="home-shade" aria-hidden="true"></div>
-        <div class="home-copy">
-          <p class="eyebrow">СЛИВЕН · ГРЪЦКА КУХНЯ · ЖАР</p>
-          <h1>
-            Вкусът на
-            <em>истинска Гърция</em>
-          </h1>
-          <p class="lead">
-            Топла атмосфера, месо на жар и рецепти, които събират хората около
-            една маса.
+        <div class="home-index">
+          <p class="home-index-address">
+            Ресторант Zorbas · бул. „Панайот Хитов“ 1 · Сливен
           </p>
-          <div class="home-cta">
+          <nav class="home-index-links" aria-label="Основни раздели">
+            <button class="home-index-link nav-link" type="button" data-view="menu">
+              МЕНЮ
+            </button>
             <button
-              class="solid-cta nav-link"
+              class="home-index-link nav-link"
               type="button"
               data-view="reservation"
             >
-              Резервирай маса
+              РЕЗЕРВАЦИЯ
             </button>
-            <button class="line-cta nav-link" type="button" data-view="menu">
-              Разгледай менюто
-              <span>↗</span>
+            <button
+              class="home-index-link nav-link is-underlined"
+              type="button"
+              data-view="gallery"
+            >
+              СНИМКИ
             </button>
-          </div>
+          </nav>
         </div>
-        <div class="view-index" aria-hidden="true"><span>01</span> / 06</div>
-        <button class="next-view nav-link" type="button" data-view="story">
-          <span>Следващо</span>
-          <i>↓</i>
-        </button>
       </section>
 
       <section class="view view-story" id="story" data-title="За нас">
