@@ -1,12 +1,14 @@
 (() => {
-  const URL = 'https://frhletkiuupgksmgxoxc.supabase.co';
+  const API_URL = 'https://frhletkiuupgksmgxoxc.supabase.co';
   const KEY = 'sb_publishable_JQPnalB8jOs639_PWoR6mA_AOk11xWC';
   const tokenKey = 'zorbas_staff_token_v3';
   const pwaInstalledKey = 'zorbas_pwa_installed_v1';
+  const pwaInstallPendingKey = 'zorbas_pwa_install_pending_v1';
   let installPrompt = null;
+  let installReadyPromise = null;
 
   async function rpc(name, payload = {}) {
-    const response = await fetch(`${URL}/rest/v1/rpc/${name}`, {
+    const response = await fetch(`${API_URL}/rest/v1/rpc/${name}`, {
       method: 'POST',
       headers: {
         apikey: KEY,
@@ -86,7 +88,12 @@
   function refreshInstallButtons() {
     if (isStandalone()) {
       localStorage.setItem(pwaInstalledKey, '1');
+      localStorage.removeItem(pwaInstallPendingKey);
       setInstallButtons('✓ Изтеглено', true);
+      return;
+    }
+    if (localStorage.getItem(pwaInstallPendingKey) === '1') {
+      setInstallButtons('Инсталира се…', true);
       return;
     }
     if (localStorage.getItem(pwaInstalledKey) === '1') {
@@ -95,30 +102,60 @@
     }
     setInstallButtons('⬇ Изтегли');
   }
-  async function detectInstalledPwa() {
+  async function queryInstalledPwa() {
     if (isStandalone()) {
-      localStorage.setItem(pwaInstalledKey, '1');
       return true;
     }
     if (typeof navigator.getInstalledRelatedApps !== 'function') {
-      return localStorage.getItem(pwaInstalledKey) === '1';
+      return null;
     }
     try {
       const apps = await navigator.getInstalledRelatedApps();
-      const installed = apps.some(app => {
+      return apps.some(app => {
         if (app.platform !== 'webapp' || !app.url) return false;
         try { return new URL(app.url, location.href).origin === location.origin; }
         catch { return false; }
       });
-      if (installed) localStorage.setItem(pwaInstalledKey, '1');
-      return installed || localStorage.getItem(pwaInstalledKey) === '1';
     } catch {
-      return localStorage.getItem(pwaInstalledKey) === '1';
+      return null;
     }
+  }
+  function markPwaInstalled(showToast = false) {
+    localStorage.setItem(pwaInstalledKey, '1');
+    localStorage.removeItem(pwaInstallPendingKey);
+    setInstallButtons('↗ Отвори Zorbas');
+    if (showToast) toast('Изтеглено ✓ Натисни „Отвори Zorbas“.', 'success');
+  }
+  async function detectInstalledPwa() {
+    const installed = await queryInstalledPwa();
+    if (installed === true) {
+      markPwaInstalled();
+      return true;
+    }
+    return localStorage.getItem(pwaInstalledKey) === '1';
+  }
+  function waitForInstalledPwa() {
+    if (installReadyPromise) return installReadyPromise;
+    const startedAt = Date.now();
+    installReadyPromise = new Promise(resolve => {
+      const check = async () => {
+        const installed = await queryInstalledPwa();
+        const elapsed = Date.now() - startedAt;
+        if (installed === true || (installed === null && elapsed >= 4000) || elapsed >= 20000) {
+          markPwaInstalled(true);
+          installReadyPromise = null;
+          resolve(true);
+          return;
+        }
+        setTimeout(check, 700);
+      };
+      setTimeout(check, 700);
+    });
+    return installReadyPromise;
   }
   function refreshPwaMetadata() {
     const manifest = document.querySelector('link[rel="manifest"]');
-    if (manifest) manifest.href = '/manifest.webmanifest?v=open7';
+    if (manifest) manifest.href = '/manifest.webmanifest?v=launch8';
     const favicon = document.querySelector('link[rel~="icon"]') || document.createElement('link');
     favicon.rel = 'icon';
     favicon.type = 'image/png';
@@ -155,7 +192,13 @@
     }
     const refreshAndDetect = () => {
       refreshInstallButtons();
-      detectInstalledPwa().then(refreshInstallButtons);
+      detectInstalledPwa().then(installed => {
+        if (!installed && localStorage.getItem(pwaInstallPendingKey) === '1') {
+          waitForInstalledPwa();
+          return;
+        }
+        refreshInstallButtons();
+      });
     };
     if (document.readyState === 'loading') {
       document.addEventListener('DOMContentLoaded', refreshAndDetect, {once: true});
@@ -168,14 +211,21 @@
       refreshInstallButtons();
       return;
     }
-    const target = new URL('/?source=pwa-open', location.origin);
+    const target = new URL(`/?source=pwa-open&launch=${Date.now()}`, location.origin);
     if (/Android/i.test(navigator.userAgent)) {
       const hasUserGesture = event?.isTrusted || navigator.userActivation?.isActive;
       if (!hasUserGesture) {
         setInstallButtons('↗ Отвори Zorbas');
         return;
       }
-      location.href = `intent://${location.host}/?source=pwa-open#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end`;
+      event?.preventDefault?.();
+      const launcher = document.createElement('a');
+      launcher.href = `intent://${target.host}${target.pathname}${target.search}#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end`;
+      launcher.rel = 'external';
+      launcher.hidden = true;
+      document.body.appendChild(launcher);
+      launcher.click();
+      setTimeout(() => launcher.remove(), 1000);
       return;
     }
     if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
@@ -201,10 +251,14 @@
       await promptEvent.prompt();
       const choice = await promptEvent.userChoice;
       if (choice.outcome === 'accepted') {
-        setInstallButtons('Изтегля се…', true);
+        localStorage.removeItem(pwaInstalledKey);
+        localStorage.setItem(pwaInstallPendingKey, '1');
+        refreshInstallButtons();
         toast('Zorbas се изтегля…', 'success');
+        waitForInstalledPwa();
       } else {
         localStorage.removeItem(pwaInstalledKey);
+        localStorage.removeItem(pwaInstallPendingKey);
         refreshInstallButtons();
       }
       return;
@@ -219,15 +273,17 @@
     event.preventDefault();
     installPrompt = event;
     localStorage.removeItem(pwaInstalledKey);
+    localStorage.removeItem(pwaInstallPendingKey);
     refreshInstallButtons();
   });
   window.addEventListener('appinstalled', () => {
     installPrompt = null;
-    localStorage.setItem(pwaInstalledKey, '1');
-    setInstallButtons('↗ Отвори Zorbas');
-    toast('Изтеглено ✓ Натисни „Отвори Zorbas“.', 'success');
+    localStorage.removeItem(pwaInstalledKey);
+    localStorage.setItem(pwaInstallPendingKey, '1');
+    refreshInstallButtons();
+    waitForInstalledPwa();
   });
   window.matchMedia('(display-mode: standalone)').addEventListener?.('change', refreshInstallButtons);
 
-  window.Zorbas = {URL, KEY, rpc, token, setToken, deviceId, esc, money, localDate, localDateTimeValue, formatDate, toast, requireSession, logout, registerPwa, installPwa, openInstalledPwa};
+  window.Zorbas = {URL: API_URL, KEY, rpc, token, setToken, deviceId, esc, money, localDate, localDateTimeValue, formatDate, toast, requireSession, logout, registerPwa, installPwa, openInstalledPwa};
 })();
