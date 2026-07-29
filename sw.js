@@ -1,4 +1,4 @@
-const CACHE='zorbas-v27-empty-management-name-20260730';
+const CACHE='zorbas-v28-admin-password-defaults-20260730';
 const CORE=['/','/index.html','/menu.html','/order.html','/cart.html','/browse-menu.css?v=20260729-aegean6','/browse-menu.js?v=20260729-aegean4','/menu.css?v=20260729-pen3','/order.js?v=20260729-order1','/cart.js?v=20260729-cart2','/zorbas-menu-logo.jpg','/site.css?v=20260729-loader4','/public.js?v=20260729-pwa6','/config.js?v=20260729-pwa8','/staff.css','/admin.html','/admin.js','/admin-core.js','/admin-order.js','/admin-menu.js','/kitchen.html','/kitchen.js','/print.html','/print.js','/manifest.webmanifest?v=launch8','/icon-192.png?v=tower6','/icon-512.png?v=tower6','/apple-touch-icon.png?v=tower6'];
 self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',e=>e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));
