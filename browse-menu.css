@@ -206,7 +206,7 @@ a:focus-visible {
   padding: 0;
   overflow: hidden;
   text-align: center;
-  background: var(--aegean);
+  background: var(--paper);
   border: 0;
 }
 
@@ -219,12 +219,13 @@ a:focus-visible {
   width: 100%;
   margin: 0;
   padding: 0;
-  background: var(--aegean);
+  background: transparent;
   border: 0;
   box-shadow: none;
 }
 
-.logo-frame img {
+.logo-frame img,
+.logo-art {
   width: 100%;
   height: auto;
   display: block;

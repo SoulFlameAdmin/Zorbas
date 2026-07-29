@@ -9,7 +9,7 @@
   <link rel="manifest" href="/manifest.webmanifest?v=launch8">
   <link rel="icon" type="image/png" href="/icon-192.png?v=tower6">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=tower6">
-  <link rel="stylesheet" href="/browse-menu.css?v=20260729-aegean3">
+  <link rel="stylesheet" href="/browse-menu.css?v=20260729-aegean4">
 </head>
 <body>
   <header class="browse-topbar">
@@ -39,7 +39,28 @@
   <main class="browse-shell">
     <section class="logo-stage" aria-labelledby="menuTitle">
       <div class="logo-frame">
-        <img src="/zorbas-menu-logo.jpg" alt="Zorbas Greek Grill House">
+        <svg class="logo-art" viewBox="0 0 1536 465" role="img" aria-labelledby="logoTitle">
+          <title id="logoTitle">Zorbas Greek Grill House</title>
+          <defs>
+            <filter id="logoInk" color-interpolation-filters="sRGB">
+              <feColorMatrix
+                type="matrix"
+                values="
+                  0 0 0 0 0.023
+                  0 0 0 0 0.102
+                  0 0 0 0 0.278
+                  0.72 0.72 0.72 0 -0.82">
+              </feColorMatrix>
+            </filter>
+          </defs>
+          <image
+            href="/zorbas-menu-logo.jpg"
+            width="1536"
+            height="465"
+            preserveAspectRatio="xMidYMid meet"
+            filter="url(#logoInk)">
+          </image>
+        </svg>
       </div>
     </section>
 
@@ -115,6 +136,6 @@
   </nav>
 
   <script src="/config.js?v=20260729-pwa8"></script>
-  <script src="/browse-menu.js?v=20260729-aegean3"></script>
+  <script src="/browse-menu.js?v=20260729-aegean4"></script>
 </body>
 </html>
