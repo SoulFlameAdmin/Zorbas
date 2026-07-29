@@ -85,6 +85,7 @@
   }
   function refreshInstallButtons() {
     if (isStandalone()) {
+      localStorage.setItem(pwaInstalledKey, '1');
       setInstallButtons('✓ Изтеглено', true);
       return;
     }
@@ -94,9 +95,30 @@
     }
     setInstallButtons('⬇ Изтегли');
   }
+  async function detectInstalledPwa() {
+    if (isStandalone()) {
+      localStorage.setItem(pwaInstalledKey, '1');
+      return true;
+    }
+    if (typeof navigator.getInstalledRelatedApps !== 'function') {
+      return localStorage.getItem(pwaInstalledKey) === '1';
+    }
+    try {
+      const apps = await navigator.getInstalledRelatedApps();
+      const installed = apps.some(app => {
+        if (app.platform !== 'webapp' || !app.url) return false;
+        try { return new URL(app.url, location.href).origin === location.origin; }
+        catch { return false; }
+      });
+      if (installed) localStorage.setItem(pwaInstalledKey, '1');
+      return installed || localStorage.getItem(pwaInstalledKey) === '1';
+    } catch {
+      return localStorage.getItem(pwaInstalledKey) === '1';
+    }
+  }
   function refreshPwaMetadata() {
     const manifest = document.querySelector('link[rel="manifest"]');
-    if (manifest) manifest.href = '/manifest.webmanifest?v=tower6';
+    if (manifest) manifest.href = '/manifest.webmanifest?v=open7';
     const favicon = document.querySelector('link[rel~="icon"]') || document.createElement('link');
     favicon.rel = 'icon';
     favicon.type = 'image/png';
@@ -131,33 +153,45 @@
         .then(registration => registration.update())
         .catch(() => {});
     }
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', refreshInstallButtons, {once: true});
-    } else {
+    const refreshAndDetect = () => {
       refreshInstallButtons();
+      detectInstalledPwa().then(refreshInstallButtons);
+    };
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', refreshAndDetect, {once: true});
+    } else {
+      refreshAndDetect();
     }
   }
-  function openInstalledPwa() {
+  function openInstalledPwa(event) {
     if (isStandalone()) {
       refreshInstallButtons();
       return;
     }
     const target = new URL('/?source=pwa-open', location.origin);
     if (/Android/i.test(navigator.userAgent)) {
-      const fallback = encodeURIComponent(target.href);
-      location.href = `intent://${location.host}/?source=pwa-open#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;S.browser_fallback_url=${fallback};end`;
+      const hasUserGesture = event?.isTrusted || navigator.userActivation?.isActive;
+      if (!hasUserGesture) {
+        setInstallButtons('↗ Отвори Zorbas');
+        return;
+      }
+      location.href = `intent://${location.host}/?source=pwa-open#Intent;scheme=https;action=android.intent.action.VIEW;category=android.intent.category.BROWSABLE;end`;
+      return;
+    }
+    if (/iPad|iPhone|iPod/.test(navigator.userAgent)) {
+      toast('Отвори Zorbas от иконата на началния екран.');
       return;
     }
     location.assign(target.href);
   }
-  async function installPwa() {
+  async function installPwa(event) {
     if (isStandalone()) {
       refreshInstallButtons();
       toast('Zorbas вече е отворено като приложение.', 'success');
       return;
     }
     if (localStorage.getItem(pwaInstalledKey) === '1' && !installPrompt) {
-      openInstalledPwa();
+      openInstalledPwa(event);
       return;
     }
     if (installPrompt) {
@@ -191,8 +225,7 @@
     installPrompt = null;
     localStorage.setItem(pwaInstalledKey, '1');
     setInstallButtons('↗ Отвори Zorbas');
-    toast('Изтеглено ✓ Отварям Zorbas…', 'success');
-    setTimeout(openInstalledPwa, 600);
+    toast('Изтеглено ✓ Натисни „Отвори Zorbas“.', 'success');
   });
   window.matchMedia('(display-mode: standalone)').addEventListener?.('change', refreshInstallButtons);
 
