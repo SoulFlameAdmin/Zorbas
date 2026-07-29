@@ -10,6 +10,20 @@
   <link rel="icon" type="image/png" href="/icon-192.png?v=tower6">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=tower6">
   <link rel="stylesheet" href="/browse-menu.css?v=20260729-aegean6">
+  <style>
+    .logo-stage::before,
+    .logo-stage::after {
+      display: none !important;
+    }
+
+    .temple-menu {
+      grid-template-columns: 16% minmax(0, 1fr) 16% !important;
+    }
+
+    .column-shaft {
+      width: 30% !important;
+    }
+  </style>
 </head>
 <body>
   <header class="browse-topbar">
@@ -39,41 +53,14 @@
   <main class="browse-shell">
     <section class="logo-stage" aria-labelledby="menuTitle">
       <div class="logo-frame">
-        <svg class="logo-art" viewBox="0 0 1536 465" role="img" aria-labelledby="logoTitle">
-          <title id="logoTitle">Zorbas Greek Grill House</title>
-          <defs>
-            <filter id="logoInk" color-interpolation-filters="sRGB">
-              <feColorMatrix
-                type="matrix"
-                values="
-                  0 0 0 0 0.023
-                  0 0 0 0 0.102
-                  0 0 0 0 0.278
-                  0.72 0.72 0.72 0 -0.82">
-              </feColorMatrix>
-            </filter>
-          </defs>
-          <image
-            href="/zorbas-menu-logo.jpg"
-            width="1536"
-            height="465"
-            preserveAspectRatio="xMidYMid meet"
-            filter="url(#logoInk)">
-          </image>
-
-          <!-- Remove the complete embedded double rectangle while keeping the logo and columns. -->
-          <g fill="#fbf6e9" aria-hidden="true">
-            <rect x="30" y="0" width="1478" height="22"></rect>
-            <rect x="58" y="28" width="1420" height="24"></rect>
-            <rect x="30" y="0" width="28" height="465"></rect>
-            <rect x="58" y="28" width="28" height="407"></rect>
-            <rect x="1470" y="0" width="38" height="465"></rect>
-            <rect x="1444" y="28" width="34" height="407"></rect>
-            <rect x="58" y="408" width="104" height="30"></rect>
-            <rect x="244" y="408" width="1042" height="30"></rect>
-            <rect x="1368" y="408" width="110" height="30"></rect>
-          </g>
-        </svg>
+        <canvas
+          class="logo-art"
+          id="cleanZorbasLogo"
+          width="1536"
+          height="465"
+          role="img"
+          aria-label="Zorbas Greek Grill House">
+        </canvas>
       </div>
     </section>
 
@@ -148,6 +135,94 @@
     </a>
   </nav>
 
+  <script>
+    (() => {
+      const canvas = document.getElementById('cleanZorbasLogo');
+      const context = canvas?.getContext('2d', { willReadFrequently: true });
+      if (!canvas || !context) return;
+
+      const source = new Image();
+      source.decoding = 'async';
+
+      source.addEventListener('load', () => {
+        const width = source.naturalWidth || 1536;
+        const height = source.naturalHeight || 465;
+
+        canvas.width = width;
+        canvas.height = height;
+        context.clearRect(0, 0, width, height);
+        context.drawImage(source, 0, 0, width, height);
+
+        let imageData;
+        try {
+          imageData = context.getImageData(0, 0, width, height);
+        } catch (error) {
+          console.error('Zorbas logo processing failed:', error);
+          return;
+        }
+
+        const pixels = imageData.data;
+        const inside = (x, y, left, top, right, bottom) =>
+          x >= left * width && x < right * width && y >= top * height && y < bottom * height;
+
+        for (let y = 0; y < height; y += 1) {
+          for (let x = 0; x < width; x += 1) {
+            const index = (y * width + x) * 4;
+            const keep =
+              inside(x, y, 0.178, 0.142, 0.825, 0.860) ||
+              inside(x, y, 0.058, 0.142, 0.188, 0.400) ||
+              inside(x, y, 0.789, 0.142, 0.935, 0.400);
+
+            if (!keep) {
+              pixels[index + 3] = 0;
+              continue;
+            }
+
+            const luminance =
+              0.2126 * pixels[index] +
+              0.7152 * pixels[index + 1] +
+              0.0722 * pixels[index + 2];
+            let alpha = Math.round(((210 - luminance) / 95) * 255);
+            alpha = Math.max(0, Math.min(255, alpha));
+            if (alpha < 45) alpha = 0;
+
+            pixels[index] = 6;
+            pixels[index + 1] = 26;
+            pixels[index + 2] = 71;
+            pixels[index + 3] = alpha;
+          }
+        }
+
+        context.clearRect(0, 0, width, height);
+        context.putImageData(imageData, 0, 0);
+        context.fillStyle = '#061a47';
+
+        const shaftTop = Math.round(height * 0.354);
+        const flutes = [
+          [0.1087, 0.1141],
+          [0.1221, 0.1275],
+          [0.1373, 0.1427],
+          [0.1515, 0.1569],
+          [0.8387, 0.8449],
+          [0.8538, 0.8583],
+          [0.8681, 0.8726],
+          [0.8815, 0.8870]
+        ];
+
+        flutes.forEach(([start, end]) => {
+          const left = Math.round(width * start);
+          const fluteWidth = Math.max(1, Math.round(width * (end - start)));
+          context.fillRect(left, shaftTop, fluteWidth, height - shaftTop);
+        });
+      });
+
+      source.addEventListener('error', () => {
+        console.error('Zorbas source logo could not be loaded.');
+      });
+
+      source.src = '/zorbas-menu-logo.jpg?v=20260729-clean2';
+    })();
+  </script>
   <script src="/config.js?v=20260729-pwa8"></script>
   <script src="/browse-menu.js?v=20260729-aegean4"></script>
 </body>
