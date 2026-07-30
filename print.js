@@ -46,7 +46,7 @@
     if (status) {
       status.textContent = message || (autoMode
         ? `Атомарно слушане на ${destination === 'staff' ? 'Print 1' : 'Print 2'} през 1 секунда.`
-        : 'Ръчен режим — всяка бележка се заключва преди печат.');
+        : 'Windows EXE печата автоматично. От телефона можеш да пуснеш безопасен TEST.');
     }
   }
 
@@ -55,7 +55,7 @@
     if (!session) return;
     $('loginView').classList.add('hidden');
     $('appView').classList.remove('hidden');
-    $('sessionName').textContent = `${session.display_name} · печатен мост v4`;
+    $('sessionName').textContent = `${session.display_name} · печатен мост v5`;
     syncUrl();
     updateControls();
     await refresh();
@@ -72,7 +72,9 @@
       });
       render();
       if (autoMode) {
-        const next = jobs.find(job => ['pending', 'retrying'].includes(job.status) && Number(job.attempts || 0) < Number(job.max_attempts || 3));
+        const next = jobs.find(job =>
+          ['pending', 'retrying'].includes(job.status) &&
+          Number(job.attempts || 0) < Number(job.max_attempts || 3));
         if (next) await printJob(next.id, true);
       }
     } catch (error) {
@@ -87,6 +89,7 @@
       : type === 'bill' ? 'СМЕТКА'
       : type === 'pickup' ? 'ПАКЕТ · ЗА ВКЪЩИ'
       : type === 'addition' ? 'ДОБАВКА'
+      : type === 'test' ? 'TEST ОТ ТЕЛЕФОНА'
       : 'ПОРЪЧКА';
   }
 
@@ -114,11 +117,13 @@
       const busy = ['claimed', 'preparing', 'sending', 'printing'].includes(job.status);
       const content = job.job_type === 'correction'
         ? `<b>ПРОМЕНЕНО</b><br>${correctionChanges(payload) || 'Няма описани промени'}<br><br><b>НОВО</b><br>${(payload.items || []).map(item => `${item.quantity}× ${Z.esc(item.name)}`).join('<br>')}`
-        : (payload.items || []).map(item => `${item.quantity}× ${Z.esc(item.name)}`).join('<br>');
+        : job.job_type === 'test'
+          ? '<b>TEST ОТ ТЕЛЕФОНА</b>'
+          : (payload.items || []).map(item => `${item.quantity}× ${Z.esc(item.name)}`).join('<br>');
       return `<article class="order-card">
-        <header><div><strong>${title(job.job_type)}</strong><small>${destination === 'staff' ? 'Print 1 · сервитьори' : 'Print 2 · кухня'} · ${Z.formatDate(job.created_at)}</small></div><span class="badge ${job.status === 'failed' || exhausted ? 'cancelled' : ''}">${statusText(job.status)}</span></header>
+        <header><div><strong>${title(job.job_type)}</strong><small>${destination === 'staff' ? 'Print 1 · сервитьори / бар' : 'Print 2 · кухня'} · ${Z.formatDate(job.created_at)}</small></div><span class="badge ${job.status === 'failed' || exhausted ? 'cancelled' : ''}">${statusText(job.status)}</span></header>
         <div class="panel-body">
-          <p><b>${payload.order_type === 'pickup' ? 'ПАКЕТ' : `МАСА ${Z.esc(payload.table_number || '—')}`}</b>${payload.visit_label ? ` · ${Z.esc(payload.visit_label)}` : ''} · №${Z.esc(payload.order_number || '—')}</p>
+          <p><b>${job.job_type === 'test' ? 'БЕЗОПАСЕН ТЕСТ' : payload.order_type === 'pickup' ? 'ПАКЕТ' : `МАСА ${Z.esc(payload.table_number || '—')}`}</b> · №${Z.esc(payload.order_number || '—')}</p>
           <p>${content}</p><p><small>Опити: ${attempts}/${maxAttempts}</small></p>
           ${payload.reason ? `<p class="notice">ПРИЧИНА: ${Z.esc(payload.reason)}</p>` : ''}
           ${payload.cancel_reason ? `<p class="notice">ОТКАЗ: ${Z.esc(payload.cancel_reason)}</p>` : ''}
@@ -132,37 +137,109 @@
     document.querySelectorAll('[data-fail]').forEach(button => button.onclick = () => markFailed(button.dataset.fail));
   }
 
-  function regularRows(payload, staff) {
-    return (payload.items || []).map(item => `<div><b>${item.quantity} × ${Z.esc(item.name)}</b>${item.note ? `<br>Бележка: ${Z.esc(item.note)}` : ''}${staff && item.unit_price != null ? `<div class="receipt-row"><span>${Number(item.quantity)} × ${Number(item.unit_price).toFixed(2)}</span><span>${(Number(item.quantity) * Number(item.unit_price)).toFixed(2)} лв.</span></div>` : ''}</div><br>`).join('');
+  const rows = payload => (payload.items || []).map(item =>
+    `<div><b>${item.quantity} × ${Z.esc(String(item.name || '').toUpperCase())}</b>${item.note ? `<br>БЕЛЕЖКА: ${Z.esc(String(item.note).toUpperCase())}` : ''}</div><br>`
+  ).join('');
+
+  function stationReceipt(job) {
+    const p = job.payload || {};
+    const stand = job.destination === 'kitchen' ? 'КУХНЯ' : 'БАР';
+    return `<div class="receipt">
+      <div>Щанд: <b>${stand}</b></div>
+      <div>Маса: <b>${p.order_type === 'pickup' ? 'ПАКЕТ' : Z.esc(p.table_number || '—')}</b></div>
+      <div>Оператор: ${Z.esc(p.actor || '—')}</div><hr>
+      ${rows(p) || 'НЯМА АРТИКУЛИ'}<hr>
+      <h2>НЕ СЕ ДЪЛЖИ ПЛАЩАНЕ</h2>
+      <div class="receipt-row"><span>Номер</span><span>${Z.esc(p.order_number || '—')}</span></div>
+      <div>Час: ${Z.formatDate(p.created_at || job.created_at)}</div>
+    </div>`;
+  }
+
+  function billReceipt(job) {
+    const p = job.payload || {};
+    const sold = (p.items || []).reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    const itemRows = (p.items || []).map(item => {
+      const qty = Number(item.quantity || 0);
+      const price = Number(item.unit_price || 0);
+      return `<div><b>${Z.esc(String(item.name || '').toUpperCase())}</b>
+        <div class="receipt-row"><span>${qty} бр x ${price.toFixed(2)}</span><span>${(qty * price).toFixed(2)} Б</span></div></div><br>`;
+    }).join('');
+    return `<div class="receipt">
+      <h2>"Н енд м" ЕООД</h2>
+      <div style="text-align:center">ж.к. "Младост", бл. 5,<br>вх. В, ет. 5, ап. 14<br>Сливен</div>
+      <div class="receipt-row"><span>Ид. №</span><span>206740575</span></div>
+      <div>Дата: ${Z.formatDate(p.created_at || job.created_at)}</div>
+      <div class="receipt-row"><span>${Z.esc(p.actor || '—')}</span><span>1</span></div>
+      <div>Маса: ${Z.esc(p.table_number || '—')}</div><br>
+      ${itemRows}
+      <div>Общо продадени</div>
+      <div class="receipt-row big"><span>артикули</span><span>${sold}</span></div>
+      <div class="receipt-row big"><span>Total:</span><span>${Number(p.subtotal || 0).toFixed(2)}</span></div>
+    </div>`;
+  }
+
+  function testReceipt(job) {
+    const p = job.payload || {};
+    const stand = job.destination === 'kitchen' ? 'КУХНЯ' : 'БАР';
+    return `<div class="receipt"><div>Щанд: <b>${stand}</b></div><div>Маса: TEST</div>
+      <div>Оператор: ${Z.esc(p.actor || 'ТЕЛЕФОН')}</div><hr>
+      <h1>TEST ОТ ТЕЛЕФОНА</h1><h2>${job.destination === 'kitchen' ? 'PRINT 2 · КУХНЯ' : 'PRINT 1 · СЕРВИТЬОРИ'}</h2><hr>
+      <h2>НЕ СЕ ДЪЛЖИ ПЛАЩАНЕ</h2>
+      <div class="receipt-row"><span>Номер</span><span>${Z.esc(p.order_number || 'TEST')}</span></div>
+      <div>Час: ${Z.formatDate(p.created_at || job.created_at)}</div></div>`;
   }
 
   function correctionReceipt(job) {
-    const payload = job.payload || {};
-    const changes = (payload.changes || []).map(change => {
+    const p = job.payload || {};
+    const changes = (p.changes || []).map(change => {
       const delta = Number(change.delta || 0);
       return `<div class="big">${delta > 0 ? '+' : ''}${delta} × ${Z.esc(change.name || 'Артикул')}</div>`;
     }).join('');
-    const newRows = (payload.items || []).map(item => `<div><b>${item.quantity} × ${Z.esc(item.name)}</b>${item.note ? `<br>Бележка: ${Z.esc(item.note)}` : ''}</div><br>`).join('');
-    return `<div class="receipt"><h1>ZORBAS</h1><h2>КОРЕКЦИЯ / ПРОМЕНЕНО</h2><hr><div class="big">МАСА ${Z.esc(payload.table_number || '—')}</div>${payload.visit_label ? `<div style="text-align:center;font-weight:700">${Z.esc(payload.visit_label)}</div>` : ''}<div>Поръчка №${Z.esc(payload.order_number || '—')} · версия ${Z.esc(payload.revision || '—')}</div><div>${Z.formatDate(payload.created_at || job.created_at)}</div>${payload.actor ? `<div>Сервитьор: ${Z.esc(payload.actor)}</div>` : ''}<hr><h2>ПРОМЕНЕНО</h2>${changes || '<div>Няма описани промени.</div>'}<hr><h2>НОВО</h2>${newRows || '<div>Няма оставащи артикули.</div>'}${payload.reason ? `<hr><b>ПРИЧИНА:</b><br>${Z.esc(payload.reason)}` : ''}<hr><div style="text-align:center">powered by SoulFlame</div></div>`;
+    return `<div class="receipt"><h1>ZORBAS</h1><h2>КОРЕКЦИЯ / ПРОМЕНЕНО</h2><hr>
+      <div class="big">МАСА ${Z.esc(p.table_number || '—')}</div>
+      <div>Поръчка №${Z.esc(p.order_number || '—')} · версия ${Z.esc(p.revision || '—')}</div>
+      <div>${Z.formatDate(p.created_at || job.created_at)}</div><hr><h2>ПРОМЕНЕНО</h2>
+      ${changes || '<div>Няма описани промени.</div>'}<hr><h2>НОВО</h2>${rows(p) || '<div>Няма оставащи артикули.</div>'}
+      ${p.reason ? `<hr><b>ПРИЧИНА:</b><br>${Z.esc(p.reason)}` : ''}</div>`;
   }
 
   function receipt(job) {
     if (job.job_type === 'correction') return correctionReceipt(job);
-    const payload = job.payload || {};
-    const staff = job.destination === 'staff';
-    return `<div class="receipt"><h1>ZORBAS</h1><h2>${title(job.job_type)}</h2><hr><div class="big">${payload.order_type === 'pickup' ? 'ПАКЕТ' : `МАСА ${Z.esc(payload.table_number || '—')}`}</div><div>Поръчка №${Z.esc(payload.order_number || '—')}</div><div>${Z.formatDate(payload.created_at || job.created_at)}</div>${payload.actor ? `<div>Сервитьор: ${Z.esc(payload.actor)}</div>` : ''}${payload.ready_at ? `<div>За час: ${Z.formatDate(payload.ready_at)}</div>` : ''}<hr>${regularRows(payload, staff)}${payload.cancel_reason ? `<hr><b>ОТКАЗ:</b><br>${Z.esc(payload.cancel_reason)}` : ''}${payload.note || payload.order_note ? `<hr><b>БЕЛЕЖКА:</b><br>${Z.esc(payload.note || payload.order_note)}` : ''}${staff && payload.subtotal != null ? `<hr><div class="receipt-row big"><span>ОБЩО</span><span>${Number(payload.subtotal).toFixed(2)} лв.</span></div>` : ''}<hr><div style="text-align:center">powered by SoulFlame</div></div>`;
+    if (job.job_type === 'test') return testReceipt(job);
+    if (job.job_type === 'bill') return billReceipt(job);
+    return stationReceipt(job);
   }
 
   async function claim(id) { return Z.rpc('zorbas_claim_print_job_v4', {p_token: Z.token(), p_job_id: id}); }
   async function ack(id, status, error = null) { return Z.rpc('zorbas_ack_print_job_v4', {p_token: Z.token(), p_job_id: id, p_status: status, p_error: error}); }
 
+  async function createPhoneTest(route) {
+    try {
+      await Z.rpc('zorbas_create_test_print_job_v1', {
+        p_token: Z.token(),
+        p_destination: route
+      });
+      Z.toast(route === 'both' ? 'TEST е изпратен към двата принтера.' : 'TEST е изпратен към принтера.', 'success');
+      await refresh();
+    } catch (error) {
+      Z.toast(error.message, 'error');
+    }
+  }
+
   async function markFailed(id) {
     if (printing) return;
     printing = true;
     let claimed = null;
-    try { claimed = await claim(id); await ack(claimed.id, 'failed', 'Отбелязано ръчно'); Z.toast('Задачата е отбелязана като грешка.', 'error'); }
-    catch (error) { Z.toast(error.message, 'error'); }
-    finally { printing = false; await refresh(); }
+    try {
+      claimed = await claim(id);
+      await ack(claimed.id, 'failed', 'Отбелязано ръчно');
+      Z.toast('Задачата е отбелязана като грешка.', 'error');
+    } catch (error) {
+      Z.toast(error.message, 'error');
+    } finally {
+      printing = false;
+      await refresh();
+    }
   }
 
   async function printJob(id, automatic) {
@@ -185,7 +262,11 @@
       if (claimed?.id) await ack(claimed.id, 'failed', error.message).catch(() => {});
       Z.toast(error.message, 'error');
     } finally {
-      root.style.display = 'none'; root.innerHTML = ''; printing = false; updateControls(); await refresh();
+      root.style.display = 'none';
+      root.innerHTML = '';
+      printing = false;
+      updateControls();
+      await refresh();
     }
   }
 
@@ -194,9 +275,24 @@
     $('loginForm').onsubmit = login;
     $('logoutButton').onclick = Z.logout;
     $('refreshButton').onclick = refresh;
-    $('autoButton').onclick = () => { autoMode = !autoMode; localStorage.setItem(`zorbas_auto_print_${destination}`, autoMode ? '1' : '0'); syncUrl(); updateControls(); if (autoMode) refresh(); };
+    $('testStaffButton').onclick = () => createPhoneTest('staff');
+    $('testKitchenButton').onclick = () => createPhoneTest('kitchen');
+    $('testBothButton').onclick = () => createPhoneTest('both');
+    $('autoButton').onclick = () => {
+      autoMode = !autoMode;
+      localStorage.setItem(`zorbas_auto_print_${destination}`, autoMode ? '1' : '0');
+      syncUrl();
+      updateControls();
+      if (autoMode) refresh();
+    };
     document.querySelectorAll('[data-destination]').forEach(button => {
-      button.onclick = () => { destination = button.dataset.destination; autoMode = localStorage.getItem(`zorbas_auto_print_${destination}`) === '1'; syncUrl(); updateControls(); refresh(); };
+      button.onclick = () => {
+        destination = button.dataset.destination;
+        autoMode = localStorage.getItem(`zorbas_auto_print_${destination}`) === '1';
+        syncUrl();
+        updateControls();
+        refresh();
+      };
     });
     start().catch(() => {});
   });
