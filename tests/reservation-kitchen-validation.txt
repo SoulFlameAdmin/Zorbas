@@ -1,0 +1,1 @@
+Validates the production reservation and kitchen flow through pull-request CI.
