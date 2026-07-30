@@ -23,6 +23,7 @@ jobs:
           node --check admin-order.js
           node --check admin-manager.js
           node --check admin-live-state.js
+          node --check print.js
       - name: Manager screen wiring
         run: |
           grep -q 'data-view="manager"' admin.html
@@ -38,6 +39,13 @@ jobs:
           grep -q 'zorbas_close_visit_v1' admin-manager.js
           grep -q 'zorbas_manager_archive_v1' admin-manager.js
           grep -q 'zorbas_admin_dashboard_v1' admin-manager.js
+      - name: Correction print wiring
+        run: |
+          grep -q "type === 'correction'" print.js
+          grep -q 'КОРЕКЦИЯ / ПРОМЕНЕНО' print.js
+          grep -q 'FormatCorrection' bridge/ZorbasBridge/ReceiptFormatter.cs
+          grep -q '"correction" => "КОРЕКЦИЯ / ПРОМЕНЕНО"' bridge/ZorbasBridge/ReceiptFormatter.cs
+          grep -q 'print.js?v=20260730-correction1' print.html
       - name: Existing waiter regressions
         run: |
           if [ -f tests/waiter-mobile.test.js ]; then node tests/waiter-mobile.test.js; fi
