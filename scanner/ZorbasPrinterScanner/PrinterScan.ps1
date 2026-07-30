@@ -29,9 +29,9 @@ function Read-RegistryValues {
   catch { return @([pscustomobject]@{ Error = $_.Exception.Message }) }
 }
 
-Write-Output '1/8 Windows и Print Spooler'
+Write-Output '1/8 Windows and Print Spooler'
 $metadata = [ordered]@{
-  ScannerVersion = '1.0.0'
+  ScannerVersion = '1.0.1'
   GeneratedAt = (Get-Date).ToString('o')
   ComputerName = $env:COMPUTERNAME
   Windows = [System.Environment]::OSVersion.VersionString
@@ -40,7 +40,7 @@ $metadata = [ordered]@{
 }
 $spooler = Safe-Run { Get-Service -Name Spooler | Select-Object Name, Status, StartType }
 
-Write-Output '2/8 Инсталирани принтери и опашки'
+Write-Output '2/8 Installed printers and queues'
 $win32Printers = @(Safe-Run {
   Get-CimInstance Win32_Printer |
     Sort-Object Name |
@@ -58,7 +58,7 @@ if (Get-Command Get-Printer -ErrorAction SilentlyContinue) {
 
 $defaultPrinter = @($win32Printers | Where-Object { $_.Default -eq $true })
 
-Write-Output '3/8 Портове, IP адреси и драйвери'
+Write-Output '3/8 Ports, IP addresses and drivers'
 $printerPorts = @()
 if (Get-Command Get-PrinterPort -ErrorAction SilentlyContinue) {
   $printerPorts = @(Safe-Run {
@@ -77,7 +77,7 @@ if (Get-Command Get-PrinterDriver -ErrorAction SilentlyContinue) {
   })
 }
 
-Write-Output '4/8 Настройки на хартия и печат'
+Write-Output '4/8 Paper and print settings'
 $printConfigurations = @()
 if ((Get-Command Get-Printer -ErrorAction SilentlyContinue) -and (Get-Command Get-PrintConfiguration -ErrorAction SilentlyContinue)) {
   foreach ($printer in @(Get-Printer -ErrorAction SilentlyContinue)) {
@@ -98,7 +98,7 @@ if ((Get-Command Get-Printer -ErrorAction SilentlyContinue) -and (Get-Command Ge
   }
 }
 
-Write-Output '5/8 USB и PnP устройства'
+Write-Output '5/8 USB and PnP devices'
 $pnpDevices = @(Safe-Run {
   Get-CimInstance Win32_PnPEntity |
     Where-Object {
@@ -135,7 +135,7 @@ $registry = [ordered]@{
   })
 }
 
-Write-Output '7/8 Свързан печатен и POS софтуер'
+Write-Output '7/8 Related printer and POS software'
 $softwarePattern = '(?i)zorbas|restaurant|waiter|kitchen|receipt|thermal|printer|print|pos\b|point.of.sale|sql'
 $installedSoftware = @()
 foreach ($path in @(
@@ -157,7 +157,7 @@ $relatedProcesses = @(Safe-Run {
     Select-Object Name, ProcessId, ExecutablePath
 })
 
-Write-Output '8/8 Мрежови връзки към стандартни printer портове'
+Write-Output '8/8 Network connections to standard printer ports'
 $networkConnections = @()
 if (Get-Command Get-NetTCPConnection -ErrorAction SilentlyContinue) {
   $networkConnections = @(Safe-Run {
@@ -222,5 +222,5 @@ $lines.Add('')
 $lines.Add('Upload the ZIP report to ChatGPT. No data was uploaded automatically.')
 $lines | Set-Content -Path (Join-Path $OutputFolder 'report.txt') -Encoding UTF8
 
-Write-Output 'Отчетът е създаден успешно.'
+Write-Output 'Report created successfully.'
 exit 0
