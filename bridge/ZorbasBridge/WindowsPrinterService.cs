@@ -13,7 +13,7 @@ internal sealed class WindowsPrinterService
     public bool IsPrinterAvailable(string printerName)
     {
         if (string.IsNullOrWhiteSpace(printerName)) return false;
-        using var settings = new PrinterSettings { PrinterName = printerName };
+        var settings = new PrinterSettings { PrinterName = printerName };
         return settings.IsValid;
     }
 
