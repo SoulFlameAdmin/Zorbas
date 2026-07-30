@@ -10,13 +10,13 @@
 
   async function login(event) {
     event.preventDefault();
-    const f = new FormData(event.currentTarget);
+    const form = new FormData(event.currentTarget);
     $('loginMessage').textContent = 'Влизане…';
     try {
       const data = await Z.rpc('zorbas_staff_login', {
-        p_username: f.get('username'),
-        p_password: f.get('password'),
-        p_display_name: f.get('display_name'),
+        p_username: form.get('username'),
+        p_password: form.get('password'),
+        p_display_name: form.get('display_name'),
         p_device_id: Z.deviceId()
       });
       Z.setToken(data.token);
@@ -33,7 +33,7 @@
     history.replaceState(null, '', next);
   }
 
-  function updateControls() {
+  function updateControls(message = '') {
     document.querySelectorAll('[data-destination]').forEach(button => {
       button.classList.toggle('active', button.dataset.destination === destination);
     });
@@ -44,9 +44,9 @@
     }
     const status = $('bridgeStatus');
     if (status) {
-      status.textContent = autoMode
-        ? `Слуша ${destination === 'staff' ? 'Print 1' : 'Print 2'} през 1 секунда.`
-        : 'Ръчен режим — натисни ПЕЧАТ.';
+      status.textContent = message || (autoMode
+        ? `Атомарно слушане на ${destination === 'staff' ? 'Print 1' : 'Print 2'} през 1 секунда.`
+        : 'Ръчен режим — всяка бележка се заключва преди печат.');
     }
   }
 
@@ -55,7 +55,7 @@
     if (!session) return;
     $('loginView').classList.add('hidden');
     $('appView').classList.remove('hidden');
-    $('sessionName').textContent = `${session.display_name} · печатен мост`;
+    $('sessionName').textContent = `${session.display_name} · печатен мост v4`;
     syncUrl();
     updateControls();
     await refresh();
@@ -66,16 +66,17 @@
   async function refresh() {
     if (printing) return;
     try {
-      jobs = await Z.rpc('zorbas_list_print_jobs_v3', {
+      jobs = await Z.rpc('zorbas_list_print_jobs_v4', {
         p_token: Z.token(),
         p_destination: destination
       });
       render();
       if (autoMode) {
-        const next = jobs.find(job => job.status === 'pending');
+        const next = jobs.find(job => ['pending', 'retrying'].includes(job.status) && Number(job.attempts || 0) < Number(job.max_attempts || 3));
         if (next) await printJob(next.id, true);
       }
     } catch (error) {
+      updateControls(`Грешка при опресняване: ${error.message}`);
       Z.toast(error.message, 'error');
     }
   }
@@ -88,25 +89,45 @@
       : 'ПОРЪЧКА';
   }
 
+  function statusText(status) {
+    return ({
+      pending: 'ЧАКА',
+      retrying: 'ПОВТОРЕН ОПИТ',
+      claimed: 'ВЗЕТА',
+      preparing: 'ПОДГОТОВКА',
+      sending: 'ИЗПРАЩАНЕ',
+      printing: 'ПЕЧАТА',
+      printed: 'ОТПЕЧАТАНА',
+      failed: 'ГРЕШКА',
+      cancelled: 'ОТКАЗАНА'
+    })[status] || String(status || '—').toUpperCase();
+  }
+
   function render() {
     $('jobsList').innerHTML = jobs.length ? jobs.map(job => {
       const payload = job.payload || {};
+      const attempts = Number(job.attempts || 0);
+      const maxAttempts = Number(job.max_attempts || 3);
+      const exhausted = attempts >= maxAttempts;
+      const busy = ['claimed', 'preparing', 'sending', 'printing'].includes(job.status);
       return `<article class="order-card">
         <header>
           <div>
             <strong>${title(job.job_type)}</strong>
             <small>${destination === 'staff' ? 'Print 1 · сервитьори' : 'Print 2 · кухня'} · ${Z.formatDate(job.created_at)}</small>
           </div>
-          <span class="badge ${job.status === 'failed' ? 'cancelled' : ''}">${job.status}</span>
+          <span class="badge ${job.status === 'failed' || exhausted ? 'cancelled' : ''}">${statusText(job.status)}</span>
         </header>
         <div class="panel-body">
           <p><b>${payload.order_type === 'pickup' ? 'ПАКЕТ' : `МАСА ${Z.esc(payload.table_number || '—')}`}</b> · №${Z.esc(payload.order_number || '—')}</p>
           <p>${(payload.items || []).map(item => `${item.quantity}× ${Z.esc(item.name)}`).join('<br>')}</p>
+          <p><small>Опити: ${attempts}/${maxAttempts}</small></p>
           ${payload.cancel_reason ? `<p class="notice">ОТКАЗ: ${Z.esc(payload.cancel_reason)}</p>` : ''}
           ${payload.note || payload.order_note ? `<p class="notice">${Z.esc(payload.note || payload.order_note)}</p>` : ''}
+          ${job.last_error ? `<p class="notice">ГРЕШКА: ${Z.esc(job.last_error)}</p>` : ''}
           <div class="toolbar">
-            <button class="btn primary" data-print="${job.id}">ПЕЧАТ</button>
-            <button class="btn red" data-fail="${job.id}">ОТБЕЛЕЖИ ГРЕШКА</button>
+            <button class="btn primary" data-print="${job.id}" ${busy || exhausted ? 'disabled' : ''}>${job.status === 'failed' ? 'ПОВТОРИ' : 'ПЕЧАТ'}</button>
+            <button class="btn red" data-fail="${job.id}" ${busy || exhausted ? 'disabled' : ''}>ОТБЕЛЕЖИ ГРЕШКА</button>
           </div>
         </div>
       </article>`;
@@ -116,13 +137,13 @@
       button.onclick = () => printJob(button.dataset.print, false);
     });
     document.querySelectorAll('[data-fail]').forEach(button => {
-      button.onclick = () => ack(button.dataset.fail, 'failed', 'Отбелязано ръчно');
+      button.onclick = () => markFailed(button.dataset.fail);
     });
   }
 
   function receipt(job) {
     const payload = job.payload || {};
-    const staff = destination === 'staff';
+    const staff = job.destination === 'staff';
     const rows = (payload.items || []).map(item => `
       <div>
         <b>${item.quantity} × ${Z.esc(item.name)}</b>
@@ -152,45 +173,66 @@
     </div>`;
   }
 
+  async function claim(id) {
+    return Z.rpc('zorbas_claim_print_job_v4', {
+      p_token: Z.token(),
+      p_job_id: id
+    });
+  }
+
+  async function ack(id, status, error = null) {
+    return Z.rpc('zorbas_ack_print_job_v4', {
+      p_token: Z.token(),
+      p_job_id: id,
+      p_status: status,
+      p_error: error
+    });
+  }
+
+  async function markFailed(id) {
+    if (printing) return;
+    printing = true;
+    let claimed = null;
+    try {
+      claimed = await claim(id);
+      await ack(claimed.id, 'failed', 'Отбелязано ръчно');
+      Z.toast('Задачата е отбелязана като грешка.', 'error');
+    } catch (error) {
+      Z.toast(error.message, 'error');
+    } finally {
+      printing = false;
+      await refresh();
+    }
+  }
+
   async function printJob(id, automatic) {
     if (printing) return;
-    const job = jobs.find(entry => entry.id === id);
-    if (!job) return;
     printing = true;
+    let claimed = null;
     const root = $('printRoot');
-    root.innerHTML = receipt(job);
-    root.style.display = 'block';
 
     try {
-      await ack(id, 'printing');
-      if (automatic) {
-        const status = $('bridgeStatus');
-        if (status) status.textContent = `Печата бележка №${job.payload?.order_number || '—'}…`;
-      }
+      claimed = await claim(id);
+      root.innerHTML = receipt(claimed);
+      root.style.display = 'block';
+      await ack(claimed.id, 'preparing');
+      updateControls(`Подготвя бележка №${claimed.payload?.order_number || '—'}…`);
+      await ack(claimed.id, 'printing');
+      updateControls(`Печата бележка №${claimed.payload?.order_number || '—'}…`);
       window.print();
-      await ack(id, 'printed');
+      await ack(claimed.id, 'printed');
+      if (!automatic) Z.toast('Бележката е отбелязана като отпечатана.', 'success');
     } catch (error) {
-      await ack(id, 'failed', error.message);
+      if (claimed?.id) {
+        await ack(claimed.id, 'failed', error.message).catch(() => {});
+      }
+      Z.toast(error.message, 'error');
     } finally {
       root.style.display = 'none';
       root.innerHTML = '';
       printing = false;
       updateControls();
       await refresh();
-    }
-  }
-
-  async function ack(id, status, error = null) {
-    try {
-      return await Z.rpc('zorbas_ack_print_job_v3', {
-        p_token: Z.token(),
-        p_job_id: id,
-        p_status: status,
-        p_error: error
-      });
-    } catch (rpcError) {
-      Z.toast(rpcError.message, 'error');
-      throw rpcError;
     }
   }
 
