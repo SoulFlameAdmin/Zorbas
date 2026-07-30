@@ -1,0 +1,42 @@
+name: Reservation and kitchen checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  flow-checks:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Check JavaScript syntax
+        run: |
+          node --check admin.js
+          node --check admin-core.js
+          node --check admin-order.js
+          node --check admin-waiter.js
+          node --check admin-waiter-hook.js
+          node --check admin-waiter-v2.js
+          node --check admin-reservation-arrival.js
+          node --check admin-reservation-refresh.js
+          node --check admin-keyboard-fix-v3.js
+          node --check admin-menu.js
+          node --check kitchen.js
+          node --check print.js
+          node --check public.js
+
+      - name: Test waiter keyboard flow
+        run: node tests/waiter-flow.test.js
+
+      - name: Test reservation and kitchen flow
+        run: node tests/reservation-kitchen-flow.test.js
