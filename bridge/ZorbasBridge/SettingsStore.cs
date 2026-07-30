@@ -8,12 +8,12 @@ namespace SoulFlame.ZorbasBridge;
 internal sealed class BridgeSettings
 {
     public string DeviceId { get; set; } = Guid.NewGuid().ToString("D");
-    public string RestaurantCode { get; set; } = string.Empty;
+    public string RestaurantCode { get; set; } = "sf-zorbas";
     public string RestaurantName { get; set; } = string.Empty;
     public string ProtectedDeviceToken { get; set; } = string.Empty;
-    public string StaffPrinterName { get; set; } = string.Empty;
-    public string KitchenPrinterName { get; set; } = string.Empty;
-    public bool StartMinimized { get; set; }
+    public string StaffPrinterName { get; set; } = "POS-80C";
+    public string KitchenPrinterName { get; set; } = "kitchen";
+    public bool StartMinimized { get; set; } = true;
 
     [JsonIgnore]
     public bool IsPaired => !string.IsNullOrWhiteSpace(RestaurantCode) && !string.IsNullOrWhiteSpace(ProtectedDeviceToken);
@@ -56,11 +56,15 @@ internal sealed class SettingsStore
         {
             var json = File.ReadAllText(_settingsPath, Encoding.UTF8);
             var settings = JsonSerializer.Deserialize<BridgeSettings>(json, JsonOptions) ?? new BridgeSettings();
+            var changed = ApplyZorbasPilotDefaults(settings);
+
             if (string.IsNullOrWhiteSpace(settings.DeviceId))
             {
                 settings.DeviceId = Guid.NewGuid().ToString("D");
-                Save(settings);
+                changed = true;
             }
+
+            if (changed) Save(settings);
             return settings;
         }
         catch
@@ -71,6 +75,37 @@ internal sealed class SettingsStore
             Save(replacement);
             return replacement;
         }
+    }
+
+    private static bool ApplyZorbasPilotDefaults(BridgeSettings settings)
+    {
+        var changed = false;
+
+        if (string.IsNullOrWhiteSpace(settings.RestaurantCode))
+        {
+            settings.RestaurantCode = "sf-zorbas";
+            changed = true;
+        }
+
+        if (string.IsNullOrWhiteSpace(settings.StaffPrinterName))
+        {
+            settings.StaffPrinterName = "POS-80C";
+            changed = true;
+        }
+
+        if (string.IsNullOrWhiteSpace(settings.KitchenPrinterName))
+        {
+            settings.KitchenPrinterName = "kitchen";
+            changed = true;
+        }
+
+        if (!settings.StartMinimized)
+        {
+            settings.StartMinimized = true;
+            changed = true;
+        }
+
+        return changed;
     }
 
     public void Save(BridgeSettings settings)
@@ -121,9 +156,12 @@ internal sealed class SettingsStore
 
     public void ClearPairing(BridgeSettings settings)
     {
-        settings.RestaurantCode = string.Empty;
+        settings.RestaurantCode = "sf-zorbas";
         settings.RestaurantName = string.Empty;
         settings.ProtectedDeviceToken = string.Empty;
+        settings.StaffPrinterName = "POS-80C";
+        settings.KitchenPrinterName = "kitchen";
+        settings.StartMinimized = true;
         Save(settings);
     }
 }
