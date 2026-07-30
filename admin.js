@@ -1,7 +1,8 @@
 (() => {
   const files = [
     '/admin-core.js',
-    '/admin-order.js',
+    '/admin-order.js?v=20260730-routing2',
+    '/admin-auto-routing.js?v=20260730-routing2',
     '/admin-waiter.js?v=20260730-waiter1',
     '/admin-waiter-hook.js?v=20260730-waiter1',
     '/admin-waiter-v2.js?v=20260730-waiter2',
