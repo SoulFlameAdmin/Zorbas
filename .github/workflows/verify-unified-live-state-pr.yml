@@ -1,0 +1,36 @@
+name: Verify unified live state
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify JavaScript syntax
+        run: |
+          node --check live-sync.js
+          node --check admin-live-state.js
+          node --check kitchen-live.js
+          node --check reserve-live.js
+          node --check admin.js
+          node --check kitchen.js
+          node --check reserve.js
+      - name: Verify every screen is connected
+        run: |
+          grep -q 'live-sync.js?v=20260730-live1' admin.html
+          grep -q 'admin-live-state.js?v=20260730-live1' admin.js
+          grep -q 'live-sync.js?v=20260730-live1' kitchen.html
+          grep -q 'kitchen-live.js?v=20260730-live1' kitchen.html
+          grep -q 'live-sync.js?v=20260730-live1' reserve.html
+          grep -q 'reserve-live.js?v=20260730-live1' reserve.html
+          grep -q 'zorbas_live_version' live-sync.js
+          grep -q 'zorbas_live_updates' live-sync.js
