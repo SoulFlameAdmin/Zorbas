@@ -59,9 +59,9 @@ internal sealed class WindowsPrinterService
             using var brush = new SolidBrush(Color.Black);
 
             var lineHeight = Math.Max(font.GetHeight(graphics) + 1.5f, 12f);
-            var x = eventArgs.MarginBounds.Left;
-            var y = eventArgs.MarginBounds.Top;
-            var bottom = eventArgs.MarginBounds.Bottom;
+            var x = (float)eventArgs.MarginBounds.Left;
+            var y = (float)eventArgs.MarginBounds.Top;
+            var bottom = (float)eventArgs.MarginBounds.Bottom;
 
             while (lineIndex < lines.Count)
             {
