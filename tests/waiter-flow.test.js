@@ -104,7 +104,7 @@ assert.strictEqual(focusCount, 1, 'Input must regain focus after accepting an it
 vm.runInContext('waiterState.cart[0].quantity += 1; renderWaiterMobile();', context);
 assert.strictEqual(context.renderCount, 2, 'Quantity change must rerender');
 
-// A second shorthand with an explicit quantity must merge into the existing line.
+// A repeated accepted item must merge into the existing line and add its explicit quantity.
 vm.runInContext(`
   waiterState.query = '2 S';
   waiterState.candidate = snapshot.items[0];
@@ -122,6 +122,6 @@ assert.strictEqual(context.renderCount, 4, 'Preview navigation must rerender');
 const loader = fs.readFileSync('admin.js', 'utf8');
 const entry = fs.readFileSync('waiter.html', 'utf8');
 assert(loader.includes('admin-keyboard-fix-v3.js'), 'Admin loader must use keyboard fix v3');
-assert(entry.includes('20260730-keyboard3'), 'Waiter entry must force the fresh loader');
+assert(entry.includes('20260730-reservation1'), 'Waiter entry must force the fresh reservation loader');
 
 console.log('WAITER_FLOW_TEST_OK');
