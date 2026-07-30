@@ -1,5 +1,5 @@
 (() => {
-  const files = ['/admin-core.js', '/admin-order.js', '/admin-waiter.js?v=20260730-waiter1', '/admin-waiter-hook.js?v=20260730-waiter1', '/admin-waiter-v2.js?v=20260730-waiter2', '/admin-menu.js'];
+  const files = ['/admin-core.js', '/admin-order.js', '/admin-waiter.js?v=20260730-waiter1', '/admin-waiter-hook.js?v=20260730-waiter1', '/admin-waiter-v2.js?v=20260730-waiter2', '/admin-keyboard-fix.js?v=20260730-keyboard1', '/admin-menu.js'];
   const load = src => new Promise((resolve, reject) => {
     const script = document.createElement('script');
     script.src = src;
