@@ -44,7 +44,7 @@ jobs:
           grep -q "type === 'correction'" print.js
           grep -q 'КОРЕКЦИЯ / ПРОМЕНЕНО' print.js
           grep -q 'FormatCorrection' bridge/ZorbasBridge/ReceiptFormatter.cs
-          grep -q '"correction" => "КОРЕКЦИЯ / ПРОМЕНЕНО"' bridge/ZorbasBridge/ReceiptFormatter.cs
+          grep -q 'icash-kitchen-correction-v2' bridge/ZorbasBridge/ReceiptFormatter.cs
           grep -q 'print.js?v=20260730-correction1' print.html
       - name: Existing waiter regressions
         run: |
