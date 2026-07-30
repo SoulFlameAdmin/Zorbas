@@ -1,0 +1,25 @@
+@media (max-width:650px){
+  .waiter-table-card.reserved{background:linear-gradient(145deg,#5e4711,#2e250d)!important;border-color:#e8bb47!important;box-shadow:0 0 0 1px #e8bb4738,0 14px 28px #0007!important;color:#fff5cf!important}
+  .waiter-table-card.reserved small{color:#ffd971!important;font-weight:800!important}
+  .waiter-table-card.reserved strong{color:white!important}
+  .waiter-table-card.reserved span{color:#ffe6a2!important}
+  .waiter-reserved-badge{background:#6d5214!important;border:1px solid #e8bb47!important;color:#ffe7a4!important;font-weight:900!important}
+  .waiter-arrival-card{margin:18px 20px 120px;padding:22px;border:1px solid #33445d;border-radius:26px;background:linear-gradient(180deg,#172334,#101824);box-shadow:0 22px 48px #0008}
+  .waiter-arrival-card header{display:flex;justify-content:space-between;gap:18px;align-items:flex-start;padding-bottom:18px;border-bottom:1px solid #304057}
+  .waiter-arrival-card header small,.waiter-arrival-food>small{display:block;color:#91a0b6;letter-spacing:.14em;font-size:12px;font-weight:800}
+  .waiter-arrival-card h4{font-size:28px;margin:7px 0 0;color:white}
+  .waiter-arrival-card header strong{font-size:21px;color:#ffd66d;white-space:nowrap}
+  .waiter-arrival-meta{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:18px 0}
+  .waiter-arrival-meta span{padding:13px;border:1px solid #33445d;border-radius:14px;background:#0d1520;color:#e6edf7;font-weight:700}
+  .waiter-arrival-note{padding:14px;border-radius:14px;background:#3a2a0d;border:1px solid #77591e;color:#ffe0a0}
+  .waiter-arrival-food{margin-top:20px;padding-top:18px;border-top:1px solid #304057}
+  .waiter-arrival-food ul{list-style:none;padding:0;margin:13px 0 0}
+  .waiter-arrival-food li{display:grid;grid-template-columns:auto 1fr;gap:9px;padding:11px 0;border-bottom:1px solid #29374a;color:#f4f7fb}
+  .waiter-arrival-food li small{grid-column:2;color:#f1b96b}
+  .waiter-arrival-food p{color:#98a5b8}
+  .waiter-arrived-button{width:100%;min-height:86px;margin-top:24px;border:0;border-radius:20px;background:linear-gradient(135deg,#4db17d,#2b895b);color:white;display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:14px;align-items:center;text-align:left;padding:16px 20px;box-shadow:0 14px 28px #174b3470}
+  .waiter-arrived-button span{grid-row:1/3;font-size:37px}
+  .waiter-arrived-button strong{font-size:25px;letter-spacing:.08em}
+  .waiter-arrived-button small{font-size:13px;color:#d9ffea}
+  .waiter-arrived-button:disabled{opacity:.65}
+}
