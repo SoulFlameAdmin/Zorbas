@@ -26,6 +26,14 @@
     };
   }
 
+  if (typeof reservationForTable === 'function') {
+    reservationForTable = function unifiedReservationForTable(tableId) {
+      const table = snapshot?.tables?.find(entry => entry.id === tableId);
+      if (table?.live_state !== 'reserved' || !table?.reservation_id) return null;
+      return snapshot?.reservations?.find(entry => entry.id === table.reservation_id) || null;
+    };
+  }
+
   function tableState(table) {
     if (['available','reserved','occupied','blocked'].includes(table?.live_state)) return table.live_state;
     if (table?.status === 'blocked') return 'blocked';
@@ -108,4 +116,8 @@
 
   window.ZorbasLive?.subscribe(syncLiveState);
   ensureLegend();
+  if (snapshot) {
+    renderMap();
+    if (typeof renderWaiterMobile === 'function') renderWaiterMobile();
+  }
 })();
