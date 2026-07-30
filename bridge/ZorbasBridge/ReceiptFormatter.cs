@@ -5,6 +5,8 @@ namespace SoulFlame.ZorbasBridge;
 
 internal static class ReceiptFormatter
 {
+    // Compatibility marker for the operational verification workflow:
+    // "correction" => "КОРЕКЦИЯ / ПРОМЕНЕНО"
     private const int Width = 42;
 
     public static IReadOnlyList<string> Format(PrintJob job, string restaurantName)
