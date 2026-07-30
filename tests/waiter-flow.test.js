@@ -104,9 +104,19 @@ assert.strictEqual(focusCount, 1, 'Input must regain focus after accepting an it
 vm.runInContext('waiterState.cart[0].quantity += 1; renderWaiterMobile();', context);
 assert.strictEqual(context.renderCount, 2, 'Quantity change must rerender');
 
+// A second shorthand with an explicit quantity must merge into the existing line.
+vm.runInContext(`
+  waiterState.query = '2 S';
+  waiterState.candidate = snapshot.items[0];
+  acceptWaiterItem(waiterState.candidate);
+`, context);
+assert.strictEqual(vm.runInContext('waiterState.cart.length', context), 1, 'Repeated item must stay on one line');
+assert.strictEqual(vm.runInContext('waiterState.cart[0].quantity', context), 4, 'Explicit quantity must be added');
+assert.strictEqual(context.renderCount, 3, 'Second ✓ must rerender');
+
 // Preview navigation is meaningful and must never be swallowed by the keyboard guard.
 vm.runInContext("waiterState.step = 'preview'; renderWaiterMobile();", context);
-assert.strictEqual(context.renderCount, 3, 'Preview navigation must rerender');
+assert.strictEqual(context.renderCount, 4, 'Preview navigation must rerender');
 
 // Static wiring checks for the deployed waiter entry and current guard.
 const loader = fs.readFileSync('admin.js', 'utf8');
