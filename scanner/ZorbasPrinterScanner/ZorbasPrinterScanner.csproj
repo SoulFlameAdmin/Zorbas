@@ -21,4 +21,7 @@
     <PublishTrimmed>false</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
   </PropertyGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="PrinterScan.ps1" LogicalName="SoulFlame.ZorbasPrinterScanner.PrinterScan.ps1" />
+  </ItemGroup>
 </Project>
