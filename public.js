@@ -186,3 +186,4 @@ boot();
     setTimeout(() => successRoot.scrollIntoView({behavior:'smooth', block:'center'}), 80);
   }).observe(successRoot, {childList:true, subtree:true});
 })();
+;(()=>{if(document.querySelector('script[data-crv3]'))return;const s=document.createElement('script');s.src='/reservation-mobile-v3.js?v=20260730-1';s.dataset.crv3='1';document.head.appendChild(s)})();
