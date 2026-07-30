@@ -1,0 +1,99 @@
+name: Build Zorbas Bridge
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - feature/zorbas-bridge-exe
+    paths:
+      - "bridge/**"
+      - ".github/workflows/build-zorbas-bridge.yml"
+  pull_request:
+    paths:
+      - "bridge/**"
+      - ".github/workflows/build-zorbas-bridge.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zorbas-bridge-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-windows-x64:
+    runs-on: windows-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Restore
+        run: dotnet restore bridge/ZorbasBridge/ZorbasBridge.csproj
+
+      - name: Publish self-contained EXE
+        shell: pwsh
+        run: |
+          $output = Join-Path $PWD "bridge/artifacts/win-x64"
+          New-Item -ItemType Directory -Force -Path $output | Out-Null
+          dotnet publish bridge/ZorbasBridge/ZorbasBridge.csproj `
+            --configuration Release `
+            --runtime win-x64 `
+            --self-contained true `
+            --output $output `
+            -p:PublishSingleFile=true `
+            -p:PublishTrimmed=false `
+            -p:IncludeNativeLibrariesForSelfExtract=true
+          if (-not (Test-Path (Join-Path $output "ZorbasBridge.exe"))) {
+            throw "ZorbasBridge.exe was not produced."
+          }
+
+      - name: Install Inno Setup
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            choco install innosetup --no-progress -y
+          }
+          if (-not (Test-Path $iscc)) {
+            throw "Inno Setup compiler was not found."
+          }
+
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          & $iscc "bridge/installer/ZorbasBridge.iss"
+          $setup = Join-Path $PWD "bridge/artifacts/installer/Zorbas-Bridge-Setup.exe"
+          if (-not (Test-Path $setup)) {
+            throw "Zorbas-Bridge-Setup.exe was not produced."
+          }
+
+      - name: Create SHA-256 checksums
+        shell: pwsh
+        run: |
+          $exe = Join-Path $PWD "bridge/artifacts/win-x64/ZorbasBridge.exe"
+          $setup = Join-Path $PWD "bridge/artifacts/installer/Zorbas-Bridge-Setup.exe"
+          $lines = @(
+            "$(Get-FileHash $exe -Algorithm SHA256 | Select-Object -ExpandProperty Hash)  ZorbasBridge.exe",
+            "$(Get-FileHash $setup -Algorithm SHA256 | Select-Object -ExpandProperty Hash)  Zorbas-Bridge-Setup.exe"
+          )
+          $lines | Set-Content -Path "bridge/artifacts/SHA256SUMS.txt" -Encoding ascii
+
+      - name: Upload Windows package
+        uses: actions/upload-artifact@v4
+        with:
+          name: Zorbas-Bridge-windows-x64
+          path: |
+            bridge/artifacts/win-x64/ZorbasBridge.exe
+            bridge/artifacts/installer/Zorbas-Bridge-Setup.exe
+            bridge/artifacts/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14
