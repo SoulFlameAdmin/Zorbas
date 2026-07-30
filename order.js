@@ -54,6 +54,10 @@
     return catalog.items.find(item => item.id === id);
   }
 
+  function cartRowById(id) {
+    return cart.find(entry => entry.menu_item_id === id);
+  }
+
   function categoryHasItems(id) {
     return catalog.items.some(item => item.category_id === id);
   }
@@ -110,6 +114,33 @@
     });
   }
 
+  function quantityAction(item) {
+    if (!item.available_for_pickup) {
+      return '<span class="restaurant-only">Само в ресторанта</span>';
+    }
+
+    const row = cartRowById(item.id);
+    if (!row) {
+      return `<button class="add-button" type="button" data-add="${Z.esc(item.id)}" aria-label="Добави ${Z.esc(item.name)} в количката">+</button>`;
+    }
+
+    return `
+      <div class="quantity-stepper" role="group" aria-label="Количество за ${Z.esc(item.name)}">
+        <button class="quantity-button" type="button" data-decrease="${Z.esc(item.id)}" aria-label="Намали ${Z.esc(item.name)}">−</button>
+        <input
+          class="quantity-input"
+          type="number"
+          inputmode="numeric"
+          min="1"
+          max="99"
+          value="${row.quantity}"
+          data-quantity="${Z.esc(item.id)}"
+          aria-label="Въведи количество за ${Z.esc(item.name)}">
+        <button class="quantity-button quantity-button-plus" type="button" data-increase="${Z.esc(item.id)}" aria-label="Добави още ${Z.esc(item.name)}">+</button>
+      </div>
+    `;
+  }
+
   function renderMenu() {
     const items = visibleItems();
     menuState.hidden = true;
@@ -117,18 +148,15 @@
       const visual = item.image_url
         ? `<img src="${Z.esc(item.image_url)}" alt="" loading="lazy">`
         : `<span aria-hidden="true">${foodEmoji(item)}</span>`;
-      const action = item.available_for_pickup
-        ? `<button class="add-button" type="button" data-add="${Z.esc(item.id)}" aria-label="Добави ${Z.esc(item.name)} в количката">+</button>`
-        : '<span class="restaurant-only">Само в ресторанта</span>';
       return `
-        <article class="menu-item">
+        <article class="menu-item ${cartRowById(item.id) ? 'has-quantity' : ''}">
           <div class="item-visual">${visual}</div>
           <div class="item-copy">
             <h3>${Z.esc(item.name)}</h3>
             ${item.description ? `<p>${Z.esc(item.description)}</p>` : ''}
             <strong class="item-price">${priceText(item)}</strong>
           </div>
-          <div class="item-action">${action}</div>
+          <div class="item-action">${quantityAction(item)}</div>
         </article>
       `;
     }).join('');
@@ -141,13 +169,26 @@
     menuList.querySelectorAll('[data-add]').forEach(button => {
       button.addEventListener('click', () => addItem(button.dataset.add));
     });
+    menuList.querySelectorAll('[data-decrease]').forEach(button => {
+      button.addEventListener('click', () => changeQuantity(button.dataset.decrease, -1));
+    });
+    menuList.querySelectorAll('[data-increase]').forEach(button => {
+      button.addEventListener('click', () => changeQuantity(button.dataset.increase, 1));
+    });
+    menuList.querySelectorAll('[data-quantity]').forEach(input => {
+      input.addEventListener('focus', () => input.select());
+      input.addEventListener('change', () => setQuantity(input.dataset.quantity, input.value));
+      input.addEventListener('keydown', event => {
+        if (event.key === 'Enter') input.blur();
+      });
+    });
   }
 
   function addItem(id) {
     const item = itemById(id);
     if (!item || !item.available_for_pickup) return;
 
-    const row = cart.find(entry => entry.menu_item_id === id);
+    const row = cartRowById(id);
     if (row) {
       row.quantity = Math.min(99, row.quantity + 1);
     } else {
@@ -157,10 +198,46 @@
         note: '',
         meta: {mode: item.quantity_mode === 'piece' ? 'piece' : 'portion'}
       });
+      Z.toast(`${item.name} е добавено в количката.`, 'success');
+    }
+
+    navigator.vibrate?.(15);
+    renderCartSummary();
+    renderMenu();
+  }
+
+  function changeQuantity(id, delta) {
+    const row = cartRowById(id);
+    if (!row) {
+      if (delta > 0) addItem(id);
+      return;
+    }
+
+    const nextQuantity = Math.min(99, row.quantity + delta);
+    if (nextQuantity <= 0) {
+      cart = cart.filter(entry => entry.menu_item_id !== id);
+    } else {
+      row.quantity = nextQuantity;
+    }
+
+    navigator.vibrate?.(10);
+    renderCartSummary();
+    renderMenu();
+  }
+
+  function setQuantity(id, value) {
+    const row = cartRowById(id);
+    if (!row) return;
+
+    const parsed = Number.parseInt(value, 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      cart = cart.filter(entry => entry.menu_item_id !== id);
+    } else {
+      row.quantity = Math.min(99, parsed);
     }
 
     renderCartSummary();
-    Z.toast(`${item.name} е добавено в количката.`, 'success');
+    renderMenu();
   }
 
   function renderCartSummary() {
