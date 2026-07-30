@@ -114,3 +114,75 @@ document.getElementById('showPoll').onclick=()=>document.getElementById('pollBox
 document.getElementById('voteDelivery').onclick=async()=>{try{const d=await Z.rpc('zorbas_vote_delivery',{p_device_id:Z.deviceId()});Z.toast(d.accepted?'Гласът е отчетен.':'От това устройство вече има глас.',d.accepted?'success':'info');loadPoll();}catch(error){Z.toast(error.message,'error');}};
 
 boot();
+
+(() => {
+  const stateLabels = {available:'СВОБОДНА', reserved:'РЕЗЕРВИРАНА', occupied:'ЗАЕТА'};
+  const stateOrder = {available:0, reserved:1, occupied:2};
+  const style = document.createElement('style');
+  style.textContent = `
+    .area-map.public-reservation-grid{display:grid;grid-template-columns:repeat(4,minmax(130px,1fr));gap:14px;min-height:0!important;aspect-ratio:auto!important;padding:112px 18px 22px;overflow:visible;background:#0b111b;border-radius:24px}
+    .public-reservation-grid .reservation-map-head{position:absolute;inset:18px 18px auto;display:grid;gap:13px;color:#fff}
+    .public-reservation-grid .reservation-map-title{display:flex;align-items:end;justify-content:space-between;gap:12px}
+    .public-reservation-grid .reservation-map-title strong{font-family:Forum,serif;font-size:32px;font-weight:400}
+    .public-reservation-grid .reservation-map-title small{color:#9ca7b7;font-size:11px}
+    .public-reservation-grid .reserve-progress{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+    .public-reservation-grid .reserve-step{display:flex;align-items:center;justify-content:center;gap:6px;min-height:34px;border:1px solid #263448;border-radius:999px;color:#8f9bab;font-size:10px;font-weight:800}
+    .public-reservation-grid .reserve-step.done{border-color:#285842;background:#17392d;color:#a9ddbf}.public-reservation-grid .reserve-step.active{border-color:#708dc0;background:#516f9e;color:#fff}
+    .public-reservation-grid .table-node{position:relative!important;inset:auto!important;left:auto!important;top:auto!important;width:auto!important;height:auto!important;min-height:148px!important;padding:18px 10px!important;border:1px solid transparent!important;border-radius:22px!important;transform:none!important;display:flex!important;flex-direction:column;justify-content:center;align-items:center;gap:14px;box-shadow:none!important;overflow:hidden;opacity:1!important}
+    .public-reservation-grid .table-node .chair{display:none!important}.public-reservation-grid .table-node>span{display:grid;gap:8px;place-items:center}.public-reservation-grid .table-node strong{font-size:44px;font-weight:500;line-height:1}.public-reservation-grid .table-node small{font-size:12px;color:#aeb7c5;font-weight:500}
+    .public-reservation-grid .table-state-pill{position:absolute;top:16px;padding:6px 11px;border-radius:999px;font-size:9px;font-weight:800;letter-spacing:.03em}
+    .public-reservation-grid .state-available{background:linear-gradient(160deg,#142a29,#111b27)!important;border-color:#285947!important;color:#fff}.public-reservation-grid .state-available .table-state-pill{background:#1e4036;color:#aee0c4}
+    .public-reservation-grid .state-reserved{background:linear-gradient(160deg,#403416,#211f25)!important;border-color:#806a27!important;color:#fff}.public-reservation-grid .state-reserved .table-state-pill{background:#5b491c;color:#ffe08a}
+    .public-reservation-grid .state-occupied{background:linear-gradient(160deg,#3a2028,#1b1b25)!important;border-color:#6c3543!important;color:#fff}.public-reservation-grid .state-occupied .table-state-pill{background:#512a34;color:#f3aebd}
+    .public-reservation-grid .table-node.selected{outline:4px solid #84a8e7!important;outline-offset:2px}.public-reservation-grid .table-node.capacity-blocked{filter:saturate(.45);opacity:.56!important}.public-reservation-grid .table-node:not(:disabled):active{transform:scale(.97)!important}
+    .public-reservation-grid .reservation-legend{display:flex;flex-wrap:wrap;gap:10px;color:#aeb7c5;font-size:10px}.public-reservation-grid .reservation-legend span{display:inline-flex;align-items:center;gap:5px}.public-reservation-grid .reservation-legend i{width:9px;height:9px;border-radius:50%}.public-reservation-grid .reservation-legend .free{background:#45a879}.public-reservation-grid .reservation-legend .reserved{background:#d2aa37}.public-reservation-grid .reservation-legend .occupied{background:#c65a70}
+    #reserveDetails:not(.hidden){margin-top:18px;padding:18px;border:1px solid #d2cdc4;border-radius:20px;background:#fff}#selectedTableText{font-weight:800;color:#335d94}#reservationSuccess .action{width:100%;margin-top:10px;border-radius:14px;min-height:58px}
+    @media(max-width:760px){.area-map.public-reservation-grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;padding:116px 10px 14px;border-radius:20px}.public-reservation-grid .reservation-map-head{inset:14px 12px auto}.public-reservation-grid .reservation-map-title strong{font-size:27px}.public-reservation-grid .table-node{min-height:139px!important;border-radius:19px!important;padding:16px 5px!important}.public-reservation-grid .table-node strong{font-size:39px}.public-reservation-grid .table-state-pill{top:13px;padding:5px 8px;font-size:8px}.public-reservation-grid .table-node small{font-size:10px}.public-reservation-grid .reserve-step{font-size:8px;gap:4px}.public-reservation-grid .reservation-legend{display:none}}
+    @media(max-width:365px){.area-map.public-reservation-grid{grid-template-columns:repeat(2,minmax(0,1fr));padding-top:118px}.public-reservation-grid .table-node{min-height:145px!important}}
+  `;
+  document.head.appendChild(style);
+
+  renderPublicMap = function renderPublicReservationCards() {
+    const map = document.getElementById('publicTableMap');
+    const area = catalog.areas.find(entry => entry.id === selectedArea);
+    const guests = Math.max(1, Number(document.querySelector('#reserveSearch [name=guests]')?.value || 1));
+    const tables = availability
+      .filter(table => table.area_id === selectedArea)
+      .map(table => ({...table, state: table.state || (table.available ? 'available' : 'reserved')}))
+      .sort((a,b) => (stateOrder[a.state] ?? 9) - (stateOrder[b.state] ?? 9) || String(a.table_number).localeCompare(String(b.table_number), 'bg', {numeric:true}));
+
+    map.className = 'area-map public-reservation-grid';
+    map.style.aspectRatio = 'auto';
+    map.innerHTML = `
+      <div class="reservation-map-head">
+        <div class="reservation-map-title"><div><small>ИЗБЕРИ МАСА</small><strong>${Z.esc(area?.name || 'Зона')}</strong></div><small>${tables.length} маси</small></div>
+        <div class="reserve-progress"><span class="reserve-step done">✓ Час</span><span class="reserve-step active">2 Маса</span><span class="reserve-step">3 Храна</span></div>
+        <div class="reservation-legend"><span><i class="free"></i>Свободна</span><span><i class="reserved"></i>Резервирана</span><span><i class="occupied"></i>Заета</span></div>
+      </div>
+      ${tables.map(table => {
+        const state = table.state;
+        const fits = Number(table.seats || 0) >= guests;
+        const selectable = state === 'available' && fits;
+        const label = state === 'available' && !fits ? `МАЛКА ЗА ${guests}` : (stateLabels[state] || 'НЕСВОБОДНА');
+        return `<button type="button" class="table-node state-${state} ${selectedTable===table.id?'selected':''} ${!fits&&state==='available'?'capacity-blocked':''}" data-table="${table.id}" ${selectable?'':'disabled'} aria-label="Маса ${Z.esc(table.table_number)}, ${label}, ${table.seats} места"><span class="table-state-pill">${label}</span><span><strong>${Z.esc(table.table_number)}</strong><small>${table.seats} места</small></span></button>`;
+      }).join('') || '<p class="status">Няма маси в тази зона.</p>'}`;
+
+    map.querySelectorAll('[data-table]:not(:disabled)').forEach(button => button.onclick = () => {
+      selectedTable = button.dataset.table;
+      renderPublicMap();
+      const table = availability.find(entry => entry.id === selectedTable);
+      document.getElementById('selectedTableText').textContent = `Избрана: ${area?.name || ''} · Маса ${table.table_number} · ${table.seats} места`;
+      const details = document.getElementById('reserveDetails');
+      details.classList.remove('hidden');
+      setTimeout(() => details.scrollIntoView({behavior:'smooth', block:'start'}), 80);
+    });
+  };
+
+  const successRoot = document.getElementById('reservationSuccess');
+  if (successRoot) new MutationObserver(() => {
+    const addFood = document.getElementById('addPreorder');
+    if (!addFood) return;
+    addFood.textContent = '🍽 ИЗБЕРИ ХРАНА ЗА РЕЗЕРВАЦИЯТА';
+    setTimeout(() => successRoot.scrollIntoView({behavior:'smooth', block:'center'}), 80);
+  }).observe(successRoot, {childList:true, subtree:true});
+})();
