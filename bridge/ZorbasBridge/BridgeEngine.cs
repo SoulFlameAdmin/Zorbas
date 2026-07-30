@@ -39,16 +39,12 @@ internal sealed class BridgeEngine : IAsyncDisposable
         try
         {
             if (IsRunning) return;
-
-            var token = RequireDeviceToken();
-            _config = await _client.GetConfigAsync(_settings.DeviceId, token, cancellationToken).ConfigureAwait(false);
-            SaveRestaurantIdentity(_config);
-            ConfigChanged?.Invoke(_config);
-            ConnectionChanged?.Invoke(true, "Свързан със SoulFlame");
+            _ = RequireDeviceToken();
 
             _runCancellation = new CancellationTokenSource();
             _runTask = RunLoopAsync(_runCancellation.Token);
-            _log.Info($"Bridge стартира за {_config.Restaurant.Name} ({_config.Restaurant.Code}) в режим {BridgeModes.Label(_config.Restaurant.OperatingMode)}.");
+            ConnectionChanged?.Invoke(false, "Bridge стартира и чака връзка…");
+            _log.Info("Bridge фоновият процес стартира. При липса на интернет ще опитва отново автоматично.");
         }
         finally
         {
@@ -129,6 +125,17 @@ internal sealed class BridgeEngine : IAsyncDisposable
                 var now = DateTimeOffset.UtcNow;
                 var token = RequireDeviceToken();
 
+                if (_config is null || now >= nextConfigRefresh)
+                {
+                    _config = await _client.GetConfigAsync(
+                        _settings.DeviceId,
+                        token,
+                        cancellationToken).ConfigureAwait(false);
+                    SaveRestaurantIdentity(_config);
+                    ConfigChanged?.Invoke(_config);
+                    nextConfigRefresh = now.AddSeconds(15);
+                }
+
                 if (now >= nextHeartbeat)
                 {
                     await _client.HeartbeatAsync(
@@ -139,32 +146,32 @@ internal sealed class BridgeEngine : IAsyncDisposable
                         new
                         {
                             staff_printer = _settings.StaffPrinterName,
-                            kitchen_printer = _settings.KitchenPrinterName
+                            kitchen_printer = _settings.KitchenPrinterName,
+                            kitchen_endpoint = "192.168.0.98:9100"
                         },
                         cancellationToken).ConfigureAwait(false);
                     nextHeartbeat = now.AddSeconds(20);
                     ConnectionChanged?.Invoke(true, "Bridge онлайн");
                 }
 
-                if (now >= nextConfigRefresh)
+                var mode = _config.Restaurant.OperatingMode;
+                if (mode == BridgeModes.Legacy)
                 {
-                    _config = await _client.GetConfigAsync(_settings.DeviceId, token, cancellationToken).ConfigureAwait(false);
-                    SaveRestaurantIdentity(_config);
-                    ConfigChanged?.Invoke(_config);
-                    nextConfigRefresh = now.AddSeconds(15);
-                }
-
-                var mode = _config?.Restaurant.OperatingMode ?? BridgeModes.TestNoPrint;
-                if (BridgeModes.ProcessesQueue(mode))
-                {
-                    await ProcessDestinationAsync("staff", cancellationToken).ConfigureAwait(false);
-                    await ProcessDestinationAsync("kitchen", cancellationToken).ConfigureAwait(false);
+                    ActivityChanged?.Invoke("Старата система е активна. Новият печат е спрян.");
                 }
                 else
                 {
-                    ActivityChanged?.Invoke(mode == BridgeModes.Legacy
-                        ? "Старата система е активна. Новият печат е спрян."
-                        : "Тест без печат. Опашката не се взема.");
+                    var staffPrinted = await ProcessDestinationAsync("staff", cancellationToken).ConfigureAwait(false);
+                    var kitchenPrinted = await ProcessDestinationAsync("kitchen", cancellationToken).ConfigureAwait(false);
+
+                    if (!staffPrinted && !kitchenPrinted && mode == BridgeModes.TestNoPrint)
+                    {
+                        ActivityChanged?.Invoke("Тестов режим: приема само TEST от телефона.");
+                    }
+                    else if (!staffPrinted && !kitchenPrinted)
+                    {
+                        ActivityChanged?.Invoke("Bridge онлайн · чака бележки.");
+                    }
                 }
 
                 await Task.Delay(1000, cancellationToken).ConfigureAwait(false);
@@ -175,14 +182,15 @@ internal sealed class BridgeEngine : IAsyncDisposable
             }
             catch (Exception error)
             {
-                ConnectionChanged?.Invoke(false, error.Message);
+                ConnectionChanged?.Invoke(false, "Няма връзка · автоматичен нов опит");
+                ActivityChanged?.Invoke("Ще опита отново след 5 секунди.");
                 _log.Error(error.Message);
                 await Task.Delay(TimeSpan.FromSeconds(5), cancellationToken).ConfigureAwait(false);
             }
         }
     }
 
-    private async Task ProcessDestinationAsync(string destination, CancellationToken cancellationToken)
+    private async Task<bool> ProcessDestinationAsync(string destination, CancellationToken cancellationToken)
     {
         var printerName = GetPrinterName(destination);
         if (string.IsNullOrWhiteSpace(printerName) || !_printerService.IsPrinterAvailable(printerName))
@@ -190,7 +198,7 @@ internal sealed class BridgeEngine : IAsyncDisposable
             ActivityChanged?.Invoke(destination == "kitchen"
                 ? "Print 2 не е избран или не е наличен."
                 : "Print 1 не е избран или не е наличен.");
-            return;
+            return false;
         }
 
         var token = RequireDeviceToken();
@@ -200,11 +208,11 @@ internal sealed class BridgeEngine : IAsyncDisposable
             destination,
             cancellationToken).ConfigureAwait(false);
 
-        if (job is null) return;
+        if (job is null) return false;
 
         var orderNumber = ReadOrderNumber(job);
-        ActivityChanged?.Invoke($"{(destination == "kitchen" ? "Print 2" : "Print 1")}: поръчка №{orderNumber}");
-        _log.Info($"Взета е задача {job.Id} за {destination}, поръчка №{orderNumber}, опит {job.Attempts}/{job.MaxAttempts}.");
+        ActivityChanged?.Invoke($"{(destination == "kitchen" ? "Print 2" : "Print 1")}: бележка №{orderNumber}");
+        _log.Info($"Взета е задача {job.Id} за {destination}, №{orderNumber}, опит {job.Attempts}/{job.MaxAttempts}.");
 
         try
         {
@@ -215,7 +223,9 @@ internal sealed class BridgeEngine : IAsyncDisposable
                 "preparing",
                 cancellationToken: cancellationToken).ConfigureAwait(false);
 
-            var lines = ReceiptFormatter.Format(job, _config?.Restaurant.Name ?? _settings.RestaurantName);
+            var lines = ReceiptFormatter.Format(
+                job,
+                _config?.Restaurant.Name ?? _settings.RestaurantName);
 
             await _client.AckAsync(
                 _settings.DeviceId,
@@ -227,7 +237,7 @@ internal sealed class BridgeEngine : IAsyncDisposable
             await _printerService.PrintReceiptAsync(
                 printerName,
                 lines,
-                $"Zorbas order {orderNumber}",
+                $"Zorbas {job.JobType} {orderNumber}",
                 cancellationToken).ConfigureAwait(false);
 
             await _client.AckAsync(
@@ -235,10 +245,15 @@ internal sealed class BridgeEngine : IAsyncDisposable
                 token,
                 job.Id,
                 "printed",
-                metadata: new { windows_printer = printerName },
+                metadata: new
+                {
+                    windows_printer = printerName,
+                    receipt_profile = "icash-photo-match-v1"
+                },
                 cancellationToken: cancellationToken).ConfigureAwait(false);
 
             _log.Info($"Задача {job.Id} е приета от Windows spooler на „{printerName}“.");
+            return true;
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
@@ -265,6 +280,7 @@ internal sealed class BridgeEngine : IAsyncDisposable
             }
 
             _log.Error($"Печатът на задача {job.Id} се провали: {error.Message}");
+            return false;
         }
     }
 
@@ -275,9 +291,8 @@ internal sealed class BridgeEngine : IAsyncDisposable
     {
         var token = _settingsStore.GetDeviceToken(_settings);
         if (string.IsNullOrWhiteSpace(token))
-        {
             throw new InvalidOperationException("Bridge устройството не е свързано. Въведи ресторантския код.");
-        }
+
         return token;
     }
 
@@ -295,6 +310,7 @@ internal sealed class BridgeEngine : IAsyncDisposable
         {
             return number.ToString();
         }
+
         return "—";
     }
 

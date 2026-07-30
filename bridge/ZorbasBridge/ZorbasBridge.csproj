@@ -14,12 +14,12 @@
     <PublishSingleFile>true</PublishSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <Version>1.0.1</Version>
-    <AssemblyVersion>1.0.1.0</AssemblyVersion>
-    <FileVersion>1.0.1.0</FileVersion>
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <FileVersion>1.1.0.0</FileVersion>
     <Product>Zorbas Bridge by SoulFlame</Product>
     <Company>SoulFlame</Company>
-    <Description>Windows print bridge for SoulFlame Restaurant OS.</Description>
+    <Description>Stable Windows print bridge for Zorbas Print 1, Print 2, bills and phone tests.</Description>
   </PropertyGroup>
 
   <ItemGroup>

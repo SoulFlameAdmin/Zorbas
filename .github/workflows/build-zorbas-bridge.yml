@@ -7,6 +7,7 @@ on:
       - main
       - feature/zorbas-bridge-exe
       - feature/zorbas-bridge-printer-mapping-v1.0.1
+      - feature/zorbas-full-menu-print-v1.1.0
     paths:
       - "bridge/**"
       - ".github/workflows/build-zorbas-bridge.yml"
@@ -91,7 +92,7 @@ jobs:
       - name: Upload Windows package
         uses: actions/upload-artifact@v4
         with:
-          name: Zorbas-Bridge-windows-x64-v1.0.1
+          name: Zorbas-Bridge-windows-x64-v1.1.0
           path: |
             bridge/artifacts/win-x64/ZorbasBridge.exe
             bridge/artifacts/installer/Zorbas-Bridge-Setup.exe
@@ -99,13 +100,13 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Publish v1.0.1 release assets
+      - name: Publish v1.1.0 release assets
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = "zorbas-bridge-v1.0.1"
+          $tag = "zorbas-bridge-v1.1.0"
           $setup = "bridge/artifacts/installer/Zorbas-Bridge-Setup.exe"
           $exe = "bridge/artifacts/win-x64/ZorbasBridge.exe"
           $checksums = "bridge/artifacts/SHA256SUMS.txt"
@@ -117,7 +118,6 @@ jobs:
           else {
             gh release create $tag $setup $exe $checksums `
               --target $env:GITHUB_SHA `
-              --title "Zorbas Bridge v1.0.1" `
-              --notes "Zorbas pilot printer mapping: Print 1 is preconfigured to POS-80C for staff, Print 2 to kitchen for the network kitchen printer, restaurant code sf-zorbas is prefilled, and the Bridge starts minimized with Windows after pairing. Queue processing remains staff first, then kitchen." `
-              --latest
+              --title "Zorbas Bridge v1.1.0" `
+              --notes "Stable background bridge with photographed bar, kitchen and bill formats; safe TEST from phone; Print 1 POS-80C; Print 2 kitchen; automatic management launch at Windows startup."
           }

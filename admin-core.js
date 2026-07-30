@@ -3,7 +3,7 @@ let snapshot=null,activeView='tables',selectedArea=null,selectedTable=null,order
 Z.registerPwa();document.querySelectorAll('[data-install-pwa]').forEach(b=>b.onclick=Z.installPwa);
 const $=id=>document.getElementById(id);
 
-async function init(){const session=await Z.requireSession();if(!session)return showLogin();$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');$('sessionName').textContent=`${session.display_name} · ${session.role}`;await refresh();await loadShift();}
+async function init(){const session=await Z.requireSession();if(!session)return showLogin();$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');$('sessionName').textContent=`${session.display_name} · ${session.role}`;await refresh();await loadShift();const requested=new URLSearchParams(location.search).get('view');if(['tables','order','orders','manager','archive','reservations','menuAdmin','adminStats'].includes(requested))switchView(requested);}
 function showLogin(){$('loginView').classList.remove('hidden');$('appView').classList.add('hidden');}
 $('loginForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.currentTarget);$('loginMessage').textContent='Влизане…';try{const data=await Z.rpc('zorbas_staff_login',{p_username:f.get('username'),p_password:f.get('password'),p_display_name:f.get('display_name'),p_device_id:Z.deviceId()});Z.setToken(data.token);location.reload();}catch(error){$('loginMessage').textContent=error.message;}};
 $('logoutButton').onclick=Z.logout;
@@ -12,7 +12,7 @@ async function refresh(){try{snapshot=await Z.rpc('zorbas_staff_snapshot',{p_tok
 document.querySelectorAll('[data-refresh]').forEach(b=>b.onclick=refresh);$('refreshButton').onclick=refresh;
 function renderAll(){renderAreaTabs();renderMap();renderCategoryTabs();renderProducts();renderCart();renderOrders();renderReservations();renderMenuAdmin();fillProductSelects();}
 
-function switchView(name){activeView=name;document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${name}`));document.querySelectorAll('.nav [data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===name));if(name==='orders'||name==='reservations')refresh();}
+function switchView(name){activeView=name;document.querySelectorAll('.view').forEach(v=>v.classList.toggle('active',v.id===`view-${name}`));document.querySelectorAll('.nav [data-view]').forEach(b=>b.classList.toggle('active',b.dataset.view===name));const next=new URL(location.href);next.searchParams.set('view',name);history.replaceState(null,'',next);if(name==='orders'||name==='reservations')refresh();}
 document.querySelectorAll('.nav [data-view]').forEach(b=>b.onclick=()=>switchView(b.dataset.view));
 
 async function loadShift(){try{const s=await Z.rpc('zorbas_shift_status_v3',{p_token:Z.token()});const active=Boolean(s.id);$('shiftText').textContent=active?`🟢 На работа от ${Z.formatDate(s.started_at)}`:'⚪ Извън работа';$('shiftButton').textContent=active?'Приключвам смяна':'Започвам смяна';$('shiftButton').className=`btn ${active?'red':'green'} full`;$('shiftButton').dataset.active=String(active);}catch{}}
