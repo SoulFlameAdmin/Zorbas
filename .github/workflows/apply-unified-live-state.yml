@@ -1,0 +1,116 @@
+name: Apply unified live state
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/apply-unified-live-state.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Connect every screen to live state
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          def replace_once(path, old, new):
+              p = Path(path)
+              text = p.read_text()
+              if new in text:
+                  return
+              if old not in text:
+                  raise SystemExit(f'Marker not found in {path}: {old[:80]}')
+              p.write_text(text.replace(old, new, 1))
+
+          replace_once(
+              'admin.html',
+              '<script src="/config.js?v=20260729-pwa8"></script><script src="/admin.js?v=20260730-keyboard2"></script>',
+              '<script src="/config.js?v=20260730-live1"></script><script src="/live-sync.js?v=20260730-live1"></script><script src="/admin.js?v=20260730-live1"></script>'
+          )
+
+          replace_once(
+              'kitchen.html',
+              '<script src="/config.js?v=20260729-pwa8"></script><script src="/kitchen.js?v=20260730-kitchen2"></script>',
+              '<script src="/config.js?v=20260730-live1"></script><script src="/live-sync.js?v=20260730-live1"></script><script src="/kitchen.js?v=20260730-live1"></script><script src="/kitchen-live.js?v=20260730-live1"></script>'
+          )
+
+          replace_once(
+              'admin.js',
+              "'/admin-keyboard-fix-v3.js?v=20260730-keyboard3', '/admin-menu.js'",
+              "'/admin-keyboard-fix-v3.js?v=20260730-keyboard3', '/admin-menu.js', '/admin-live-state.js?v=20260730-live1'"
+          )
+
+          reserve = Path('reserve.js')
+          text = reserve.read_text()
+          marker = '  boot();\n})();'
+          live_code = '''  let liveRefreshRunning = false;
+
+  async function refreshReservationLiveState() {
+    if (liveRefreshRunning) return;
+    liveRefreshRunning = true;
+    try {
+      if (state.view === 'tables') {
+        const fresh = await Z.rpc('zorbas_public_availability', {
+          p_date: state.date,
+          p_time: state.time,
+          p_duration_minutes: 120
+        });
+        state.tables = fresh;
+        renderTables();
+      } else if (state.view === 'details') {
+        await checkExactSlot(false);
+      }
+    } catch {}
+    finally { liveRefreshRunning = false; }
+  }
+
+  window.ZorbasLive?.subscribe(refreshReservationLiveState);
+  boot();
+})();'''
+          if 'refreshReservationLiveState' not in text:
+              if marker not in text:
+                  raise SystemExit('reserve.js boot marker not found')
+              reserve.write_text(text.replace(marker, live_code, 1))
+
+          sw = Path('sw.js')
+          text = sw.read_text()
+          text = text.replace("const CACHE='zorbas-v41-table-first-reservation-20260730';", "const CACHE='zorbas-v42-unified-live-state-20260730';")
+          if "'/live-sync.js?v=20260730-live1'" not in text:
+              text = text.replace("'/public.js?v=20260729-pwa6',", "'/public.js?v=20260729-pwa6','/live-sync.js?v=20260730-live1','/reserve.html','/reserve.js?v=20260730-live1','/reserve.css?v=20260730-2','/admin-live-state.js?v=20260730-live1','/kitchen-live.js?v=20260730-live1',")
+          text = text.replace("url.pathname.startsWith('/print')||url.pathname==='/site.css'", "url.pathname.startsWith('/print')||url.pathname.startsWith('/reserve')||url.pathname==='/live-sync.js'||url.pathname==='/site.css'")
+          sw.write_text(text)
+          PY
+      - name: Verify JavaScript syntax and links
+        run: |
+          node --check live-sync.js
+          node --check reserve.js
+          node --check admin.js
+          node --check admin-live-state.js
+          node --check kitchen.js
+          node --check kitchen-live.js
+          grep -q 'live-sync.js?v=20260730-live1' admin.html
+          grep -q 'live-sync.js?v=20260730-live1' kitchen.html
+          grep -q 'refreshReservationLiveState' reserve.js
+          grep -q 'admin-live-state.js?v=20260730-live1' admin.js
+      - name: Commit verified integration
+        run: |
+          if git diff --quiet; then
+            echo 'Already integrated.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add admin.html kitchen.html admin.js reserve.js sw.js
+          git commit -m 'Unify live table state across client staff kitchen admin'
+          git push
