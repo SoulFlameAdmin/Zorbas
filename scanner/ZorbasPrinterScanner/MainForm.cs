@@ -19,7 +19,7 @@ internal sealed class MainForm : Form
 
     public MainForm()
     {
-        Text = "Zorbas Printer Scanner · SoulFlame";
+        Text = $"Zorbas Printer Scanner v{Application.ProductVersion} · SoulFlame";
         Width = 760;
         Height = 610;
         MinimumSize = new Size(700, 560);
@@ -142,7 +142,10 @@ internal sealed class MainForm : Form
         try
         {
             Directory.CreateDirectory(reportFolder);
-            await File.WriteAllTextAsync(scriptPath, LoadPowerShellScript(), new UTF8Encoding(false));
+            await File.WriteAllTextAsync(
+                scriptPath,
+                LoadPowerShellScript(),
+                new UTF8Encoding(encoderShouldEmitUTF8Identifier: true));
             AppendLog("Стартиране на read-only Windows анализ…");
 
             var startInfo = new ProcessStartInfo
@@ -213,7 +216,7 @@ internal sealed class MainForm : Form
         }
     }
 
-    private static string LoadPowerShellScript()
+    internal static string LoadPowerShellScript()
     {
         using var stream = typeof(MainForm).Assembly.GetManifestResourceStream(ScriptResourceName)
             ?? throw new InvalidOperationException("Вграденият модул за анализ липсва.");
