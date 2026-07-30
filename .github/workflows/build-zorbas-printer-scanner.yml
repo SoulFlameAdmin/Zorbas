@@ -36,7 +36,7 @@ jobs:
           dotnet-version: "8.0.x"
 
       - name: Validate PowerShell analysis module
-        shell: pwsh
+        shell: powershell
         run: |
           $tokens = $null
           $errors = $null
@@ -47,7 +47,7 @@ jobs:
           ) | Out-Null
           if ($errors.Count -gt 0) {
             $errors | Format-List | Out-String | Write-Error
-            throw "PrinterScan.ps1 contains syntax errors."
+            throw "PrinterScan.ps1 contains Windows PowerShell 5.1 syntax errors."
           }
 
       - name: Restore
@@ -71,7 +71,16 @@ jobs:
             throw "Zorbas-Printer-Scanner.exe was not produced."
           }
 
-      - name: Smoke-test embedded resource
+      - name: Runtime self-test embedded script
+        shell: powershell
+        run: |
+          $exe = Resolve-Path "scanner/artifacts/win-x64/Zorbas-Printer-Scanner.exe"
+          & $exe --self-test
+          if ($LASTEXITCODE -ne 0) {
+            throw "The compiled Scanner EXE failed its embedded Windows PowerShell 5.1 self-test."
+          }
+
+      - name: Smoke-test package
         shell: pwsh
         run: |
           $exe = Resolve-Path "scanner/artifacts/win-x64/Zorbas-Printer-Scanner.exe"
@@ -89,20 +98,20 @@ jobs:
       - name: Upload Windows scanner package
         uses: actions/upload-artifact@v4
         with:
-          name: Zorbas-Printer-Scanner-windows-x64
+          name: Zorbas-Printer-Scanner-windows-x64-v1.0.1
           path: |
             scanner/artifacts/win-x64/Zorbas-Printer-Scanner.exe
             scanner/artifacts/SHA256SUMS.txt
           if-no-files-found: error
           retention-days: 14
 
-      - name: Publish scanner v1.0.0 release
+      - name: Publish scanner v1.0.1 release
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = "zorbas-printer-scanner-v1.0.0"
+          $tag = "zorbas-printer-scanner-v1.0.1"
           $exe = "scanner/artifacts/win-x64/Zorbas-Printer-Scanner.exe"
           $checksums = "scanner/artifacts/SHA256SUMS.txt"
 
@@ -113,7 +122,7 @@ jobs:
           else {
             gh release create $tag $exe $checksums `
               --target $env:GITHUB_SHA `
-              --title "Zorbas Printer Scanner v1.0.0" `
-              --notes "Read-only Windows x64 utility that creates a local ZIP report of printer queues, drivers, USB/LAN ports, printer IP addresses, spooler state and related POS/printing software. It does not print, change settings or upload data automatically." `
+              --title "Zorbas Printer Scanner v1.0.1" `
+              --notes "Windows PowerShell 5.1 compatibility fix. The embedded analysis script is now ASCII-safe, written with UTF-8 BOM and runtime-tested from the compiled EXE before release. The utility remains read-only: it does not print, change settings or upload data automatically." `
               --latest
           }
