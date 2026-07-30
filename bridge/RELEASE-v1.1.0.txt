@@ -1,0 +1,9 @@
+Zorbas Bridge v1.1.0
+Released: 2026-07-30
+
+Print 1: POS-80C · сервитьори / бар
+Print 2: kitchen · 192.168.0.98:9100
+Receipt profile: photographed iCashPOS bar, kitchen and bill layouts
+Phone tests: safe TEST-only queue in test_no_print mode
+Startup: Bridge background + Zorbas Manager page
+Fiscal Tremol / COM5: untouched
