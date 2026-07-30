@@ -1,0 +1,44 @@
+name: Verify Zorbas Manager workflow
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: JavaScript syntax
+        run: |
+          node --check admin.js
+          node --check admin-core.js
+          node --check admin-order.js
+          node --check admin-manager.js
+          node --check admin-live-state.js
+      - name: Manager screen wiring
+        run: |
+          grep -q 'data-view="manager"' admin.html
+          grep -q 'data-view="archive"' admin.html
+          grep -q 'id="notesSearch"' admin.html
+          grep -q 'id="managerSearch"' admin.html
+          grep -q 'id="archiveSearch"' admin.html
+          grep -q 'admin-manager.js?v=20260730-manager1' admin.js
+          grep -q 'zorbas_edit_order_v1' admin-manager.js
+          grep -q 'zorbas_manager_update_item_v1' admin-manager.js
+          grep -q 'zorbas_manager_complete_order_v1' admin-manager.js
+          grep -q 'zorbas_start_next_guests_v1' admin-manager.js
+          grep -q 'zorbas_close_visit_v1' admin-manager.js
+          grep -q 'zorbas_manager_archive_v1' admin-manager.js
+          grep -q 'zorbas_admin_dashboard_v1' admin-manager.js
+      - name: Existing waiter regressions
+        run: |
+          if [ -f tests/waiter-mobile.test.js ]; then node tests/waiter-mobile.test.js; fi
+          if [ -f tests/reservation-kitchen.test.js ]; then node tests/reservation-kitchen.test.js; fi
