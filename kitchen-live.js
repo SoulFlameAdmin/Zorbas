@@ -97,6 +97,13 @@
   document.addEventListener('DOMContentLoaded', () => {
     ensureRoot();
     if (Z.token()) loadLiveTables();
+    document.getElementById('loginForm')?.addEventListener('submit', () => {
+      setTimeout(loadLiveTables, 450);
+      setTimeout(loadLiveTables, 1100);
+    });
     window.ZorbasLive?.subscribe(syncKitchen);
+    setInterval(() => {
+      if (Z.token() && !document.hidden) loadLiveTables();
+    }, 5000);
   });
 })();
