@@ -10,61 +10,127 @@ internal static class ReceiptFormatter
     public static IReadOnlyList<string> Format(PrintJob job, string restaurantName)
     {
         if (job.JobType.Equals("correction", StringComparison.OrdinalIgnoreCase))
-        {
             return FormatCorrection(job, restaurantName);
-        }
 
+        if (job.JobType.Equals("test", StringComparison.OrdinalIgnoreCase))
+            return FormatTestJob(job);
+
+        if (job.JobType.Equals("bill", StringComparison.OrdinalIgnoreCase))
+            return FormatBill(job);
+
+        return FormatStationNote(job);
+    }
+
+    private static IReadOnlyList<string> FormatStationNote(PrintJob job)
+    {
         var lines = new List<string>();
         var payload = job.Payload;
-        var isStaff = job.Destination.Equals("staff", StringComparison.OrdinalIgnoreCase);
+        var isKitchen = job.Destination.Equals("kitchen", StringComparison.OrdinalIgnoreCase);
         var orderType = GetText(payload, "order_type");
-        var tableNumber = GetText(payload, "table_number");
-        var orderNumber = GetText(payload, "order_number");
-        var actor = GetText(payload, "actor");
-        var readyAt = GetText(payload, "ready_at");
+        var tableNumber = orderType.Equals("pickup", StringComparison.OrdinalIgnoreCase)
+            ? "ПАКЕТ"
+            : Fallback(GetText(payload, "table_number"), "—");
+        var actor = Fallback(GetText(payload, "actor"), "—");
+        var orderNumber = Fallback(GetText(payload, "order_number"), "—");
         var note = FirstNonEmpty(GetText(payload, "note"), GetText(payload, "order_note"));
         var cancelReason = GetText(payload, "cancel_reason");
 
-        AddCentered(lines, RestaurantTitle(restaurantName));
-        AddCentered(lines, Title(job.JobType));
+        lines.Add($"Щанд: {(isKitchen ? "КУХНЯ" : "БАР")}");
+        lines.Add($"Маса: {tableNumber}");
+        lines.Add($"Оператор: {actor}");
         lines.Add(new string('-', Width));
 
-        if (orderType.Equals("pickup", StringComparison.OrdinalIgnoreCase))
-        {
-            AddCentered(lines, "ПАКЕТ / ЗА ВКЪЩИ");
-        }
-        else
-        {
-            AddCentered(lines, $"МАСА {Fallback(tableNumber, "—")}");
-        }
-
-        lines.Add($"Поръчка № {Fallback(orderNumber, "—")}");
-        lines.Add($"Час: {FormatDate(GetText(payload, "created_at"), job.CreatedAt)}");
-        if (!string.IsNullOrWhiteSpace(actor)) lines.Add($"Сервитьор: {actor}");
-        if (!string.IsNullOrWhiteSpace(readyAt)) lines.Add($"За час: {FormatDate(readyAt, null)}");
-        lines.Add(new string('-', Width));
-
-        AddItems(lines, payload, isStaff);
+        AddItems(lines, payload, includePrices: false, upperCase: true);
 
         if (!string.IsNullOrWhiteSpace(cancelReason))
         {
             lines.Add(new string('-', Width));
-            AddWrapped(lines, $"ОТКАЗ: {cancelReason}");
+            AddWrapped(lines, $"ОТКАЗ: {cancelReason.ToUpperInvariant()}");
         }
 
         if (!string.IsNullOrWhiteSpace(note))
         {
             lines.Add(new string('-', Width));
-            AddWrapped(lines, $"ОБЩА БЕЛЕЖКА: {note}");
+            AddWrapped(lines, $"БЕЛЕЖКА: {note.ToUpperInvariant()}");
         }
 
-        if (isStaff && TryGetNumber(payload, "subtotal", out var subtotal))
+        lines.Add(new string('-', Width));
+        AddCentered(lines, "НЕ СЕ ДЪЛЖИ ПЛАЩАНЕ");
+        lines.Add(AlignColumns("Номер", orderNumber));
+        lines.Add($"Час: {FormatDateSeconds(GetText(payload, "created_at"), job.CreatedAt)}");
+        AddPaperFeed(lines);
+        return lines;
+    }
+
+    private static IReadOnlyList<string> FormatBill(PrintJob job)
+    {
+        var lines = new List<string>();
+        var payload = job.Payload;
+        var actor = Fallback(GetText(payload, "actor"), "—");
+        var table = GetText(payload, "order_type").Equals("pickup", StringComparison.OrdinalIgnoreCase)
+            ? "ПАКЕТ"
+            : Fallback(GetText(payload, "table_number"), "—");
+
+        AddCentered(lines, "\"Н енд м\" ЕООД");
+        AddCentered(lines, "ж.к. \"Младост\", бл. 5,");
+        AddCentered(lines, "вх. В, ет. 5, ап. 14");
+        AddCentered(lines, "Сливен");
+        lines.Add(AlignColumns("Ид. №", "206740575"));
+        lines.Add($"Дата: {FormatDateSeconds(GetText(payload, "created_at"), job.CreatedAt)}");
+        lines.Add(AlignColumns(actor, "1"));
+        lines.Add($"Маса: {table}");
+        lines.Add(string.Empty);
+
+        decimal soldCount = 0;
+        if (TryGetArray(payload, "items", out var items))
         {
-            lines.Add(new string('=', Width));
-            lines.Add(AlignColumns("ОБЩО", $"{subtotal:0.00} лв."));
+            foreach (var item in items.EnumerateArray())
+            {
+                var quantity = GetNumber(item, "quantity", 1m);
+                var name = Fallback(GetText(item, "name"), "Артикул").ToUpperInvariant();
+                var unitPrice = GetNumber(item, "unit_price", 0m);
+                soldCount += quantity;
+
+                AddWrapped(lines, name);
+                lines.Add(AlignColumns(
+                    $"{quantity:0.##} бр x {unitPrice:0.00}",
+                    $"{quantity * unitPrice:0.00} Б"));
+
+                var itemNote = GetText(item, "note");
+                if (!string.IsNullOrWhiteSpace(itemNote))
+                    AddWrapped(lines, $"БЕЛЕЖКА: {itemNote.ToUpperInvariant()}");
+            }
         }
 
-        AddFooter(lines);
+        lines.Add(string.Empty);
+        lines.Add("Общо продадени");
+        lines.Add(AlignColumns("артикули", soldCount.ToString("0.##", CultureInfo.InvariantCulture)));
+
+        var subtotal = TryGetNumber(payload, "subtotal", out var total) ? total : 0m;
+        lines.Add(AlignColumns("Total:", subtotal.ToString("0.00", CultureInfo.InvariantCulture)));
+        AddPaperFeed(lines);
+        return lines;
+    }
+
+    private static IReadOnlyList<string> FormatTestJob(PrintJob job)
+    {
+        var lines = new List<string>();
+        var payload = job.Payload;
+        var isKitchen = job.Destination.Equals("kitchen", StringComparison.OrdinalIgnoreCase);
+        var actor = Fallback(GetText(payload, "actor"), "ТЕЛЕФОН");
+        var number = Fallback(GetText(payload, "order_number"), "TEST");
+
+        lines.Add($"Щанд: {(isKitchen ? "КУХНЯ" : "БАР")}");
+        lines.Add("Маса: TEST");
+        lines.Add($"Оператор: {actor}");
+        lines.Add(new string('-', Width));
+        AddCentered(lines, "TEST ОТ ТЕЛЕФОНА");
+        AddCentered(lines, isKitchen ? "PRINT 2 · КУХНЯ" : "PRINT 1 · СЕРВИТЬОРИ");
+        lines.Add(new string('-', Width));
+        AddCentered(lines, "НЕ СЕ ДЪЛЖИ ПЛАЩАНЕ");
+        lines.Add(AlignColumns("Номер", number));
+        lines.Add($"Час: {FormatDateSeconds(GetText(payload, "created_at"), job.CreatedAt)}");
+        AddPaperFeed(lines);
         return lines;
     }
 
@@ -86,7 +152,7 @@ internal static class ReceiptFormatter
         if (!string.IsNullOrWhiteSpace(visitLabel)) AddCentered(lines, visitLabel.ToUpperInvariant());
         lines.Add($"Поръчка № {Fallback(orderNumber, "—")}");
         if (!string.IsNullOrWhiteSpace(revision)) lines.Add($"Версия: {revision}");
-        lines.Add($"Час: {FormatDate(GetText(payload, "created_at"), job.CreatedAt)}");
+        lines.Add($"Час: {FormatDateSeconds(GetText(payload, "created_at"), job.CreatedAt)}");
         if (!string.IsNullOrWhiteSpace(actor)) lines.Add($"Сервитьор: {actor}");
 
         lines.Add(new string('-', Width));
@@ -101,26 +167,50 @@ internal static class ReceiptFormatter
                 var delta = GetNumber(change, "delta", 0m);
                 var name = Fallback(GetText(change, "name"), "Артикул");
                 var sign = delta > 0 ? "+" : string.Empty;
-                AddWrapped(lines, $"{sign}{delta:0.##} x {name}");
+                AddWrapped(lines, $"{sign}{delta:0.##} x {name.ToUpperInvariant()}");
             }
         }
+
         if (!hasChanges) lines.Add("Няма описани промени.");
 
         lines.Add(new string('-', Width));
         AddCentered(lines, "НОВО");
-        AddItems(lines, payload, includePrices: false);
+        AddItems(lines, payload, includePrices: false, upperCase: true);
 
         if (!string.IsNullOrWhiteSpace(reason))
         {
             lines.Add(new string('-', Width));
-            AddWrapped(lines, $"ПРИЧИНА: {reason}");
+            AddWrapped(lines, $"ПРИЧИНА: {reason.ToUpperInvariant()}");
         }
 
-        AddFooter(lines);
+        AddPaperFeed(lines);
         return lines;
     }
 
-    private static void AddItems(ICollection<string> lines, JsonElement payload, bool includePrices)
+    public static IReadOnlyList<string> TestReceipt(string destination, string printerName)
+    {
+        var lines = new List<string>();
+        var isKitchen = destination.Equals("kitchen", StringComparison.OrdinalIgnoreCase);
+        lines.Add($"Щанд: {(isKitchen ? "КУХНЯ" : "БАР")}");
+        lines.Add("Маса: TEST");
+        lines.Add("Оператор: ZORBAS BRIDGE");
+        lines.Add(new string('-', Width));
+        AddCentered(lines, "TEST");
+        AddCentered(lines, isKitchen ? "PRINT 2 · КУХНЯ" : "PRINT 1 · СЕРВИТЬОРИ");
+        AddWrapped(lines, $"Windows: {printerName}");
+        lines.Add(new string('-', Width));
+        AddCentered(lines, "НЕ СЕ ДЪЛЖИ ПЛАЩАНЕ");
+        lines.Add(AlignColumns("Номер", DateTime.Now.ToString("HHmmss")));
+        lines.Add($"Час: {DateTime.Now:dd.MM.yyyy HH:mm:ss}");
+        AddPaperFeed(lines);
+        return lines;
+    }
+
+    private static void AddItems(
+        ICollection<string> lines,
+        JsonElement payload,
+        bool includePrices,
+        bool upperCase)
     {
         var hasItems = false;
         if (TryGetArray(payload, "items", out var items))
@@ -130,10 +220,15 @@ internal static class ReceiptFormatter
                 hasItems = true;
                 var quantity = GetNumber(item, "quantity", 1m);
                 var name = Fallback(GetText(item, "name"), "Артикул");
+                if (upperCase) name = name.ToUpperInvariant();
                 AddWrapped(lines, $"{quantity:0.##} x {name}");
 
                 var itemNote = GetText(item, "note");
-                if (!string.IsNullOrWhiteSpace(itemNote)) AddWrapped(lines, $"  БЕЛЕЖКА: {itemNote}");
+                if (!string.IsNullOrWhiteSpace(itemNote))
+                {
+                    var text = upperCase ? itemNote.ToUpperInvariant() : itemNote;
+                    AddWrapped(lines, $"  БЕЛЕЖКА: {text}");
+                }
 
                 if (includePrices && TryGetNumber(item, "unit_price", out var unitPrice))
                 {
@@ -143,45 +238,16 @@ internal static class ReceiptFormatter
                 }
             }
         }
-        if (!hasItems) lines.Add("Няма оставащи артикули.");
+
+        if (!hasItems) lines.Add("НЯМА АРТИКУЛИ.");
     }
 
-    private static void AddFooter(ICollection<string> lines)
+    private static void AddPaperFeed(ICollection<string> lines)
     {
-        lines.Add(new string('-', Width));
-        AddCentered(lines, "powered by SoulFlame");
         lines.Add(string.Empty);
         lines.Add(string.Empty);
         lines.Add(string.Empty);
     }
-
-    public static IReadOnlyList<string> TestReceipt(string destination, string printerName)
-    {
-        var lines = new List<string>();
-        AddCentered(lines, "ZORBAS BRIDGE");
-        AddCentered(lines, "ТЕСТОВ ПЕЧАТ");
-        lines.Add(new string('-', Width));
-        lines.Add($"Канал: {(destination == "kitchen" ? "Print 2 · Кухня" : "Print 1 · Сервитьори")}");
-        AddWrapped(lines, $"Windows принтер: {printerName}");
-        lines.Add($"Час: {DateTime.Now:dd.MM.yyyy HH:mm:ss}");
-        lines.Add(new string('-', Width));
-        AddCentered(lines, "ВРЪЗКАТА Е ГОТОВА");
-        AddCentered(lines, "SoulFlame Restaurant OS");
-        lines.Add(string.Empty);
-        lines.Add(string.Empty);
-        lines.Add(string.Empty);
-        return lines;
-    }
-
-    private static string Title(string? type) => type switch
-    {
-        "correction" => "КОРЕКЦИЯ / ПРОМЕНЕНО",
-        "cancellation" => "ОТКАЗАНА ПОРЪЧКА",
-        "bill" => "СМЕТКА",
-        "pickup" => "ПАКЕТ",
-        "addition" => "ДОБАВКА",
-        _ => "ПОРЪЧКА"
-    };
 
     private static string RestaurantTitle(string restaurantName) =>
         string.IsNullOrWhiteSpace(restaurantName) ? "ZORBAS" : restaurantName.ToUpperInvariant();
@@ -196,7 +262,9 @@ internal static class ReceiptFormatter
 
     private static string GetText(JsonElement element, string property)
     {
-        if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(property, out var value)) return string.Empty;
+        if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(property, out var value))
+            return string.Empty;
+
         return value.ValueKind switch
         {
             JsonValueKind.String => value.GetString() ?? string.Empty,
@@ -213,23 +281,26 @@ internal static class ReceiptFormatter
     private static bool TryGetNumber(JsonElement element, string property, out decimal value)
     {
         value = 0;
-        if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(property, out var token)) return false;
+        if (element.ValueKind != JsonValueKind.Object || !element.TryGetProperty(property, out var token))
+            return false;
+
         if (token.ValueKind == JsonValueKind.Number && token.TryGetDecimal(out value)) return true;
         if (token.ValueKind == JsonValueKind.String)
         {
             return decimal.TryParse(token.GetString(), NumberStyles.Number, CultureInfo.InvariantCulture, out value)
                 || decimal.TryParse(token.GetString(), NumberStyles.Number, CultureInfo.GetCultureInfo("bg-BG"), out value);
         }
+
         return false;
     }
 
-    private static string FormatDate(string value, DateTimeOffset? fallback)
+    private static string FormatDateSeconds(string value, DateTimeOffset? fallback)
     {
         if (DateTimeOffset.TryParse(value, CultureInfo.InvariantCulture, DateTimeStyles.AssumeLocal, out var parsed))
-        {
-            return parsed.ToLocalTime().ToString("dd.MM.yyyy HH:mm", CultureInfo.GetCultureInfo("bg-BG"));
-        }
-        return fallback?.ToLocalTime().ToString("dd.MM.yyyy HH:mm", CultureInfo.GetCultureInfo("bg-BG")) ?? value;
+            return parsed.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss", CultureInfo.GetCultureInfo("bg-BG"));
+
+        return fallback?.ToLocalTime().ToString("dd.MM.yyyy HH:mm:ss", CultureInfo.GetCultureInfo("bg-BG"))
+            ?? value;
     }
 
     private static string FirstNonEmpty(params string[] values) =>
@@ -268,6 +339,7 @@ internal static class ReceiptFormatter
             yield return remaining[..split].TrimEnd();
             remaining = remaining[split..].TrimStart();
         }
+
         yield return remaining;
     }
 
@@ -282,6 +354,7 @@ internal static class ReceiptFormatter
             left = left.Length > allowedLeft ? left[..allowedLeft] : left;
             spaces = Math.Max(1, Width - left.Length - right.Length);
         }
+
         return left + new string(' ', spaces) + right;
     }
 }
