@@ -21,10 +21,12 @@
 
   function paintVisibleCards(tables) {
     const byId = new Map((tables || []).map(table => [String(table.id), table]));
+    let newlyAvailable = false;
     document.querySelectorAll('.table-card[data-table]').forEach(card => {
       const table = byId.get(String(card.dataset.table));
       if (!table) return;
       const state = table.state || (table.available ? 'available' : 'reserved');
+      if (card.disabled && state === 'available') newlyAvailable = true;
       card.classList.remove('free','reserved','occupied','blocked');
       card.classList.add(state === 'available' ? 'free' : state);
       card.disabled = state !== 'available';
@@ -32,6 +34,7 @@
       if (pill) pill.textContent = labels[state] || 'НЕСВОБОДНА';
       card.setAttribute('aria-label', `Маса ${table.table_number}, ${labels[state] || 'несвободна'}, ${table.seats} места`);
     });
+    if (newlyAvailable) location.reload();
   }
 
   async function syncClientTables() {
