@@ -1,0 +1,41 @@
+name: Ensure mobile reservation loader
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch-public-entry:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Append reservation loader once
+        shell: bash
+        run: |
+          if ! grep -q "reservation-mobile-v3.js" public.js; then
+            cat >> public.js <<'LOADER'
+
+          ;(()=>{if(document.querySelector('script[data-crv3]'))return;const s=document.createElement('script');s.src='/reservation-mobile-v3.js?v=20260730-1';s.dataset.crv3='1';document.head.appendChild(s)})();
+          LOADER
+          fi
+          node --check public.js
+
+      - name: Commit direct loader
+        shell: bash
+        run: |
+          if git diff --quiet -- public.js; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add public.js
+          git commit -m "Load table-first reservation directly"
+          git push origin HEAD:main
