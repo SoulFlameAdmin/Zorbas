@@ -14,12 +14,12 @@
     <PublishSingleFile>true</PublishSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <Version>1.2.1</Version>
-    <AssemblyVersion>1.2.1.0</AssemblyVersion>
-    <FileVersion>1.2.1.0</FileVersion>
+    <Version>1.2.2</Version>
+    <AssemblyVersion>1.2.2.0</AssemblyVersion>
+    <FileVersion>1.2.2.0</FileVersion>
     <Product>Zorbas Bridge by SoulFlame</Product>
     <Company>SoulFlame</Company>
-    <Description>Windows and LAN print bridge with separate BAR drinks and KITCHEN food routing.</Description>
+    <Description>Print 1 receives the complete order, Print 2 receives kitchen items only, and bills retain the full total.</Description>
   </PropertyGroup>
 
   <ItemGroup>
