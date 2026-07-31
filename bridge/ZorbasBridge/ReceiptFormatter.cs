@@ -40,9 +40,43 @@ internal static class ReceiptFormatter
         var orderNumber = Fallback(GetText(payload, "order_number"), "—");
         var note = FirstNonEmpty(GetText(payload, "note"), GetText(payload, "order_note"));
         var cancelReason = GetText(payload, "cancel_reason");
+        var visitLabel = GetText(payload, "guest_label");
+        var areaName = GetText(payload, "area_name");
+        var orderKind = GetText(payload, "order_kind");
+        var isNewOrder = orderKind.Equals("new", StringComparison.OrdinalIgnoreCase);
+        var isAddition = orderKind.Equals("addition", StringComparison.OrdinalIgnoreCase)
+            || job.JobType.Equals("addition", StringComparison.OrdinalIgnoreCase);
+        var breadRequired = GetText(payload, "bread_required").Equals("true", StringComparison.OrdinalIgnoreCase);
+
+        if (orderType.Equals("dine_in", StringComparison.OrdinalIgnoreCase))
+        {
+            AddCentered(
+                lines,
+                $"{(isAddition ? "ДОБАВКА" : "НОВО")} | МАСА {tableNumber}",
+                width,
+                isKitchen ? 14.2f : 12.2f,
+                bold: true,
+                spaceAfter: 1f);
+            if (!string.IsNullOrWhiteSpace(areaName))
+                AddCentered(lines, areaName.ToUpperInvariant(), width, bodySize, bold: true);
+            if (!string.IsNullOrWhiteSpace(visitLabel))
+                AddCentered(lines, visitLabel.ToUpperInvariant(), width, bodySize, bold: true, spaceAfter: 1f);
+            if (breadRequired || isNewOrder)
+                AddCentered(
+                    lines,
+                    "НОВИ ГОСТИ · СЛОЖИ ХЛЯБ",
+                    width,
+                    isKitchen ? 13.2f : 11.3f,
+                    bold: true,
+                    spaceBefore: 1f,
+                    spaceAfter: 2f);
+            AddSeparator(lines, width, bodySize, '=');
+        }
 
         AddWrapped(lines, $"Щанд: {(isKitchen ? "КУХНЯ" : "БАР")}", width, bodySize);
         AddWrapped(lines, $"Маса: {tableNumber}", width, bodySize);
+        if (!string.IsNullOrWhiteSpace(visitLabel))
+            AddWrapped(lines, $"Гости: {visitLabel}", width, bodySize);
         AddWrapped(lines, $"Оператор: {actor}", width, bodySize, spaceAfter: 1.5f);
         AddSeparator(lines, width, bodySize, count: 2);
 
@@ -67,7 +101,7 @@ internal static class ReceiptFormatter
         AddPaperFeed(lines);
 
         return new ReceiptDocument(
-            isKitchen ? "icash-kitchen-photo-v2" : "icash-bar-photo-v2",
+            isKitchen ? "icash-kitchen-stage1-v3" : "icash-bar-stage1-v3",
             width,
             lines);
     }
@@ -81,6 +115,9 @@ internal static class ReceiptFormatter
         var table = GetText(payload, "order_type").Equals("pickup", StringComparison.OrdinalIgnoreCase)
             ? "ПАКЕТ"
             : Fallback(GetText(payload, "table_number"), "—");
+        var visitLabel = GetText(payload, "guest_label");
+        var areaName = GetText(payload, "area_name");
+        var billPrintNumber = GetText(payload, "bill_print_number");
 
         AddCentered(lines, "\"Н енд м\" ЕООД", BillWidth, 10.2f, bold: true, spaceAfter: 1f);
         AddCentered(lines, "ж.к. \"Младост\", бл. 5,", BillWidth, 9.2f);
@@ -89,7 +126,15 @@ internal static class ReceiptFormatter
         AddLine(lines, AlignColumns("Ид. №", "206740575", BillWidth), 9.4f);
         AddWrapped(lines, $"Дата: {FormatDateSeconds(GetText(payload, "created_at"), job.CreatedAt)}", BillWidth, 9.4f);
         AddLine(lines, AlignColumns(actor, operatorNumber, BillWidth), 9.4f);
-        AddWrapped(lines, $"Маса: {table}", BillWidth, 9.4f, spaceAfter: 4f);
+        AddWrapped(lines, $"Маса: {table}", BillWidth, 9.4f);
+        if (!string.IsNullOrWhiteSpace(areaName))
+            AddWrapped(lines, $"Зона: {areaName}", BillWidth, 9.2f);
+        if (!string.IsNullOrWhiteSpace(visitLabel))
+            AddWrapped(lines, $"Гости: {visitLabel}", BillWidth, 9.4f, bold: true);
+        if (!string.IsNullOrWhiteSpace(billPrintNumber))
+            AddWrapped(lines, $"Печат на сметка: {billPrintNumber}", BillWidth, 8.8f, spaceAfter: 4f);
+        else
+            AddLine(lines, string.Empty, 7f, spaceAfter: 3f);
 
         decimal soldCount = 0;
         if (TryGetArray(payload, "items", out var items))
@@ -122,7 +167,7 @@ internal static class ReceiptFormatter
         AddCentered(lines, "НЕФИСКАЛНА СМЕТКА", BillWidth, 8.4f, bold: true);
         AddPaperFeed(lines);
 
-        return new ReceiptDocument("icash-bill-photo-v2", BillWidth, lines);
+        return new ReceiptDocument("icash-bill-stage1-v3", BillWidth, lines);
     }
 
     private static ReceiptDocument FormatTestJob(PrintJob job)
