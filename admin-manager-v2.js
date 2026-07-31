@@ -227,8 +227,9 @@
       }
     });
 
-    cards.sort((a, b) => Number(b.dataset.managerV2Time || 0) - Number(a.dataset.managerV2Time || 0));
-    cards.forEach(card => root.appendChild(card));
+    const desired = [...cards].sort((a, b) => Number(b.dataset.managerV2Time || 0) - Number(a.dataset.managerV2Time || 0));
+    const changed = cards.some((card, index) => card !== desired[index]);
+    if (changed) desired.forEach(card => root.appendChild(card));
   }
 
   function decorateHeadings() {
