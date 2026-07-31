@@ -10,6 +10,24 @@
   let installPrompt = null;
   let installReadyPromise = null;
 
+  function hardenLegacyLoginFields() {
+    document.querySelectorAll('input[name="username"]').forEach(input => {
+      if (input.value === 'admin' || input.getAttribute('value') === 'admin') input.value = '';
+      input.removeAttribute('value');
+      input.autocomplete = 'username';
+    });
+    document.querySelectorAll('input[name="password"]').forEach(input => {
+      input.value = '';
+      input.autocomplete = 'current-password';
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', hardenLegacyLoginFields, {once: true});
+  } else {
+    hardenLegacyLoginFields();
+  }
+
   async function rpc(name, payload = {}, options = {}) {
     if (!/^[a-z0-9_]+$/i.test(String(name || ''))) {
       throw new Error('Невалидна операция.');
