@@ -93,7 +93,7 @@ jobs:
       - name: Upload Windows package
         uses: actions/upload-artifact@v4
         with:
-          name: Zorbas-Bridge-windows-x64-v1.2.1
+          name: Zorbas-Bridge-windows-x64-v1.2.2
           path: |
             bridge/artifacts/win-x64/ZorbasBridge.exe
             bridge/artifacts/installer/Zorbas-Bridge-Setup.exe
@@ -101,13 +101,13 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Publish v1.2.1 release assets
+      - name: Publish v1.2.2 release assets
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = "zorbas-bridge-v1.2.1"
+          $tag = "zorbas-bridge-v1.2.2"
           $setup = "bridge/artifacts/installer/Zorbas-Bridge-Setup.exe"
           $exe = "bridge/artifacts/win-x64/ZorbasBridge.exe"
           $checksums = "bridge/artifacts/SHA256SUMS.txt"
@@ -119,7 +119,7 @@ jobs:
           else {
             gh release create $tag $setup $exe $checksums `
               --target $env:GITHUB_SHA `
-              --title "Zorbas Bridge v1.2.1" `
-              --notes "Fixes automatic routing: Print 1 receives drinks only, Print 2 receives food only, and the kitchen printer is reached directly over LAN at 192.168.0.98:9100 with Unicode-safe raster ESC/POS printing." `
+              --title "Zorbas Bridge v1.2.2" `
+              --notes "Correct restaurant routing: Print 1 / BAR receives the complete order copy, Print 2 / KITCHEN receives kitchen items only, the customer bill keeps the complete total, and the Bridge interface includes separate Print 1 and Print 2 printer selections." `
               --latest
           }
