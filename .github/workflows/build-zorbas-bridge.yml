@@ -93,7 +93,7 @@ jobs:
       - name: Upload Windows package
         uses: actions/upload-artifact@v4
         with:
-          name: Zorbas-Bridge-windows-x64-v1.2.0
+          name: Zorbas-Bridge-windows-x64-v1.2.1
           path: |
             bridge/artifacts/win-x64/ZorbasBridge.exe
             bridge/artifacts/installer/Zorbas-Bridge-Setup.exe
@@ -101,13 +101,13 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Publish v1.2.0 release assets
+      - name: Publish v1.2.1 release assets
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = "zorbas-bridge-v1.2.0"
+          $tag = "zorbas-bridge-v1.2.1"
           $setup = "bridge/artifacts/installer/Zorbas-Bridge-Setup.exe"
           $exe = "bridge/artifacts/win-x64/ZorbasBridge.exe"
           $checksums = "bridge/artifacts/SHA256SUMS.txt"
@@ -119,6 +119,7 @@ jobs:
           else {
             gh release create $tag $setup $exe $checksums `
               --target $env:GITHUB_SHA `
-              --title "Zorbas Bridge v1.2.0" `
-              --notes "Upgraded 80mm photographed iCash-style BAR, KITCHEN and BILL templates; larger kitchen text, exact Bulgarian layout, dynamic receipt length, stable Cyrillic rendering, safe phone tests, Print 1 POS-80C and Print 2 kitchen."
+              --title "Zorbas Bridge v1.2.1" `
+              --notes "Fixes automatic routing: Print 1 receives drinks only, Print 2 receives food only, and the kitchen printer is reached directly over LAN at 192.168.0.98:9100 with Unicode-safe raster ESC/POS printing." `
+              --latest
           }
