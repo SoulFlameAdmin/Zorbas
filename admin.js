@@ -14,7 +14,9 @@
     '/admin-manager.js?v=20260730-manager1',
     '/admin-manager-v2.js?v=20260731-manager2',
     '/admin-bill-flow-v1.js?v=20260731-bill2',
-    '/admin-stage1.js?v=20260731-stage1b'
+    '/admin-stage1.js?v=20260731-stage1b',
+    '/admin-stage2.js?v=20260731-stage2a',
+    '/admin-stage3.js?v=20260731-stage3a'
   ];
   const load = src => new Promise((resolve, reject) => {
     const script = document.createElement('script');
@@ -30,7 +32,9 @@
     '/admin-manager.css?v=20260730-manager1',
     '/admin-manager-v2.css?v=20260731-manager2',
     '/admin-bill-flow-v1.css?v=20260731-bill1',
-    '/admin-stage1.css?v=20260731-stage1'
+    '/admin-stage1.css?v=20260731-stage1',
+    '/admin-stage2.css?v=20260731-stage2a',
+    '/admin-stage3.css?v=20260731-stage3a'
   ].forEach(href => {
     if (document.querySelector(`link[href="${href}"]`)) return;
     const style = document.createElement('link');
