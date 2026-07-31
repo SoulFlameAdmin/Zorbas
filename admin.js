@@ -11,7 +11,8 @@
     '/admin-keyboard-fix-v3.js?v=20260730-keyboard3',
     '/admin-menu.js',
     '/admin-live-state.js?v=20260730-live1',
-    '/admin-manager.js?v=20260730-manager1'
+    '/admin-manager.js?v=20260730-manager1',
+    '/admin-manager-v2.js?v=20260731-manager2'
   ];
   const load = src => new Promise((resolve, reject) => {
     const script = document.createElement('script');
@@ -24,7 +25,8 @@
     '/waiter-mobile.css?v=20260730-waiter1',
     '/waiter-mobile-v2.css?v=20260730-waiter2',
     '/waiter-reservation.css?v=20260730-reservation1',
-    '/admin-manager.css?v=20260730-manager1'
+    '/admin-manager.css?v=20260730-manager1',
+    '/admin-manager-v2.css?v=20260731-manager2'
   ].forEach(href => {
     if (document.querySelector(`link[href="${href}"]`)) return;
     const style = document.createElement('link');
