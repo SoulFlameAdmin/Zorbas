@@ -1,27 +1,63 @@
 (() => {
+  'use strict';
+
   const API_URL = 'https://frhletkiuupgksmgxoxc.supabase.co';
   const KEY = 'sb_publishable_JQPnalB8jOs639_PWoR6mA_AOk11xWC';
   const tokenKey = 'zorbas_staff_token_v3';
   const pwaInstalledKey = 'zorbas_pwa_installed_v1';
   const pwaInstallPendingKey = 'zorbas_pwa_install_pending_v1';
+  const DEFAULT_RPC_TIMEOUT_MS = 20000;
   let installPrompt = null;
   let installReadyPromise = null;
 
-  async function rpc(name, payload = {}) {
-    const response = await fetch(`${API_URL}/rest/v1/rpc/${name}`, {
-      method: 'POST',
-      headers: {
-        apikey: KEY,
-        Authorization: `Bearer ${KEY}`,
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify(payload)
-    });
-    const data = await response.json().catch(() => null);
-    if (!response.ok) {
-      throw new Error(data?.message || data?.hint || 'Възникна грешка.');
+  async function rpc(name, payload = {}, options = {}) {
+    if (!/^[a-z0-9_]+$/i.test(String(name || ''))) {
+      throw new Error('Невалидна операция.');
     }
-    return data;
+
+    const controller = new AbortController();
+    const timeoutMs = Math.max(3000, Number(options.timeoutMs || DEFAULT_RPC_TIMEOUT_MS));
+    const timer = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch(`${API_URL}/rest/v1/rpc/${name}`, {
+        method: 'POST',
+        headers: {
+          apikey: KEY,
+          Authorization: `Bearer ${KEY}`,
+          'Content-Type': 'application/json',
+          Accept: 'application/json'
+        },
+        body: JSON.stringify(payload),
+        cache: 'no-store',
+        signal: controller.signal
+      });
+
+      const raw = await response.text();
+      let data = null;
+      if (raw) {
+        try { data = JSON.parse(raw); }
+        catch { data = raw; }
+      }
+
+      if (!response.ok) {
+        const message = typeof data === 'object'
+          ? (data?.message || data?.hint || data?.details)
+          : null;
+        throw new Error(message || `Грешка при връзката (${response.status}).`);
+      }
+      return data;
+    } catch (error) {
+      if (error?.name === 'AbortError') {
+        throw new Error('Връзката се забави. Провери интернет връзката и опитай отново.');
+      }
+      if (error instanceof TypeError) {
+        throw new Error('Няма връзка със системата. Провери интернет връзката.');
+      }
+      throw error;
+    } finally {
+      clearTimeout(timer);
+    }
   }
 
   function token() { return localStorage.getItem(tokenKey) || ''; }
@@ -70,7 +106,7 @@
   }
   async function logout() {
     const value = token();
-    if (value) await rpc('zorbas_logout', {p_token: value}).catch(() => {});
+    if (value) await rpc('zorbas_logout', {p_token: value}, {timeoutMs: 8000}).catch(() => {});
     setToken('');
     location.reload();
   }
@@ -103,12 +139,8 @@
     setInstallButtons('⬇ Изтегли');
   }
   async function queryInstalledPwa() {
-    if (isStandalone()) {
-      return true;
-    }
-    if (typeof navigator.getInstalledRelatedApps !== 'function') {
-      return null;
-    }
+    if (isStandalone()) return true;
+    if (typeof navigator.getInstalledRelatedApps !== 'function') return null;
     try {
       const apps = await navigator.getInstalledRelatedApps();
       return apps.some(app => {
@@ -116,9 +148,7 @@
         try { return new URL(app.url, location.href).origin === location.origin; }
         catch { return false; }
       });
-    } catch {
-      return null;
-    }
+    } catch { return null; }
   }
   function markPwaInstalled(showToast = false) {
     localStorage.setItem(pwaInstalledKey, '1');
@@ -269,6 +299,7 @@
     }
     toast('Отвори сайта в Chrome и натисни отново „Изтегли“.');
   }
+
   window.addEventListener('beforeinstallprompt', event => {
     event.preventDefault();
     installPrompt = event;
@@ -285,17 +316,23 @@
   });
   window.matchMedia('(display-mode: standalone)').addEventListener?.('change', refreshInstallButtons);
 
-  function setDefaultPasswords() {
-    document.querySelectorAll('input[type="password"]').forEach(input => {
-      input.value = 'admin';
-      input.removeAttribute('inputmode');
-    });
-  }
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', setDefaultPasswords, {once: true});
-  } else {
-    setDefaultPasswords();
-  }
-
-  window.Zorbas = {URL: API_URL, KEY, rpc, token, setToken, deviceId, esc, money, localDate, localDateTimeValue, formatDate, toast, requireSession, logout, registerPwa, installPwa, openInstalledPwa};
+  window.Zorbas = {
+    URL: API_URL,
+    KEY,
+    rpc,
+    token,
+    setToken,
+    deviceId,
+    esc,
+    money,
+    localDate,
+    localDateTimeValue,
+    formatDate,
+    toast,
+    requireSession,
+    logout,
+    registerPwa,
+    installPwa,
+    openInstalledPwa
+  };
 })();
