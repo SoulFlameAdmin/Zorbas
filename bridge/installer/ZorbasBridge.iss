@@ -1,5 +1,5 @@
 #define MyAppName "Zorbas Bridge"
-#define MyAppVersion "1.2.0"
+#define MyAppVersion "1.2.1"
 #define MyAppPublisher "SoulFlame"
 #define MyAppExeName "ZorbasBridge.exe"
 
