@@ -18,6 +18,11 @@
       repeating-linear-gradient(0deg,rgba(23,33,48,.018) 0,rgba(23,33,48,.018) 1px,transparent 1px,transparent 5px),
       linear-gradient(180deg,#fffaf0,#f1e8d8)!important;
     box-shadow:0 16px 36px rgba(0,0,0,.31),inset 0 1px 0 #fff!important;
+    transition:box-shadow .2s ease,transform .2s ease!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card.waiter-receipt-complete{
+    box-shadow:0 0 0 2px rgba(47,175,112,.22),0 18px 40px rgba(0,0,0,.34),inset 0 1px 0 #fff!important;
   }
 
   body.waiter-note-page-active .stage3-order-block.waiter-receipt-card:before,
@@ -225,6 +230,8 @@
   }
 
   body.waiter-note-page-active .stage3-order-block.waiter-receipt-card>footer{
+    min-height:61px!important;
+    box-sizing:border-box!important;
     padding:12px 15px!important;
     border-top:2px dashed rgba(23,33,48,.2)!important;
     background:rgba(235,224,202,.72)!important;
@@ -235,5 +242,22 @@
     color:#172130!important;
     font-family:Georgia,"Times New Roman",serif!important;
     font-size:21px!important;
+    opacity:0!important;
+    visibility:hidden!important;
+    transform:translateY(5px) scale(.96)!important;
+    transition:opacity .2s ease,transform .2s ease,visibility .2s ease!important;
+    pointer-events:none!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card.waiter-receipt-complete>footer{
+    border-top-color:rgba(47,175,112,.42)!important;
+    background:linear-gradient(180deg,rgba(235,224,202,.76),rgba(224,235,217,.9))!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card.waiter-receipt-complete>footer b{
+    opacity:1!important;
+    visibility:visible!important;
+    transform:none!important;
+    pointer-events:auto!important;
   }
 }
