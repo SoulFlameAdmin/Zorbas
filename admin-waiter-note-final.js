@@ -33,6 +33,13 @@
     return activeItems.length > 0 && activeItems.every(isIssued);
   }
 
+  function setButtonVisible(button, visible) {
+    button.hidden = !visible;
+    if (visible) button.style.removeProperty('display');
+    else button.style.setProperty('display', 'none', 'important');
+    document.body.classList.toggle('waiter-bill-visible', visible);
+  }
+
   function ensureButton() {
     let button = document.getElementById('waiterFixedBill');
     if (button) return button;
@@ -41,13 +48,14 @@
     button.id = 'waiterFixedBill';
     button.type = 'button';
     button.className = 'waiter-fixed-bill';
-    button.hidden = true;
     button.setAttribute('aria-label', 'Принт на сметка');
     button.innerHTML = `
       <span class="wfb-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none"><path d="M7 8V3h10v5M7 17H5a2 2 0 0 1-2-2v-4a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v4a2 2 0 0 1-2 2h-2M7 14h10v7H7v-7Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/><path d="M17.5 11.5h.01" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
       </span>
       <span class="wfb-copy"><b>ПРИНТ СМЕТКА</b><small></small></span>`;
+
+    setButtonVisible(button, false);
 
     button.addEventListener('click', () => {
       if (button.hidden || button.disabled) return;
@@ -75,8 +83,7 @@
     const fullyIssued = notePage && visitIsFullyIssued(visitId);
     const visible = Boolean(source && fullyIssued);
 
-    button.hidden = !visible;
-    document.body.classList.toggle('waiter-bill-visible', visible);
+    setButtonVisible(button, visible);
 
     if (!visible) {
       button.disabled = true;
