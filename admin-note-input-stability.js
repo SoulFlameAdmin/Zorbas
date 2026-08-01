@@ -1,17 +1,26 @@
 (() => {
   'use strict';
 
-  if (window.ZorbasNoteInputStability) return;
-  window.ZorbasNoteInputStability = true;
+  if (window.ZorbasNoteInputStabilityV2) return;
+  window.ZorbasNoteInputStabilityV2 = true;
 
-  const STYLE_ID = 'zorbas-note-input-stability-style';
+  let keyboardLocked = false;
+  let pendingRefresh = false;
+  let blurTimer = 0;
+
+  const inputFocused = () => document.activeElement?.id === 'waiterQuickInput';
 
   function installStyle() {
-    if (document.getElementById(STYLE_ID)) return;
+    if (document.getElementById('zorbas-note-input-stability-v2-style')) return;
     const style = document.createElement('style');
-    style.id = STYLE_ID;
+    style.id = 'zorbas-note-input-stability-v2-style';
     style.textContent = `
       @media (max-width:650px) {
+        html.zorbas-keyboard-open,
+        html.zorbas-keyboard-open body {
+          overscroll-behavior:none!important;
+        }
+
         .stage3-waiter-notepad.zorbas-input-first {
           display:flex!important;
           flex-direction:column!important;
@@ -42,7 +51,7 @@
         .stage3-waiter-notepad.zorbas-input-first > .waiter-composer {
           order:3!important;
           position:relative!important;
-          z-index:5!important;
+          z-index:20!important;
           display:grid!important;
           margin:0 12px!important;
           padding:10px!important;
@@ -68,10 +77,10 @@
 
         #waiterQuickInput {
           position:relative!important;
-          z-index:6!important;
+          z-index:21!important;
           display:block!important;
           width:100%!important;
-          min-height:56px!important;
+          min-height:58px!important;
           box-sizing:border-box!important;
           margin:0!important;
           padding:0 15px!important;
@@ -124,43 +133,18 @@
           font-weight:900;
           letter-spacing:.13em;
         }
-
-        .waiter-main-action {
-          position:relative!important;
-          z-index:2!important;
-        }
       }
     `;
     document.head.appendChild(style);
   }
 
-  function currentInput() {
-    return document.getElementById('waiterQuickInput');
-  }
-
-  function moveComposerFirst() {
+  function prepareInput() {
     const notepad = document.querySelector('.stage3-waiter-notepad');
-    if (!notepad) return;
+    const input = document.getElementById('waiterQuickInput');
+    if (!notepad || !input) return;
 
-    const history = Array.from(notepad.children).find(node => node.classList?.contains('stage3-live-note'));
-    const title = Array.from(notepad.children).find(node => node.classList?.contains('stage3-new-position-title'));
-    const cart = Array.from(notepad.children).find(node => node.classList?.contains('stage3-current-cart'));
-    const composer = Array.from(notepad.children).find(node => node.classList?.contains('waiter-composer'));
-    const suggestions = Array.from(notepad.children).find(node => node.id === 'waiterSuggestionBox');
-
-    if (!composer) return;
+    // CSS order is enough. Never move the focused input in the DOM.
     notepad.classList.add('zorbas-input-first');
-
-    if (history) {
-      [title, cart, composer, suggestions].filter(Boolean).forEach(node => {
-        notepad.insertBefore(node, history);
-      });
-    }
-  }
-
-  function makeInputWritable() {
-    const input = currentInput();
-    if (!input) return;
 
     input.disabled = false;
     input.readOnly = false;
@@ -172,23 +156,26 @@
     input.spellcheck = false;
     input.setAttribute('aria-label', 'Напиши продукт за бележката');
 
-    if (typeof waiterState !== 'undefined' && input.value !== String(waiterState.query || '')) {
-      input.value = String(waiterState.query || '');
-    }
+    if (input.dataset.zorbasKeyboardV2 === '1') return;
+    input.dataset.zorbasKeyboardV2 = '1';
 
-    if (input.dataset.zorbasWritable === '1') return;
-    input.dataset.zorbasWritable = '1';
-
-    let composing = false;
-
-    input.addEventListener('compositionstart', () => {
-      composing = true;
+    input.addEventListener('focus', () => {
+      clearTimeout(blurTimer);
+      keyboardLocked = true;
+      document.documentElement.classList.add('zorbas-keyboard-open');
     });
 
-    input.addEventListener('compositionend', () => {
-      composing = false;
-      if (typeof waiterState !== 'undefined') waiterState.query = input.value;
-      if (typeof updateWaiterSuggestions === 'function') updateWaiterSuggestions();
+    input.addEventListener('blur', () => {
+      clearTimeout(blurTimer);
+      blurTimer = window.setTimeout(async () => {
+        if (inputFocused()) return;
+        keyboardLocked = false;
+        document.documentElement.classList.remove('zorbas-keyboard-open');
+        if (pendingRefresh && typeof refresh === 'function') {
+          pendingRefresh = false;
+          try { await refresh(); } catch {}
+        }
+      }, 350);
     });
 
     input.addEventListener('input', () => {
@@ -196,67 +183,53 @@
         waiterState.query = input.value;
         waiterState.showMenu = false;
       }
-      if (!composing && typeof updateWaiterSuggestions === 'function') updateWaiterSuggestions();
     }, true);
 
-    input.addEventListener('keydown', event => {
-      if (event.key !== 'Enter' || composing) return;
-      event.preventDefault();
-      if (typeof waiterState !== 'undefined' && waiterState.candidate && typeof acceptWaiterItem === 'function') {
-        acceptWaiterItem(waiterState.candidate);
-      }
-    }, true);
-
-    const composer = input.closest('.waiter-composer');
-    const focusInput = event => {
-      if (event?.target === input) return;
-      input.focus({preventScroll:false});
-    };
-    composer?.addEventListener('pointerdown', focusInput, {passive:true});
-    composer?.addEventListener('click', focusInput);
+    input.closest('.waiter-composer')?.addEventListener('click', event => {
+      if (event.target !== input) input.focus({preventScroll:true});
+    });
   }
 
-  function stabilize() {
-    installStyle();
-    moveComposerFirst();
-    makeInputWritable();
-  }
+  installStyle();
 
   const baseRender = typeof renderWaiterMobile === 'function' ? renderWaiterMobile : null;
   if (baseRender) {
     const stableRender = function (...args) {
+      // Android resizes the viewport when its keyboard opens. Keeping this DOM
+      // untouched is what keeps the keyboard and caret alive.
+      if (keyboardLocked && inputFocused() && document.getElementById('waiterQuickInput')?.isConnected) {
+        return;
+      }
       const result = baseRender.apply(this, args);
-      queueMicrotask(stabilize);
+      queueMicrotask(prepareInput);
       return result;
     };
     renderWaiterMobile = stableRender;
     window.renderWaiterMobile = stableRender;
   }
 
-  document.addEventListener('click', event => {
-    const composer = event.target.closest?.('.waiter-composer');
-    if (!composer) return;
-    const input = composer.querySelector('#waiterQuickInput');
-    if (input && event.target !== input) input.focus({preventScroll:false});
-  }, true);
+  if (typeof refresh === 'function') {
+    const baseRefresh = refresh;
+    refresh = async function (...args) {
+      if (keyboardLocked && inputFocused()) {
+        pendingRefresh = true;
+        return snapshot;
+      }
+      return baseRefresh.apply(this, args);
+    };
+  }
 
   let scheduled = false;
-  const schedule = () => {
+  const schedulePrepare = () => {
     if (scheduled) return;
     scheduled = true;
     requestAnimationFrame(() => {
       scheduled = false;
-      stabilize();
+      prepareInput();
     });
   };
 
-  new MutationObserver(schedule).observe(document.body, {subtree:true, childList:true});
-  window.addEventListener('pageshow', schedule);
-  window.visualViewport?.addEventListener('resize', () => {
-    if (document.activeElement?.id === 'waiterQuickInput') {
-      document.activeElement.scrollIntoView({block:'center', behavior:'smooth'});
-    }
-  });
-
-  stabilize();
+  new MutationObserver(schedulePrepare).observe(document.body, {subtree:true, childList:true});
+  window.addEventListener('pageshow', schedulePrepare);
+  prepareInput();
 })();
