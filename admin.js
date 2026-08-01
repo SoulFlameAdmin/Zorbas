@@ -19,7 +19,8 @@
     '/admin-stage2.js?v=20260731-stage2a',
     '/admin-stage3.js?v=20260731-stage3c',
     '/admin-stage3-note-checks.js?v=20260731-notechecks1',
-    '/admin-note-input-stability.js?v=20260801-note2'
+    '/admin-note-input-stability.js?v=20260801-note2',
+    '/admin-waiter-home-v1.js?v=20260801-home1'
   ];
 
   const load = src => new Promise((resolve, reject) => {
