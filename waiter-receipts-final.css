@@ -1,0 +1,239 @@
+/* ZORBAS waiter · receipt history with direct checks */
+@media (max-width:650px){
+  body.waiter-note-page-active .stage3-order-history{
+    display:grid!important;
+    gap:13px!important;
+    padding:11px!important;
+    background:transparent!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card{
+    position:relative!important;
+    margin:0!important;
+    overflow:hidden!important;
+    border:0!important;
+    border-radius:18px!important;
+    color:#172130!important;
+    background:
+      repeating-linear-gradient(0deg,rgba(23,33,48,.018) 0,rgba(23,33,48,.018) 1px,transparent 1px,transparent 5px),
+      linear-gradient(180deg,#fffaf0,#f1e8d8)!important;
+    box-shadow:0 16px 36px rgba(0,0,0,.31),inset 0 1px 0 #fff!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card:before,
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card:after{
+    content:"";
+    position:absolute;
+    z-index:4;
+    top:64px;
+    width:16px;
+    height:16px;
+    border-radius:50%;
+    background:#092039;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card:before{left:-8px}
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card:after{right:-8px}
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card>header{
+    min-height:62px!important;
+    box-sizing:border-box!important;
+    padding:13px 15px!important;
+    display:flex!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    gap:10px!important;
+    border-bottom:2px dashed rgba(23,33,48,.2)!important;
+    background:rgba(235,224,202,.72)!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card>header b{
+    color:#9f6900!important;
+    font-size:13px!important;
+    font-weight:900!important;
+    letter-spacing:.12em!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card>header span,
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card .stage3-note-issued-count{
+    color:#69717d!important;
+    font-size:11px!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card>header button{
+    position:relative!important;
+    z-index:6!important;
+    min-height:36px!important;
+    padding:0 11px!important;
+    border:1px solid rgba(23,33,48,.18)!important;
+    border-radius:10px!important;
+    background:#25374a!important;
+    color:#fff!important;
+    font-size:10px!important;
+    font-weight:800!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card>div>p{
+    position:relative!important;
+    min-height:72px!important;
+    box-sizing:border-box!important;
+    margin:0!important;
+    padding:12px 13px 12px 62px!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    align-items:center!important;
+    gap:10px!important;
+    border-bottom:1px dashed rgba(23,33,48,.2)!important;
+    background:transparent!important;
+    transition:background .16s ease,opacity .16s ease!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card>div>p:last-child{
+    border-bottom:0!important;
+  }
+
+  body.waiter-note-page-active .waiter-receipt-toggle{
+    position:absolute!important;
+    z-index:5!important;
+    inset:0!important;
+    width:100%!important;
+    height:100%!important;
+    margin:0!important;
+    padding:0!important;
+    border:0!important;
+    border-radius:0!important;
+    background:transparent!important;
+    color:transparent!important;
+    box-shadow:none!important;
+    cursor:pointer!important;
+    touch-action:manipulation!important;
+  }
+
+  body.waiter-note-page-active .waiter-receipt-toggle:before{
+    content:"";
+    position:absolute;
+    left:13px;
+    top:50%;
+    width:36px;
+    height:36px;
+    border:2px solid #687381;
+    border-radius:10px;
+    background:#fffdf8;
+    box-shadow:inset 0 1px 2px rgba(0,0,0,.08);
+    transform:translateY(-50%);
+  }
+
+  body.waiter-note-page-active .waiter-receipt-toggle span{
+    position:absolute;
+    left:13px;
+    top:50%;
+    width:40px;
+    height:40px;
+    display:grid;
+    place-items:center;
+    color:#fff;
+    font-size:24px;
+    font-weight:900;
+    line-height:1;
+    transform:translateY(-50%);
+  }
+
+  body.waiter-note-page-active .waiter-receipt-toggle.checked:before{
+    border-color:#218d59;
+    background:#2faf70;
+    box-shadow:0 0 0 4px rgba(47,175,112,.14);
+  }
+
+  body.waiter-note-page-active .waiter-receipt-toggle.partial:before{
+    border-color:#bd861b;
+    background:#efb33c;
+  }
+
+  body.waiter-note-page-active .waiter-receipt-toggle.saving:before{
+    opacity:.55;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card .stage3-item-name{
+    position:relative!important;
+    z-index:2!important;
+    min-width:0!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card .stage3-item-name b{
+    color:#172130!important;
+    font-size:17px!important;
+    font-weight:700!important;
+    line-height:1.25!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card .stage3-item-name small{
+    color:#69717d!important;
+    font-size:11px!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card .stage3-bar-state,
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card .stage3-kitchen-state,
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card>div>p>em{
+    position:relative!important;
+    z-index:2!important;
+    padding:6px 8px!important;
+    border-radius:999px!important;
+    font-size:9px!important;
+    font-weight:900!important;
+    letter-spacing:.04em!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card .stage3-bar-state{
+    color:#215ea8!important;
+    background:rgba(57,129,219,.13)!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card .stage3-kitchen-state{
+    color:#946606!important;
+    background:rgba(239,179,60,.18)!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card .stage3-kitchen-state.done{
+    color:#176b43!important;
+    background:rgba(47,175,112,.16)!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card>div>p.waiter-receipt-issued{
+    opacity:.64!important;
+    background:rgba(47,175,112,.11)!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card>div>p.waiter-receipt-issued .stage3-item-name b,
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card>div>p.waiter-receipt-issued .stage3-item-name small{
+    color:#5f756a!important;
+    text-decoration-line:line-through!important;
+    text-decoration-thickness:3px!important;
+    text-decoration-color:#218c59!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card>div>p.waiter-receipt-cancelled{
+    opacity:.58!important;
+    background:rgba(223,83,96,.09)!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card>div>p.waiter-receipt-cancelled .stage3-item-name b,
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card>div>p.waiter-receipt-cancelled .stage3-item-name small{
+    color:#a95b62!important;
+    text-decoration-line:line-through!important;
+    text-decoration-thickness:3px!important;
+    text-decoration-color:#cf3947!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card>footer{
+    padding:12px 15px!important;
+    border-top:2px dashed rgba(23,33,48,.2)!important;
+    background:rgba(235,224,202,.72)!important;
+    color:#69717d!important;
+  }
+
+  body.waiter-note-page-active .stage3-order-block.waiter-receipt-card>footer b{
+    color:#172130!important;
+    font-family:Georgia,"Times New Roman",serif!important;
+    font-size:21px!important;
+  }
+}
