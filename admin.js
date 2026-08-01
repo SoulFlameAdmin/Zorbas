@@ -24,7 +24,7 @@
     '/admin-waiter-note-final.js?v=20260801-note3',
     '/admin-manager-active-final.js?v=20260801-manager-active1',
     '/admin-manager-stability-v2.js?v=20260801-manager-stable2',
-    '/admin-waiter-receipts-final.js?v=20260801-waiter-receipts1'
+    '/admin-waiter-receipts-final.js?v=20260801-waiter-receipts2'
   ];
 
   const load = src => new Promise((resolve, reject) => {
