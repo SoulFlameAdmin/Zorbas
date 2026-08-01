@@ -1,5 +1,6 @@
 (() => {
   const files = [
+    '/admin-login-stability.js?v=20260801-login1',
     '/admin-core.js',
     '/admin-order.js?v=20260730-routing3',
     '/admin-auto-routing.js?v=20260730-routing3',
