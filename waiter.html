@@ -1,16 +1,50 @@
-<!doctype html><html lang="bg"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#0b1018"><title>ZORBAS · Сервитьори</title></head><body style="margin:0;min-height:100vh;display:grid;place-items:center;background:#0b1018;color:white;font-family:system-ui"><div id="waiterBoot">Зареждане на сервитьорския екран…</div><script>
+<!doctype html><html lang="bg"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#07111f"><title>ZORBAS · Сервитьори</title><style>html,body{margin:0;min-height:100%;background:#07111f;color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}#waiterBoot{position:fixed;inset:0;display:grid;place-items:center;background:radial-gradient(circle at 50% 20%,#173454 0,#07111f 48%,#040a12 100%)}.bootMini{text-align:center}.bootMini strong{display:block;font-size:24px;letter-spacing:.24em}.bootMini span{display:block;margin-top:10px;color:#9fb1c6;font-size:13px}</style></head><body><div id="waiterBoot"><div class="bootMini"><strong>ZORBAS</strong><span>Зареждане на програмата…</span></div></div><script>
 (async()=>{
   try{
-    const response=await fetch('/admin.html?waiter-shell=20260730-reservation1',{cache:'no-store'});
+    const response=await fetch('/admin.html?staff-shell=20260801-stable3',{cache:'no-store'});
     if(!response.ok)throw new Error('HTTP '+response.status);
     let html=await response.text();
+    const critical=`<style id="zorbas-critical-boot">
+      html.zorbas-booting,html.zorbas-booting body{margin:0;min-height:100%;background:#07111f;overflow:hidden}
+      html.zorbas-booting body>*:not(#zorbasBoot){visibility:hidden!important}
+      .hidden{display:none!important}
+      #zorbasBoot{position:fixed;inset:0;z-index:2147483647;display:grid;place-items:center;padding:24px;background:radial-gradient(circle at 50% 18%,#183958 0,#081522 43%,#040a12 100%);color:#fff;font-family:Inter,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;opacity:1;transition:opacity .2s ease}
+      #zorbasBoot.done{opacity:0;pointer-events:none}
+      #zorbasBoot .zb-card{width:min(360px,88vw);text-align:center}
+      #zorbasBoot .zb-mark{width:72px;height:72px;margin:0 auto 20px;display:grid;place-items:center;border:1px solid rgba(142,184,231,.35);border-radius:22px;background:linear-gradient(145deg,#1d3c5c,#102338);box-shadow:0 22px 70px rgba(0,0,0,.42);font-size:30px;font-weight:950;letter-spacing:.04em}
+      #zorbasBoot strong{display:block;font-size:27px;letter-spacing:.22em}
+      #zorbasBoot p{margin:10px 0 0;color:#a9bacb;font-size:13px}
+      #zorbasBoot .zb-line{height:4px;margin:24px auto 0;overflow:hidden;border-radius:999px;background:#14283d}
+      #zorbasBoot .zb-line:after{content:"";display:block;width:42%;height:100%;border-radius:inherit;background:linear-gradient(90deg,#4f8ff7,#8bbcff);animation:zbload 1.05s ease-in-out infinite alternate}
+      #zorbasBoot button{display:none;width:100%;min-height:50px;margin-top:18px;border:1px solid #35506d;border-radius:14px;background:#152a40;color:white;font:800 14px system-ui}
+      #zorbasBoot.problem button{display:block}
+      @keyframes zbload{from{transform:translateX(-15%)}to{transform:translateX(150%)}}
+    </style>`;
+    const styles=`
+      <link rel="stylesheet" href="/waiter-mobile.css?v=20260730-waiter1">
+      <link rel="stylesheet" href="/waiter-mobile-v2.css?v=20260730-waiter2">
+      <link rel="stylesheet" href="/waiter-reservation.css?v=20260730-reservation1">
+      <link rel="stylesheet" href="/admin-manager-v2.css?v=20260731-manager2">
+      <link rel="stylesheet" href="/admin-bill-flow-v1.css?v=20260731-bill1">
+      <link rel="stylesheet" href="/admin-stage1.css?v=20260731-stage1">
+      <link rel="stylesheet" href="/admin-stage2.css?v=20260731-stage2a">
+      <link rel="stylesheet" href="/admin-stage3.css?v=20260731-stage3b">
+      <link rel="stylesheet" href="/admin-stage3-v3.css?v=20260731-stage3c">
+      <link rel="stylesheet" href="/admin-stage3-note-checks.css?v=20260731-notechecks1">
+      <link rel="stylesheet" href="/staff-mobile-2026.css?v=20260801-mobile1">
+      <link rel="stylesheet" href="/staff-simple-notes-2026.css?v=20260801-simple1">`;
+    const boot=`<div id="zorbasBoot"><div class="zb-card"><div class="zb-mark">Z</div><strong>ZORBAS</strong><p id="zorbasBootText">Подготвяме управлението…</p><div class="zb-line"></div><button type="button" onclick="location.reload()">ОПИТАЙ ОТНОВО</button></div></div><script>window.__zorbasBootTimer=setTimeout(function(){var b=document.getElementById('zorbasBoot'),t=document.getElementById('zorbasBootText');if(b)b.classList.add('problem');if(t)t.textContent='Зареждането се забави. Провери връзката.';},12000);<\/script>`;
+    html=html.replace('<html lang="bg">','<html lang="bg" class="zorbas-booting">');
     html=html.replace('<title>ZORBAS · Управление</title>','<title>ZORBAS · Сервитьори</title>');
-    html=html.replace(/\/admin\.js\?v=[^\"]+/,'/admin.js?v=20260730-reservation1');
+    html=html.replace('</head>',critical+styles+'</head>');
+    html=html.replace('<body>','<body>'+boot);
+    html=html.replace(/\/admin\.js\?v=[^\"]+/,'/admin.js?v=20260801-stable3');
     document.open();
     document.write(html);
     document.close();
   }catch(error){
-    document.getElementById('waiterBoot').textContent='Не може да се зареди управлението: '+error.message;
+    const root=document.getElementById('waiterBoot');
+    root.innerHTML='<div class="bootMini"><strong>ZORBAS</strong><span>Не може да се зареди програмата.</span><button style="margin-top:18px;min-height:48px;padding:0 18px;border:1px solid #35506d;border-radius:13px;background:#152a40;color:white;font-weight:800" onclick="location.reload()">ОПИТАЙ ОТНОВО</button></div>';
   }
 })();
 </script></body></html>
