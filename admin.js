@@ -22,7 +22,9 @@
     '/admin-note-input-stability.js?v=20260801-note2',
     '/admin-waiter-home-v1.js?v=20260801-home2',
     '/admin-waiter-note-final.js?v=20260801-note3',
-    '/admin-manager-active-final.js?v=20260801-manager-active1'
+    '/admin-manager-active-final.js?v=20260801-manager-active1',
+    '/admin-manager-stability-v2.js?v=20260801-manager-stable2',
+    '/admin-waiter-receipts-final.js?v=20260801-waiter-receipts1'
   ];
 
   const load = src => new Promise((resolve, reject) => {
