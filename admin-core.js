@@ -3,8 +3,38 @@ let snapshot=null,activeView='tables',selectedArea=null,selectedTable=null,order
 Z.registerPwa();document.querySelectorAll('[data-install-pwa]').forEach(b=>b.onclick=Z.installPwa);
 const $=id=>document.getElementById(id);
 
-async function init(){const session=await Z.requireSession();if(!session)return showLogin();$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');$('sessionName').textContent=`${session.display_name} · ${session.role}`;await refresh();await loadShift();const requested=new URLSearchParams(location.search).get('view');if(['tables','order','orders','manager','archive','reservations','menuAdmin','adminStats'].includes(requested))switchView(requested);}
-function showLogin(){$('loginView').classList.remove('hidden');$('appView').classList.add('hidden');}
+function finishBoot(){
+  clearTimeout(window.__zorbasBootTimer);
+  const boot=$('zorbasBoot');
+  document.documentElement.classList.remove('zorbas-booting');
+  document.documentElement.classList.add('zorbas-ready');
+  if(boot){boot.classList.add('done');setTimeout(()=>boot.remove(),220);}
+}
+
+async function init(){
+  try{
+    const session=await Z.requireSession();
+    if(!session)return showLogin();
+    $('loginView').classList.add('hidden');
+    $('appView').classList.remove('hidden');
+    $('sessionName').textContent=`${session.display_name} · ${session.role}`;
+    await refresh();
+    await loadShift();
+    const requested=new URLSearchParams(location.search).get('view');
+    if(['tables','order','orders','manager','archive','reservations','menuAdmin','adminStats'].includes(requested))switchView(requested);
+    finishBoot();
+  }catch(error){
+    console.error('Zorbas init failed',error);
+    showLogin('Неуспешно зареждане. Провери връзката и опитай отново.');
+  }
+}
+function showLogin(message=''){
+  $('loginView').classList.remove('hidden');
+  $('appView').classList.add('hidden');
+  if(message)$('loginMessage').textContent=message;
+  finishBoot();
+  setTimeout(()=>$('loginForm')?.elements?.password?.focus({preventScroll:true}),80);
+}
 $('loginForm').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.currentTarget);$('loginMessage').textContent='Влизане…';try{const data=await Z.rpc('zorbas_staff_login',{p_username:f.get('username'),p_password:f.get('password'),p_display_name:f.get('display_name'),p_device_id:Z.deviceId()});Z.setToken(data.token);location.reload();}catch(error){$('loginMessage').textContent=error.message;}};
 $('logoutButton').onclick=Z.logout;
 
