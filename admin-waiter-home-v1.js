@@ -1,9 +1,9 @@
 (() => {
   'use strict';
 
-  if (window.ZorbasWaiterHomeV1) return;
+  if (window.ZorbasWaiterHomeV2) return;
   if (typeof waiterState === 'undefined' || typeof renderWaiterMobile !== 'function') return;
-  window.ZorbasWaiterHomeV1 = true;
+  window.ZorbasWaiterHomeV2 = true;
 
   const mobile = () => window.matchMedia('(max-width:650px)').matches;
   const esc = value => Z.esc(value == null ? '' : String(value));
@@ -17,8 +17,7 @@
   function icon(kind) {
     const icons = {
       tables: '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M19 28h26M23 28v18M41 28v18M15 23v24M49 23v24M13 47h8M43 47h8M18 20h28"/></svg>',
-      notes: '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M19 10h26v43l-5-4-5 4-5-4-5 4-6-4zM25 22h14M25 30h14M25 38h9"/></svg>',
-      plus: '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M32 14v36M14 32h36"/></svg>'
+      notes: '<svg viewBox="0 0 64 64" aria-hidden="true"><path d="M19 10h26v43l-5-4-5 4-5-4-5 4-6-4zM25 22h14M25 30h14M25 38h9"/></svg>'
     };
     return icons[kind] || '';
   }
@@ -75,7 +74,6 @@
 
     return {
       table,
-      orders,
       total,
       latest,
       status,
@@ -104,8 +102,8 @@
       const rawNumber = String(entry.table.table_number || '—');
       return `<button type="button" class="wh-table-row" data-wh-table="${esc(entry.table.id)}">
         <span class="wh-table-name">
-          <span class="wh-table-number">${esc(rawNumber)}</span>
-          <b>${esc(tableLabel(entry.table))}</b>
+          <span class="wh-table-number"><i></i><b>${esc(rawNumber)}</b></span>
+          <strong>${esc(tableLabel(entry.table))}</strong>
         </span>
         <span class="wh-table-amount">${Z.money(entry.total)}</span>
         <span class="wh-table-status ${entry.statusClass}">${esc(entry.status)}</span>
@@ -140,7 +138,7 @@
 
     root.innerHTML = `<main class="wh-home">
       <header class="wh-header">
-        <div class="wh-emblem" aria-hidden="true">Z</div>
+        <div class="wh-header-spacer" aria-hidden="true"></div>
         <div class="wh-brand">
           <small>${esc(displayName())}</small>
           <strong>ZORBAS</strong>
@@ -170,7 +168,7 @@
         </button>
       </section>
 
-      <section>
+      <section class="wh-recent">
         <div class="wh-section-head"><h3>Последни маси</h3>${tables.length > 3 ? '<button type="button" data-wh-action="tables">Виж всички</button>' : ''}</div>
         <div class="wh-table-list">${renderRows(tables)}</div>
       </section>
@@ -238,10 +236,9 @@
     selectedArea = table.area_id;
     switchView('tables');
     renderWaiterMobile();
-    setTimeout(() => document.getElementById('waiterQuickInput')?.focus({preventScroll:false}), 60);
   }
 
-  async function toggleShift() {
+  function toggleShift() {
     const button = document.getElementById('shiftButton');
     waiterState.homeMenuOpen = false;
     if (!button) return;
