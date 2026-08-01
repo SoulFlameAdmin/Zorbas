@@ -1,0 +1,277 @@
+/* ZORBAS mobile notes simplification — visual only */
+@media (max-width: 650px) {
+  /* Smaller, calmer application header */
+  #appView .content {
+    padding-top: 70px !important;
+  }
+
+  .waiter-mobile-top {
+    min-height: 58px !important;
+    padding: 6px 10px calc(6px + env(safe-area-inset-top)) !important;
+    gap: 8px !important;
+    background: rgba(7, 17, 31, .98) !important;
+    box-shadow: none !important;
+  }
+
+  .waiter-notes-button,
+  .waiter-burger {
+    min-height: 46px !important;
+    height: 46px !important;
+    border-radius: 14px !important;
+    box-shadow: none !important;
+  }
+
+  .waiter-notes-button {
+    padding: 0 13px !important;
+    font-size: 13px !important;
+  }
+
+  .waiter-burger {
+    width: 50px !important;
+  }
+
+  .waiter-mobile-brand small {
+    font-size: 10px !important;
+  }
+
+  .waiter-mobile-brand strong {
+    font-size: 15px !important;
+    letter-spacing: .18em !important;
+  }
+
+  /* Let the list use the full phone width without a card inside a card */
+  .waiter-mobile {
+    padding-bottom: 20px !important;
+  }
+
+  .stage3-waiter-notepad {
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding-bottom: 0 !important;
+  }
+
+  .stage3-waiter-notepad > .stage3-live-note {
+    margin: 0 !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    overflow: visible !important;
+  }
+
+  /* One compact visit summary instead of several heavy sections */
+  .stage3-live-note > header {
+    min-height: 64px !important;
+    align-items: center !important;
+    padding: 9px 12px !important;
+    border: 1px solid #263a50 !important;
+    border-radius: 14px !important;
+    background: #101d2c !important;
+    margin: 0 0 8px !important;
+  }
+
+  .stage3-live-note > header > div {
+    max-width: calc(100% - 118px) !important;
+    gap: 1px !important;
+  }
+
+  .stage3-live-note > header small {
+    font-size: 8px !important;
+    letter-spacing: .12em !important;
+  }
+
+  .stage3-live-note > header strong {
+    font-size: 17px !important;
+    line-height: 1.15 !important;
+  }
+
+  .stage3-live-note > header span {
+    overflow: hidden !important;
+    font-size: 10px !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .stage3-bill-button {
+    min-width: 108px !important;
+    min-height: 48px !important;
+    border-radius: 12px !important;
+    padding: 6px 9px !important;
+  }
+
+  .stage3-bill-button small,
+  .stage3-bill-button span {
+    font-size: 7px !important;
+  }
+
+  .stage3-bill-button b {
+    font-size: 16px !important;
+  }
+
+  /* The three summary cells repeat information already visible in the list */
+  .stage3-visit-summary {
+    display: none !important;
+  }
+
+  /* Compact order list */
+  .stage3-order-history {
+    display: grid !important;
+    gap: 8px !important;
+    padding: 0 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  .stage3-order-block {
+    margin: 0 !important;
+    overflow: hidden !important;
+    border: 1px solid #263a50 !important;
+    border-radius: 14px !important;
+    background: #0d1926 !important;
+    box-shadow: none !important;
+  }
+
+  .stage3-order-block > header {
+    min-height: 42px !important;
+    padding: 7px 11px !important;
+    background: #142235 !important;
+  }
+
+  .stage3-order-block > header > div {
+    gap: 7px !important;
+  }
+
+  .stage3-order-block > header b {
+    font-size: 10px !important;
+    letter-spacing: .08em !important;
+  }
+
+  .stage3-order-block > header span {
+    font-size: 10px !important;
+  }
+
+  .stage3-order-block > header button {
+    width: 32px !important;
+    min-width: 32px !important;
+    height: 32px !important;
+    padding: 0 !important;
+    border-radius: 10px !important;
+    font-size: 0 !important;
+  }
+
+  .stage3-order-block > header button::after {
+    content: '✎';
+    font-size: 16px;
+  }
+
+  .stage3-order-block p {
+    min-height: 54px !important;
+    align-items: center !important;
+    padding: 8px 11px !important;
+    border-top-color: #223349 !important;
+    background: #0c1724 !important;
+  }
+
+  .stage3-item-name {
+    gap: 1px !important;
+  }
+
+  .stage3-item-name b {
+    font-size: 15px !important;
+    line-height: 1.2 !important;
+  }
+
+  .stage3-item-name small {
+    margin-top: 2px !important;
+    font-size: 10px !important;
+    line-height: 1.2 !important;
+  }
+
+  .stage3-kitchen-state,
+  .stage3-bar-state,
+  .stage3-order-block em {
+    padding: 5px 8px !important;
+    border-radius: 999px !important;
+    font-size: 8px !important;
+    letter-spacing: .06em !important;
+  }
+
+  .stage3-order-block > footer {
+    min-height: 42px !important;
+    justify-content: flex-end !important;
+    padding: 7px 11px !important;
+    border-top: 1px solid #223349 !important;
+    background: #132235 !important;
+  }
+
+  /* The operator is already shown in the top bar; do not repeat Admin on every note */
+  .stage3-order-block > footer span {
+    display: none !important;
+  }
+
+  .stage3-order-block > footer b {
+    font-size: 18px !important;
+  }
+
+  /* No floating button over the last note */
+  .waiter-main-action {
+    position: relative !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    z-index: 1 !important;
+    width: calc(100% - 40px) !important;
+    min-height: 54px !important;
+    margin: 12px 20px 4px !important;
+    border-radius: 14px !important;
+    box-shadow: none !important;
+  }
+
+  .stage3-new-position-title {
+    margin: 12px 20px 0 !important;
+    padding: 12px 0 7px !important;
+  }
+
+  /* Do not visually multiply borders around the composer */
+  .stage3-waiter-notepad > .waiter-lines,
+  .stage3-waiter-notepad > .waiter-composer,
+  .stage3-waiter-notepad > #waiterSuggestionBox {
+    margin-left: 20px !important;
+    margin-right: 20px !important;
+  }
+
+  .stage3-waiter-notepad > .waiter-composer {
+    border: 1px solid #263a50 !important;
+    border-radius: 14px !important;
+    padding: 10px !important;
+  }
+
+  .stage3-waiter-notepad > .waiter-composer input {
+    min-height: 50px !important;
+  }
+
+  /* Guest tabs become smaller and easier to scan */
+  .stage3-guest-tabs {
+    margin: 0 0 8px !important;
+    padding: 0 1px 2px !important;
+    gap: 7px !important;
+  }
+
+  .stage3-guest-tab {
+    flex-basis: 112px !important;
+    min-height: 54px !important;
+    border-radius: 13px !important;
+    padding: 7px 9px !important;
+  }
+
+  .stage3-guest-tab span,
+  .stage3-guest-tab b {
+    font-size: 11px !important;
+  }
+
+  .stage3-guest-tab small {
+    font-size: 8px !important;
+  }
+}
