@@ -7,6 +7,15 @@
   let scheduled = false;
   let decorating = false;
 
+  function ensureStyle() {
+    if (document.querySelector('link[data-manager-active-final]')) return;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = '/manager-active-final.css?v=20260801-manager-active1';
+    link.dataset.managerActiveFinal = '1';
+    document.head.appendChild(link);
+  }
+
   const orders = () => (typeof snapshot !== 'undefined' && snapshot?.orders) ? snapshot.orders : [];
   const activeOrders = () => orders().filter(order => order.manager_state !== 'completed' && !['completed', 'cancelled', 'returned'].includes(order.status));
 
@@ -113,6 +122,7 @@
     if (decorating) return;
     decorating = true;
     try {
+      ensureStyle();
       markManagerPage();
       ensureSummary();
       decorateReceipts();
