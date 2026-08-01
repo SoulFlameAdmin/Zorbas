@@ -22,6 +22,11 @@
     return item.status !== 'cancelled' && quantity > 0 && issuedQuantity(item) >= quantity;
   }
 
+  function isReceiptComplete(order) {
+    const activeItems = (order?.items || []).filter(item => item.status !== 'cancelled');
+    return activeItems.length > 0 && activeItems.every(isIssued);
+  }
+
   function decorate() {
     scheduled = false;
 
@@ -29,7 +34,20 @@
       const order = orderFor(card.dataset.stage3OrderDetail);
       if (!order) return;
 
+      const receiptComplete = isReceiptComplete(order);
       card.classList.add('waiter-receipt-card');
+      card.classList.toggle('waiter-receipt-complete', receiptComplete);
+      card.classList.toggle('waiter-receipt-pending', !receiptComplete);
+      card.dataset.waiterReceiptComplete = String(receiptComplete);
+
+      const total = card.querySelector(':scope > footer b');
+      if (total) {
+        total.setAttribute('aria-hidden', receiptComplete ? 'false' : 'true');
+        total.title = receiptComplete
+          ? 'Всички продукти са издадени.'
+          : 'Сумата ще се покаже, когато всички продукти са издадени.';
+      }
+
       const rows = [...card.querySelectorAll(':scope > div > p')];
 
       rows.forEach((row, index) => {
