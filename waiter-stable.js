@@ -51,6 +51,51 @@
   function orderFor(id) { return (state.snapshot?.orders || []).find(order => String(order.id) === String(id)) || null; }
   function items() { return (state.snapshot?.items || []).filter(item => item.active !== false); }
   function categories() { return state.snapshot?.categories || []; }
+  const CYRILLIC_TO_LATIN = {а:'a', б:'b', в:'v', г:'g', д:'d', е:'e', ж:'zh', з:'z', и:'i', й:'y', к:'k', л:'l', м:'m', н:'n', о:'o', п:'p', р:'r', с:'s', т:'t', у:'u', ф:'f', х:'h', ц:'ts', ч:'ch', ш:'sh', щ:'sht', ъ:'a', ь:'y', ю:'yu', я:'ya', ё:'yo'};
+  function searchKey(value) {
+    return String(value ?? '').normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('bg-BG').replace(/[а-яё]/g, letter => CYRILLIC_TO_LATIN[letter] || letter).replace(/[^a-z0-9]+/g, ' ').trim();
+  }
+  function productSearchText(item) {
+    return [item?.name, item?.name_bg, item?.name_en, item?.english_name, item?.name_english, item?.description, item?.description_en].filter(Boolean).join(' ');
+  }
+  function editDistance(left, right) {
+    if (left === right) return 0;
+    if (!left) return right.length;
+    if (!right) return left.length;
+    let previous = Array.from({length: right.length + 1}, (_, index) => index);
+    for (let row = 1; row <= left.length; row += 1) {
+      const current = [row];
+      for (let column = 1; column <= right.length; column += 1) current[column] = Math.min(current[column - 1] + 1, previous[column] + 1, previous[column - 1] + (left[row - 1] === right[column - 1] ? 0 : 1));
+      previous = current;
+    }
+    return previous[right.length];
+  }
+  function productSearchScore(item, query) {
+    if (!query) return 0;
+    const name = searchKey(productSearchText(item));
+    const description = searchKey([item?.description, item?.description_en].filter(Boolean).join(' '));
+    if (!name) return null;
+    const words = name.split(' ').filter(Boolean);
+    if (name === query) return 0;
+    const exactWord = words.findIndex(word => word === query);
+    if (exactWord >= 0) return 8 + exactWord;
+    if (name.startsWith(query)) return 10 + name.length - query.length;
+    const firstWordPrefix = words.findIndex(word => word.startsWith(query));
+    if (firstWordPrefix >= 0) return 25 + firstWordPrefix * 3 + words[firstWordPrefix].length - query.length;
+    const containsAt = name.indexOf(query);
+    if (containsAt >= 0) return 50 + containsAt;
+    const distance = Math.min(...words.map(word => editDistance(query, word)));
+    const allowedDistance = query.length <= 3 ? 1 : Math.max(1, Math.ceil(query.length * .3));
+    if (distance <= allowedDistance) return 90 + distance * 12;
+    if (description.includes(query)) return 150 + description.indexOf(query);
+    return null;
+  }
+  function searchableItems() {
+    const query = searchKey(state.query);
+    const list = items().filter(item => query || state.categoryId === 'all' || String(item.category_id) === String(state.categoryId));
+    if (!query) return list;
+    return list.map((item, index) => ({item, score: productSearchScore(item, query), index})).filter(row => row.score !== null).sort((left, right) => left.score - right.score || searchKey(productSearchText(left.item)).localeCompare(searchKey(productSearchText(right.item)), 'en') || left.index - right.index).map(row => row.item);
+  }
   function visitsForTable(tableId) {
     const visits = (state.snapshot?.visits || []).filter(visit => String(visit.table_id) === String(tableId) && visit.status === 'active');
     if (visits.length) return visits;
@@ -131,10 +176,11 @@
     return `<div class="ws-section"><div class="ws-section-head"><strong>Гости на масата / Guests</strong><small>Избери към кого е бележката / Choose the guest tab</small></div><div class="ws-guest-bar">${buttons}<button class="ws-guest new ${state.newGuest ? 'active' : ''}" data-new-guest="1">＋ Нови гости / New guests</button></div></div>`;
   }
   function productMarkup() {
-    const query = state.query.trim().toLocaleLowerCase('bg-BG');
-    const filtered = items().filter(item => (state.categoryId === 'all' || String(item.category_id) === String(state.categoryId)) && (!query || `${item.name} ${item.description || ''}`.toLocaleLowerCase('bg-BG').includes(query)));
+    const query = searchKey(state.query);
+    const filtered = searchableItems();
     if (!filtered.length) return '<div class="ws-empty">Няма намерени продукти. / No products found.</div>';
-    return filtered.map(item => { const unavailable = Boolean(item.price_pending) || Number(item.price || 0) <= 0; return `<button class="ws-product" data-add-item="${esc(item.id)}" ${unavailable ? 'disabled' : ''}><span class="ws-product-main"><strong>${esc(item.name)}</strong><small>${esc(item.description || (unavailable ? 'Цената още не е потвърдена / Price pending' : 'Добави към бележката / Add to note'))}</small></span><span class="ws-product-price">${unavailable ? '—' : money(item.price)}</span><span class="ws-product-add">＋</span></button>`; }).join('');
+    const resultLabel = query ? `<div class="ws-search-result-meta">${filtered.length} намерени / found · най-близките са първи / closest first</div>` : '';
+    return resultLabel + filtered.map(item => { const unavailable = Boolean(item.price_pending) || Number(item.price || 0) <= 0; const alternateName = item.name_en || item.english_name || item.name_english || item.name_bg || ''; const description = item.description || (unavailable ? 'Цената още не е потвърдена / Price pending' : 'Добави към бележката / Add to note'); return `<button class="ws-product" data-add-item="${esc(item.id)}" ${unavailable ? 'disabled' : ''}><span class="ws-product-main"><strong>${esc(item.name)}${alternateName && alternateName !== item.name ? ` <em>${esc(alternateName)}</em>` : ''}</strong><small>${esc(description)}</small></span><span class="ws-product-price">${unavailable ? '—' : money(item.price)}</span><span class="ws-product-add">＋</span></button>`; }).join('');
   }
   function cartMarkup() {
     if (!state.cart.length) return '<div class="ws-empty">Бележката е празна. / Note is empty. Избери продукт по-горе. / Choose a product above.</div>';
