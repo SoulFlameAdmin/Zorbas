@@ -163,7 +163,8 @@
     try {
       const visit = selectedVisit();
       const result = await Z.rpc('zorbas_create_order_v4', {p_token: Z.token(), p_table_id: state.tableId, p_visit_id: visit?.id || null, p_open_new_guest: !visit, p_order_type: 'dine_in', p_customer_name: null, p_customer_phone: null, p_ready_at: null, p_note: state.orderNote || null, p_items: state.cart, p_route: state.route});
-      clearOrder(); state.screen = 'order'; state.submitting = false; await refresh({render: false}); renderShell(); setAlert(`Бележка ${result?.code || ''} е изпратена. Можеш да добавиш следваща.`, 'success');
+      const submittedVisitId = result?.visit_id || visit?.id || null;
+      clearOrder(); state.visitId = submittedVisitId; state.screen = 'order'; state.submitting = false; await refresh({render: false}); renderShell(); setAlert(`Бележка ${result?.code || ''} е изпратена. Можеш да добавиш следваща.`, 'success');
     } catch (error) { state.submitting = false; renderContent(); setAlert(error.message || 'Бележката не беше изпратена.', 'error'); }
   }
   async function markReservationArrived(id, button) {
