@@ -7,11 +7,12 @@
   const Z = window.Zorbas;
   if (!Z) return;
 
-  const STORAGE_KEY = 'zorbas_waiter_stable_state_v1';
+  const STORAGE_KEY = 'zorbas_waiter_stable_state_v2';
   const state = {
-    session: null, snapshot: null, screen: 'areas', areaId: null, tableId: null, visitId: null,
+    session: null, snapshot: null, screen: 'notes', areaId: null, tableId: null, visitId: null, noteId: null, lang: 'bg',
     newGuest: false, query: '', categoryId: 'all', route: 'both', cart: [], orderNote: '',
-    menuOpen: false, refreshing: false, refreshAgain: false, submitting: false, online: navigator.onLine !== false
+    menuOpen: false, refreshing: false, refreshAgain: false, submitting: false, online: navigator.onLine !== false,
+    itemBusy: new Set()
   };
   const $ = id => document.getElementById(id);
   const esc = value => Z.esc(value);
@@ -25,6 +26,8 @@
       if (saved.areaId) state.areaId = saved.areaId;
       if (saved.tableId) state.tableId = saved.tableId;
       if (saved.visitId) state.visitId = saved.visitId;
+      if (saved.noteId) state.noteId = saved.noteId;
+      state.lang = saved.lang === 'en' ? 'en' : 'bg';
       state.newGuest = Boolean(saved.newGuest);
       state.route = ['both', 'kitchen', 'staff'].includes(saved.route) ? saved.route : 'both';
       state.orderNote = text(saved.orderNote).slice(0, 500);
@@ -35,9 +38,9 @@
     } catch {}
   }
   function saveState() {
-    try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify({screen: state.screen, areaId: state.areaId, tableId: state.tableId, visitId: state.visitId, newGuest: state.newGuest, route: state.route, orderNote: state.orderNote, cart: state.cart})); } catch {}
+    try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify({screen: state.screen, areaId: state.areaId, tableId: state.tableId, visitId: state.visitId, noteId: state.noteId, lang: state.lang, newGuest: state.newGuest, route: state.route, orderNote: state.orderNote, cart: state.cart})); } catch {}
   }
-  function clearOrder() { state.cart = []; state.orderNote = ''; state.query = ''; state.categoryId = 'all'; state.visitId = null; state.newGuest = false; saveState(); }
+  function clearOrder() { state.cart = []; state.orderNote = ''; state.query = ''; state.categoryId = 'all'; state.visitId = null; state.noteId = null; state.newGuest = false; saveState(); }
   function setAlert(message = '', type = '') {
     const root = $('waiterStableAlert'); if (!root) return;
     root.textContent = message; root.className = `ws-alert ${type}`.trim(); root.classList.toggle('ws-hidden', !message);
@@ -45,6 +48,7 @@
   function activeOrders() { return (state.snapshot?.orders || []).filter(order => !['completed', 'cancelled', 'returned'].includes(order.status)); }
   function tableFor(id) { return (state.snapshot?.tables || []).find(table => String(table.id) === String(id)) || null; }
   function areaFor(id) { return (state.snapshot?.areas || []).find(area => String(area.id) === String(id)) || null; }
+  function orderFor(id) { return (state.snapshot?.orders || []).find(order => String(order.id) === String(id)) || null; }
   function items() { return (state.snapshot?.items || []).filter(item => item.active !== false); }
   function categories() { return state.snapshot?.categories || []; }
   function visitsForTable(tableId) {
@@ -64,13 +68,26 @@
     if (reservationForTable(table.id)) return 'reserved';
     return 'free';
   }
-  function statusLabel(status) { return ({open: 'чака', sent: 'изпратена', preparing: 'приготвя се', ready: 'готова', served: 'сервирана', completed: 'приключена', cancelled: 'отказана'})[status] || status || '—'; }
+  function statusLabel(status) { return ({open: 'ЧАКА / WAITING', sent: 'ИЗПРАТЕНА / SENT', preparing: 'ПРИГОТВЯ СЕ / PREPARING', ready: 'ГОТОВА / READY', served: 'СЕРВИРАНА / SERVED', completed: 'ПРИКЛЮЧЕНА / COMPLETED', cancelled: 'ОТКАЗАНА / CANCELLED'})[status] || status || '—'; }
+  function orderKindLabel(order) { return order?.order_kind === 'addition' || Number(order?.visit_sequence || 1) > 1 ? 'ДОБАВКА / ADDITION' : 'НОВО / NEW'; }
+  function issuedQuantity(item) {
+    if (Object.prototype.hasOwnProperty.call(item || {}, 'service_delivered_quantity')) return Number(item.service_delivered_quantity || 0);
+    return item?.send_to_kitchen_snapshot ? Number(item.delivered_quantity || 0) : 0;
+  }
+  function isIssued(item) {
+    const quantity = Number(item?.quantity || 0);
+    return item?.status !== 'cancelled' && quantity > 0 && issuedQuantity(item) >= quantity;
+  }
+  function orderItems(order) { return (order?.items || []).filter(item => item.status !== 'cancelled'); }
+  function orderPositionCount(order) { return orderItems(order).reduce((sum, item) => sum + Number(item.quantity || 0), 0); }
+  function orderIsIssued(order) { const list = orderItems(order); return list.length > 0 && list.every(isIssued); }
   function guestLabel(visit, index = 0) { return visit?.guest_label || `${index + 1}-ви гости`; }
   function selectedVisit() { if (state.newGuest) return null; const visits = visitsForTable(state.tableId); return visits.find(visit => String(visit.id) === String(state.visitId)) || visits[0] || null; }
   function cartQuantity() { return state.cart.reduce((sum, row) => sum + Number(row.quantity || 0), 0); }
   function cartTotal() { return state.cart.reduce((sum, row) => { const item = items().find(entry => String(entry.id) === String(row.menu_item_id)); return sum + Number(item?.price || 0) * Number(row.quantity || 0); }, 0); }
 
-  function renderLogin() { $('waiterLoginView')?.classList.remove('ws-hidden'); $('waiterStableShell')?.classList.add('ws-hidden'); }
+  function syncLanguageButtons() { document.documentElement.lang = state.lang === 'en' ? 'en' : 'bg'; document.querySelectorAll('[data-language]').forEach(button => button.classList.toggle('active', button.dataset.language === state.lang)); }
+  function renderLogin() { $('waiterLoginView')?.classList.remove('ws-hidden'); $('waiterStableShell')?.classList.add('ws-hidden'); syncLanguageButtons(); }
   function renderShell() {
     $('waiterLoginView')?.classList.add('ws-hidden'); $('waiterStableShell')?.classList.remove('ws-hidden');
     $('waiterStableSession').textContent = state.session?.display_name || state.session?.username || 'Сервитьор';
@@ -78,11 +95,13 @@
     $('waiterStableMenu')?.classList.toggle('open', state.menuOpen);
     $('waiterStableBackdrop')?.classList.toggle('ws-hidden', !state.menuOpen);
     $('waiterStableBackdrop')?.setAttribute('aria-hidden', String(!state.menuOpen));
+    syncLanguageButtons();
     renderContent();
   }
-  function titleForScreen() { return ({areas: 'Избери област', tables: 'Избери маса', order: 'Нова бележка', notes: 'Бележки', reservations: 'Резервации'})[state.screen] || 'Сервитьори'; }
+  function titleForScreen() { return ({areas: 'Избери област / Choose area', tables: 'Избери маса / Choose table', order: 'Нова бележка / New note', notes: 'Бележки / Notes', noteDetail: 'Детайли на бележката / Note details', reservations: 'Резервации / Reservations'})[state.screen] || 'Сервитьори / Waiters'; }
   function renderContent() {
-    const table = tableFor(state.tableId);
+    const detailOrder = state.screen === 'noteDetail' ? orderFor(state.noteId) : null;
+    const table = tableFor(state.tableId) || tableFor(detailOrder?.table_id);
     $('waiterStableTitle').textContent = titleForScreen();
     $('waiterStableSubtitle').textContent = table ? `${areaFor(table.area_id)?.name || ''} · Маса ${table.table_number}` : 'Бързо управление от телефона';
     $('waiterStableContent').innerHTML = screenMarkup();
@@ -93,44 +112,72 @@
     if (state.screen === 'tables') return tablesMarkup();
     if (state.screen === 'order') return orderMarkup();
     if (state.screen === 'notes') return notesMarkup();
+    if (state.screen === 'noteDetail') return noteDetailMarkup();
     if (state.screen === 'reservations') return reservationsMarkup();
     return areasMarkup();
   }
   function areasMarkup() {
     const areas = state.snapshot.areas || [];
-    return `<div class="ws-view-head"><div><h2>Нова бележка</h2><p>Първо избери залата. После натисни масата.</p></div></div><div class="ws-grid ws-area-grid">${areas.map(area => { const tables = (state.snapshot.tables || []).filter(table => String(table.area_id) === String(area.id)); const occupied = tables.filter(table => ['occupied', 'reserved'].includes(tableStatus(table))).length; return `<button class="ws-card" data-area-id="${esc(area.id)}"><strong>${esc(area.name)}</strong><small>${tables.length} маси · ${occupied} заети/резервирани</small><i>→</i></button>`; }).join('') || '<div class="ws-empty">Няма въведени области.</div>'}</div>`;
+    return `<div class="ws-view-head"><div><h2>Нова бележка / New note</h2><p>Първо избери залата. После натисни масата. / Choose an area, then tap a table.</p></div></div><div class="ws-grid ws-area-grid">${areas.map(area => { const tables = (state.snapshot.tables || []).filter(table => String(table.area_id) === String(area.id)); const occupied = tables.filter(table => ['occupied', 'reserved'].includes(tableStatus(table))).length; return `<button class="ws-card" data-area-id="${esc(area.id)}"><strong>${esc(area.name)}</strong><small>${tables.length} маси / tables · ${occupied} заети / occupied</small><i>→</i></button>`; }).join('') || '<div class="ws-empty">Няма въведени области. / No areas found.</div>'}</div>`;
   }
   function tablesMarkup() {
     const area = areaFor(state.areaId); const tables = (state.snapshot.tables || []).filter(table => String(table.area_id) === String(state.areaId));
-    return `<div class="ws-view-head"><button class="ws-back" data-screen="areas">← Назад</button><div><h2>${esc(area?.name || 'Маси')}</h2><p>Натисни маса, за да отвориш бележката.</p></div></div><div class="ws-grid ws-table-grid">${tables.map(table => { const status = tableStatus(table); const labels = {free: 'Свободна', occupied: 'Заета', reserved: 'Резервирана', blocked: 'Блокирана'}; const reservation = reservationForTable(table.id); const reservationText = reservation ? ` · ${Z.formatDate(reservation.start_at)}` : ''; return `<button class="ws-card ws-table-card ${status}" data-table-id="${esc(table.id)}" ${status === 'blocked' ? 'disabled' : ''}><small>МАСА</small><strong>${esc(table.table_number)}</strong><span class="ws-status">${labels[status]}${reservationText}</span><span>${Number(table.seats || 0)} места</span></button>`; }).join('') || '<div class="ws-empty">Няма маси в тази област.</div>'}</div>`;
+    return `<div class="ws-view-head"><button class="ws-back" data-screen="areas">← Назад / Back</button><div><h2>${esc(area?.name || 'Маси / Tables')}</h2><p>Натисни маса, за да отвориш бележката. / Tap a table to open the note.</p></div></div><div class="ws-grid ws-table-grid">${tables.map(table => { const status = tableStatus(table); const labels = {free: 'Свободна / FREE', occupied: 'Заета / OCCUPIED', reserved: 'Резервирана / RESERVED', blocked: 'Блокирана / BLOCKED'}; const reservation = reservationForTable(table.id); const reservationText = reservation ? ` · ${Z.formatDate(reservation.start_at)}` : ''; return `<button class="ws-card ws-table-card ${status}" data-table-id="${esc(table.id)}" ${status === 'blocked' ? 'disabled' : ''}><small>МАСА / TABLE</small><strong>${esc(table.table_number)}</strong><span class="ws-status">${labels[status]}${reservationText}</span><span>${Number(table.seats || 0)} места / seats</span></button>`; }).join('') || '<div class="ws-empty">Няма маси в тази област. / No tables in this area.</div>'}</div>`;
   }
   function guestBarMarkup() {
     const visits = visitsForTable(state.tableId);
-    if (!visits.length) return '<div class="ws-alert success">Няма активни гости. Тази бележка ще отвори нова група.</div>';
+    if (!visits.length) return '<div class="ws-alert success">Няма активни гости. / No active guests. Тази бележка ще отвори нова група. / This note will open a new group.</div>';
     const buttons = visits.map((visit, index) => `<button class="ws-guest ${!state.newGuest && String(state.visitId) === String(visit.id) ? 'active' : ''}" data-visit-id="${esc(visit.id)}">${esc(guestLabel(visit, index))}</button>`).join('');
-    return `<div class="ws-section"><div class="ws-section-head"><strong>Гости на масата</strong><small>Избери към кого е бележката</small></div><div class="ws-guest-bar">${buttons}<button class="ws-guest new ${state.newGuest ? 'active' : ''}" data-new-guest="1">＋ Нови гости</button></div></div>`;
+    return `<div class="ws-section"><div class="ws-section-head"><strong>Гости на масата / Guests</strong><small>Избери към кого е бележката / Choose the guest tab</small></div><div class="ws-guest-bar">${buttons}<button class="ws-guest new ${state.newGuest ? 'active' : ''}" data-new-guest="1">＋ Нови гости / New guests</button></div></div>`;
   }
   function productMarkup() {
     const query = state.query.trim().toLocaleLowerCase('bg-BG');
     const filtered = items().filter(item => (state.categoryId === 'all' || String(item.category_id) === String(state.categoryId)) && (!query || `${item.name} ${item.description || ''}`.toLocaleLowerCase('bg-BG').includes(query)));
-    if (!filtered.length) return '<div class="ws-empty">Няма намерени продукти.</div>';
-    return filtered.map(item => { const unavailable = Boolean(item.price_pending) || Number(item.price || 0) <= 0; return `<button class="ws-product" data-add-item="${esc(item.id)}" ${unavailable ? 'disabled' : ''}><span class="ws-product-main"><strong>${esc(item.name)}</strong><small>${esc(item.description || (unavailable ? 'Цената още не е потвърдена' : 'Добави към бележката'))}</small></span><span class="ws-product-price">${unavailable ? '—' : money(item.price)}</span><span class="ws-product-add">＋</span></button>`; }).join('');
+    if (!filtered.length) return '<div class="ws-empty">Няма намерени продукти. / No products found.</div>';
+    return filtered.map(item => { const unavailable = Boolean(item.price_pending) || Number(item.price || 0) <= 0; return `<button class="ws-product" data-add-item="${esc(item.id)}" ${unavailable ? 'disabled' : ''}><span class="ws-product-main"><strong>${esc(item.name)}</strong><small>${esc(item.description || (unavailable ? 'Цената още не е потвърдена / Price pending' : 'Добави към бележката / Add to note'))}</small></span><span class="ws-product-price">${unavailable ? '—' : money(item.price)}</span><span class="ws-product-add">＋</span></button>`; }).join('');
   }
   function cartMarkup() {
-    if (!state.cart.length) return '<div class="ws-empty">Бележката е празна. Избери продукт по-горе.</div>';
-    return state.cart.map((row, index) => { const item = items().find(entry => String(entry.id) === String(row.menu_item_id)); return `<div class="ws-cart-row"><div class="ws-qty"><button data-cart-action="minus" data-cart-index="${index}">−</button><b>${Number(row.quantity)}</b><button data-cart-action="plus" data-cart-index="${index}">＋</button></div><span class="ws-cart-name">${esc(item?.name || 'Артикул')}</span><span class="ws-cart-price">${money(Number(item?.price || 0) * Number(row.quantity || 0))}</span><input class="ws-cart-note" data-cart-note="${index}" value="${esc(row.note || '')}" placeholder="Уточнение за този продукт…"></div>`; }).join('');
+    if (!state.cart.length) return '<div class="ws-empty">Бележката е празна. / Note is empty. Избери продукт по-горе. / Choose a product above.</div>';
+    return state.cart.map((row, index) => { const item = items().find(entry => String(entry.id) === String(row.menu_item_id)); return `<div class="ws-cart-row"><div class="ws-qty"><button data-cart-action="minus" data-cart-index="${index}" aria-label="Намали / Decrease">−</button><b>${Number(row.quantity)}</b><button data-cart-action="plus" data-cart-index="${index}" aria-label="Увеличи / Increase">＋</button></div><span class="ws-cart-name">${esc(item?.name || 'Артикул / Item')}</span><span class="ws-cart-price">${money(Number(item?.price || 0) * Number(row.quantity || 0))}</span><input class="ws-cart-note" data-cart-note="${index}" value="${esc(row.note || '')}" placeholder="Уточнение / Item note…"></div>`; }).join('');
   }
   function orderMarkup() {
     const table = tableFor(state.tableId);
-    return `<div class="ws-view-head"><button class="ws-back" data-screen="tables">← Маси</button><div><h2>Маса ${esc(table?.table_number || '—')}</h2><p>Добавяй спокойно — написаното остава при обновяване.</p></div></div>${guestBarMarkup()}<div class="ws-section"><div class="ws-toolbar"><input class="ws-search" id="stableProductSearch" value="${esc(state.query)}" placeholder="Търси продукт…" autocomplete="off"><button class="ws-secondary" data-clear-search="1">Изчисти</button></div><div class="ws-chips"><button class="ws-chip ${state.categoryId === 'all' ? 'active' : ''}" data-category-id="all">Всички</button>${categories().map(category => `<button class="ws-chip ${String(state.categoryId) === String(category.id) ? 'active' : ''}" data-category-id="${esc(category.id)}">${esc(category.name)}</button>`).join('')}</div><div class="ws-products">${productMarkup()}</div></div><div class="ws-section"><div class="ws-section-head"><strong>Бележка</strong><small>${cartQuantity()} позиции</small></div><div class="ws-cart">${cartMarkup()}</div><label class="ws-field"><span>Обща бележка</span><textarea id="stableOrderNote" rows="2" placeholder="Например: без лук, алергия, разделено…">${esc(state.orderNote)}</textarea></label><div class="ws-total"><span>Общо</span><strong>${money(cartTotal())}</strong></div><div class="ws-route-grid"><button class="ws-route ${state.route === 'both' ? 'active' : ''}" data-route="both">БАР + КУХНЯ</button><button class="ws-route ${state.route === 'kitchen' ? 'active' : ''}" data-route="kitchen">САМО КУХНЯ</button><button class="ws-route ${state.route === 'staff' ? 'active' : ''}" data-route="staff">САМО БАР</button></div><button class="ws-primary ws-full" data-submit-order="1" ${!state.cart.length || state.submitting ? 'disabled' : ''}>${state.submitting ? 'ИЗПРАЩА СЕ…' : 'ИЗПРАТИ БЕЛЕЖКАТА'}</button></div>`;
+    return `<div class="ws-view-head"><button class="ws-back" data-screen="tables">← Маси / Tables</button><div><h2>Маса / Table ${esc(table?.table_number || '—')}</h2><p>Добавяй спокойно — написаното остава при обновяване. / Keep writing; your note survives refresh.</p></div></div>${guestBarMarkup()}<div class="ws-section"><div class="ws-toolbar"><input class="ws-search" id="stableProductSearch" value="${esc(state.query)}" placeholder="Търси продукт / Search product…" autocomplete="off"><button class="ws-secondary" data-clear-search="1">Изчисти / Clear</button></div><div class="ws-chips"><button class="ws-chip ${state.categoryId === 'all' ? 'active' : ''}" data-category-id="all">Всички / All</button>${categories().map(category => `<button class="ws-chip ${String(state.categoryId) === String(category.id) ? 'active' : ''}" data-category-id="${esc(category.id)}">${esc(category.name)}</button>`).join('')}</div><div class="ws-products">${productMarkup()}</div></div><div class="ws-section"><div class="ws-section-head"><strong>Бележка / Note</strong><small>${cartQuantity()} позиции / items</small></div><div class="ws-cart">${cartMarkup()}</div><label class="ws-field"><span>Обща бележка / Order note</span><textarea id="stableOrderNote" rows="2" placeholder="Например / Example: без лук / no onion…">${esc(state.orderNote)}</textarea></label><div class="ws-total"><span>Общо / Total</span><strong>${money(cartTotal())}</strong></div><div class="ws-route-grid"><button class="ws-route ${state.route === 'both' ? 'active' : ''}" data-route="both">БАР + КУХНЯ / BAR + KITCHEN</button><button class="ws-route ${state.route === 'kitchen' ? 'active' : ''}" data-route="kitchen">САМО КУХНЯ / KITCHEN</button><button class="ws-route ${state.route === 'staff' ? 'active' : ''}" data-route="staff">САМО БАР / BAR</button></div><button class="ws-primary ws-full" data-submit-order="1" ${!state.cart.length || state.submitting ? 'disabled' : ''}>${state.submitting ? 'ИЗПРАЩА СЕ / SENDING…' : 'ИЗПРАТИ БЕЛЕЖКАТА / SEND NOTE'}</button></div>`;
   }
   function notesMarkup() {
-    const orders = [...(state.snapshot.orders || [])].filter(order => order.status !== 'completed').sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    return `<div class="ws-view-head"><div><h2>Бележки</h2><p>Последните активни поръчки в ресторанта.</p></div></div><div class="ws-note-list">${orders.map(order => { const table = tableFor(order.table_id); return `<article class="ws-note-card"><div class="ws-note-head"><div><strong>${order.order_type === 'pickup' ? 'ПАКЕТ' : `Маса ${esc(table?.table_number || '—')}`}</strong><small>№${esc(order.order_number || '—')} · ${esc(order.created_by_name || '')}</small></div><span class="ws-badge">${esc(statusLabel(order.status))}</span></div><ul class="ws-note-items">${(order.items || []).map(item => `<li><b>${Number(item.quantity || 0)}×</b><span>${esc(item.item_name || 'Артикул')}${item.note ? ` — ${esc(item.note)}` : ''}</span></li>`).join('')}</ul><button class="ws-secondary ws-full" data-open-manager="1">Отвори пълното управление</button></article>`; }).join('') || '<div class="ws-empty">Няма активни бележки.</div>'}</div>`;
+    const orders = [...activeOrders()].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    return `<div class="ws-notes-toolbar"><div><strong>Най-новите бележки / Latest notes</strong><small>${orders.length} активни / active</small></div><button class="ws-primary" data-new-note="1">＋ НОВА БЕЛЕЖКА / NEW NOTE</button></div><div class="ws-note-list">${orders.map(order => { const table = tableFor(order.table_id); const previewItems = orderItems(order).slice(0, 4); const more = Math.max(0, orderItems(order).length - previewItems.length); return `<article class="ws-note-card ws-note-clickable" data-open-note="${esc(order.id)}" role="button" tabindex="0"><div class="ws-note-head"><div><small class="ws-note-kicker">${esc(orderKindLabel(order))}</small><strong>${order.order_type === 'pickup' ? 'ПАКЕТ / TAKEAWAY' : `МАСА / TABLE ${esc(table?.table_number || '—')}`}</strong><small>Бележка / Note №${esc(order.order_number || '—')} · ${esc(order.created_by_name || '—')}</small></div><span class="ws-badge">${esc(statusLabel(order.status))}</span></div><div class="ws-note-meta"><span>Час / Time: ${esc(Z.formatDate(order.created_at))}</span><span>${orderPositionCount(order)} позиции / items</span></div><ul class="ws-note-items">${previewItems.map(item => `<li><b>${Number(item.quantity || 0)}×</b><span>${esc(item.item_name || 'Артикул / Item')}${item.note ? ` — ${esc(item.note)}` : ''}</span></li>`).join('')}${more ? `<li class="ws-note-more">+${more} още / more</li>` : ''}</ul>${order.note ? `<p class="ws-note-order-note">${esc(order.note)}</p>` : ''}<footer class="ws-note-open"><span>Натисни за детайли / Tap for details</span><strong>→</strong></footer></article>`; }).join('') || '<div class="ws-empty">Няма активни бележки. / No active notes.</div>'}</div>`;
+  }
+  function noteDetailMarkup() {
+    const order = orderFor(state.noteId);
+    if (!order) return '<div class="ws-empty">Бележката вече не е активна. / This note is no longer active.</div>';
+    const table = tableFor(order.table_id); const visit = (state.snapshot.visits || []).find(entry => String(entry.id) === String(order.visit_id)); const list = orderItems(order); const complete = orderIsIssued(order);
+    const rows = list.map(item => { const quantity = Math.max(0, Number(item.quantity || 0)); const delivered = Math.min(quantity, Math.max(0, issuedQuantity(item))); const issued = isIssued(item); const busy = state.itemBusy.has(item.id); const cancelled = item.status === 'cancelled'; const stateText = cancelled ? 'ОТКАЗАНО / CANCELLED' : issued ? 'ИЗДАДЕНО / SERVED' : delivered > 0 ? `ЧАСТИЧНО / PARTIAL ${delivered}/${quantity}` : 'ЧАКА / WAITING'; return `<div class="ws-receipt-item ${issued ? 'is-issued' : ''} ${cancelled ? 'is-cancelled' : ''}"><button class="ws-receipt-toggle" type="button" data-toggle-service-item="${esc(item.id)}" ${cancelled || busy ? 'disabled' : ''} aria-label="${issued ? 'Върни като неиздаден / Mark waiting' : 'Маркирай като издаден / Mark served'}"><span class="ws-receipt-check">${issued ? '✓' : delivered > 0 ? '•' : ''}</span><strong>${delivered} / ${quantity}</strong></button><div class="ws-receipt-item-main"><strong>${esc(item.item_name || 'Артикул / Item')}</strong>${item.note ? `<small>${esc(item.note)}</small>` : ''}<small>${item.send_to_kitchen_snapshot ? 'Кухня / Kitchen' : 'Бар / Bar'}</small></div><span class="ws-receipt-item-state">${stateText}</span></div>`; }).join('');
+    return `<div class="ws-view-head"><button class="ws-back" data-screen="notes">← Бележки / Notes</button><div><h2>${order.order_type === 'pickup' ? 'Пакет / Takeaway' : `Маса / Table ${esc(table?.table_number || '—')}`}</h2><p>Натисни квадратчето на продукта, когато е издаден. / Tap an item when it is served.</p></div></div><article class="ws-receipt"><header class="ws-receipt-head"><div><small>${esc(orderKindLabel(order))}</small><h2>Бележка / Note №${esc(order.order_number || '—')}</h2><p>${esc(order.created_by_name || '—')} · ${esc(visit?.guest_label || '')}</p></div><span class="ws-badge ${complete ? 'done' : ''}">${complete ? 'ГОТОВА / DONE' : esc(statusLabel(order.status))}</span></header><div class="ws-receipt-meta"><span><b>Час / Time</b>${esc(Z.formatDate(order.created_at))}</span><span><b>Сервитьор / Waiter</b>${esc(order.created_by_name || '—')}</span><span><b>Позиции / Items</b>${orderPositionCount(order)}</span></div><div class="ws-receipt-items">${rows || '<div class="ws-empty">Няма активни позиции. / No active items.</div>'}</div>${order.note ? `<div class="ws-receipt-note"><b>Бележка / Note</b><span>${esc(order.note)}</span></div>` : ''}<div class="ws-receipt-total"><span>ОБЩО / TOTAL</span><strong>${money(order.subtotal)}</strong></div><div class="ws-receipt-actions">${table ? '<button class="ws-secondary" data-go-to-table="1">КЪМ МАСАТА / TO TABLE</button>' : ''}<button class="ws-secondary" data-refresh-note="1">↻ ОБНОВИ / REFRESH</button></div><div class="ws-receipt-gate ${complete ? 'complete' : ''}">${complete ? '✓ ВСИЧКИ ПРОДУКТИ СА ИЗДАДЕНИ / ALL ITEMS SERVED' : 'ПЪРВО ИЗДАЙ ВСИЧКИ КУХНЕНСКИ ПРОДУКТИ / SERVE ALL KITCHEN ITEMS FIRST'}</div></article>`;
   }
   function reservationsMarkup() {
     const reservations = (state.snapshot.reservations || []).filter(reservation => ['requested', 'confirmed'].includes(reservation.status)).sort((a, b) => new Date(a.start_at) - new Date(b.start_at));
-    return `<div class="ws-view-head"><div><h2>Резервации</h2><p>Когато гостите дойдат, натисни „Тук“.</p></div></div><div class="ws-reservation-list">${reservations.map(reservation => { const table = tableFor(reservation.table_id); return `<article class="ws-reservation-card"><div class="ws-reservation-head"><div><strong>${esc(reservation.customer_name || 'Гости')}</strong><small>${reservation.start_at ? esc(Z.formatDate(reservation.start_at)) : 'Без час'}</small></div><span class="ws-badge">${esc(reservation.status === 'confirmed' ? 'потвърдена' : 'заявка')}</span></div><div class="ws-reservation-meta"><span>Маса ${esc(table?.table_number || '—')} · ${Number(reservation.guests || 0)} души</span><span>${esc(reservation.customer_phone || '')}</span>${reservation.note ? `<span>${esc(reservation.note)}</span>` : ''}</div><button class="ws-primary" data-arrived-reservation="${esc(reservation.id)}">✓ ТУК — гостите пристигнаха</button></article>`; }).join('') || '<div class="ws-empty">Няма предстоящи резервации.</div>'}</div>`;
+    return `<div class="ws-view-head"><div><h2>Резервации / Reservations</h2><p>Когато гостите дойдат, натисни „Тук“. / Tap “Here” when guests arrive.</p></div></div><div class="ws-reservation-list">${reservations.map(reservation => { const table = tableFor(reservation.table_id); return `<article class="ws-reservation-card"><div class="ws-reservation-head"><div><strong>${esc(reservation.customer_name || 'Гости / Guests')}</strong><small>${reservation.start_at ? esc(Z.formatDate(reservation.start_at)) : 'Без час / No time'}</small></div><span class="ws-badge">${esc(reservation.status === 'confirmed' ? 'ПОТВЪРДЕНА / CONFIRMED' : 'ЗАЯВКА / REQUEST')}</span></div><div class="ws-reservation-meta"><span>Маса / Table ${esc(table?.table_number || '—')} · ${Number(reservation.guests || 0)} души / guests</span><span>${esc(reservation.customer_phone || '')}</span>${reservation.note ? `<span>${esc(reservation.note)}</span>` : ''}</div><button class="ws-primary" data-arrived-reservation="${esc(reservation.id)}">✓ ТУК / HERE — гостите пристигнаха / guests arrived</button></article>`; }).join('') || '<div class="ws-empty">Няма предстоящи резервации. / No upcoming reservations.</div>'}</div>`;
+  }
+
+  function openNote(orderId) {
+    const order = orderFor(orderId);
+    if (!order) return setAlert('Бележката вече не е активна. / This note is no longer active.', 'error');
+    state.noteId = order.id; state.tableId = order.table_id || null; state.areaId = tableFor(order.table_id)?.area_id || state.areaId; state.visitId = order.visit_id || null; state.newGuest = false; state.screen = 'noteDetail'; state.menuOpen = false; saveState(); renderShell();
+  }
+  function goToNoteTable() {
+    const order = orderFor(state.noteId);
+    if (!order?.table_id) return;
+    state.tableId = order.table_id; state.areaId = tableFor(order.table_id)?.area_id || state.areaId; state.visitId = order.visit_id || null; state.newGuest = false; state.screen = 'order'; saveState(); renderContent(); setTimeout(() => $('stableProductSearch')?.focus({preventScroll: true}), 30);
+  }
+  async function toggleServiceItem(itemId, button) {
+    const order = orderFor(state.noteId); const item = order?.items?.find(entry => String(entry.id) === String(itemId));
+    if (!item || item.status === 'cancelled' || state.itemBusy.has(item.id)) return;
+    state.itemBusy.add(item.id); if (button) button.disabled = true;
+    try {
+      await Z.rpc('zorbas_set_service_item_delivered_v1', {p_token: Z.token(), p_item_id: item.id, p_delivered: !isIssued(item), p_expected_version: Number(item.manager_version || 1)});
+      state.itemBusy.delete(item.id); await refresh({render: false}); renderShell(); setAlert(isIssued((orderFor(state.noteId)?.items || []).find(entry => String(entry.id) === String(itemId))) ? 'Продуктът е отбелязан като издаден. / Item marked as served.' : 'Продуктът чака. / Item is waiting.', 'success');
+    } catch (error) { state.itemBusy.delete(item.id); renderContent(); setAlert(error.message || 'Статусът не се промени. / Status was not changed.', 'error'); }
   }
 
   function bindContent() {
@@ -138,6 +185,11 @@
     root.querySelectorAll('[data-area-id]').forEach(button => button.onclick = () => { state.areaId = button.dataset.areaId; state.screen = 'tables'; saveState(); renderContent(); });
     root.querySelectorAll('[data-table-id]').forEach(button => button.onclick = () => { state.tableId = button.dataset.tableId; state.areaId = tableFor(state.tableId)?.area_id || state.areaId; const visits = visitsForTable(state.tableId); state.visitId = visits[0]?.id || null; state.newGuest = !state.visitId; state.screen = 'order'; saveState(); renderContent(); setTimeout(() => $('stableProductSearch')?.focus({preventScroll: true}), 30); });
     root.querySelectorAll('[data-screen]').forEach(button => button.onclick = () => { state.screen = button.dataset.screen; if (state.screen === 'areas') state.areaId = null; saveState(); renderContent(); });
+    root.querySelectorAll('[data-open-note]').forEach(card => { const open = () => openNote(card.dataset.openNote); card.onclick = open; card.onkeydown = event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); } }; });
+    root.querySelectorAll('[data-new-note]').forEach(button => button.onclick = () => { state.screen = 'areas'; state.areaId = null; state.tableId = null; state.visitId = null; state.noteId = null; state.newGuest = false; state.menuOpen = false; saveState(); renderContent(); });
+    root.querySelectorAll('[data-toggle-service-item]').forEach(button => button.onclick = () => toggleServiceItem(button.dataset.toggleServiceItem, button));
+    root.querySelector('[data-go-to-table]')?.addEventListener('click', goToNoteTable);
+    root.querySelector('[data-refresh-note]')?.addEventListener('click', async () => { await refresh(); });
     root.querySelectorAll('[data-visit-id]').forEach(button => button.onclick = () => { state.visitId = button.dataset.visitId; state.newGuest = false; saveState(); renderContent(); });
     root.querySelectorAll('[data-new-guest]').forEach(button => button.onclick = () => { state.visitId = null; state.newGuest = true; saveState(); renderContent(); });
     root.querySelectorAll('[data-category-id]').forEach(button => button.onclick = () => { state.categoryId = button.dataset.categoryId; renderContent(); });
@@ -180,6 +232,7 @@
       if (!state.areaId || !areaFor(state.areaId)) state.areaId = state.snapshot.areas?.[0]?.id || null;
       if (state.tableId && !tableFor(state.tableId)) { state.tableId = null; state.visitId = null; state.screen = 'areas'; }
       if (state.screen === 'order' && !state.tableId) state.screen = 'areas';
+      if (state.screen === 'noteDetail' && !orderFor(state.noteId)) { state.noteId = null; state.screen = 'notes'; }
       state.cart = state.cart.filter(row => items().some(item => String(item.id) === String(row.menu_item_id))); saveState();
       if (render && !state.submitting && !document.activeElement?.matches('input, textarea, select')) renderShell();
     } catch (error) {
@@ -198,6 +251,7 @@
   }
   function closeMenu() { state.menuOpen = false; renderShell(); }
   function bindShell() {
+    document.querySelectorAll('[data-language]').forEach(button => button.addEventListener('click', () => { state.lang = button.dataset.language === 'en' ? 'en' : 'bg'; saveState(); syncLanguageButtons(); renderLogin(); if (state.session) renderShell(); }));
     $('waiterLoginForm')?.addEventListener('submit', async event => {
       event.preventDefault(); const form = event.currentTarget; const button = form.querySelector('button[type="submit"]'); const message = $('waiterLoginMessage'); button.disabled = true; button.textContent = 'ВЛИЗАНЕ…'; message.textContent = '';
       try { const data = await Z.rpc('zorbas_staff_login', {p_username: form.elements.username.value.trim(), p_password: form.elements.password.value, p_display_name: form.elements.display_name.value.trim(), p_device_id: Z.deviceId()}); Z.setToken(data.token); state.session = await Z.requireSession(); await refresh({render: false}); await loadShift(); renderShell(); }
