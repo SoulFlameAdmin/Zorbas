@@ -122,8 +122,10 @@ button:disabled { cursor: not-allowed; opacity: .52; }
 
 .ws-toolbar { display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 12px; }
 .ws-toolbar .ws-search { min-width: 190px; flex: 1; }
-.ws-product-toolbar { align-items: stretch; margin-bottom: 0; }
-.ws-product-toggle { display: inline-flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 175px; padding: 0 13px; }
+.ws-product-toolbar { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: stretch; margin-bottom: 0; }
+.ws-product-toolbar .ws-search { grid-column: 1 / -1; min-width: 0; }
+.ws-product-toolbar > button { width: 100%; min-width: 0; min-height: 50px; }
+.ws-product-toggle { display: inline-flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 13px; }
 .ws-product-toggle.active { border-color: var(--ws-blue); background: rgba(105,169,255,.15); }
 .ws-product-toggle-icon { color: var(--ws-blue); font-size: 18px; font-weight: 950; line-height: 1; }
 .ws-product-panel { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--ws-line); }
@@ -265,6 +267,7 @@ button:disabled { cursor: not-allowed; opacity: .52; }
 .ws-receipt-total strong { font-size: 22px; }
 .ws-receipt-actions { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; padding: 0 12px 12px; }
 .ws-receipt-actions button { min-height: 48px; padding: 0 8px; border-color: rgba(23,33,48,.17); background: #fffdf7; color: #172130; font-size: 10px; }
+.ws-receipt-actions .ws-receipt-bill { grid-column: 1 / -1; min-height: 52px; }
 .ws-receipt-gate { margin: 0 12px 14px; padding: 14px 12px; border: 1px solid rgba(23,33,48,.13); border-radius: 12px; background: #ded7ca; color: #6d7580; text-align: center; font-size: 11px; font-weight: 950; line-height: 1.35; }
 .ws-receipt-gate.complete { border-color: rgba(22,114,71,.3); background: #dcefe3; color: #167247; }
 
