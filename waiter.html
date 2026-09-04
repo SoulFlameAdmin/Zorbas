@@ -16,6 +16,7 @@
   <div id="waiterStableApp">
     <section class="ws-login" id="waiterLoginView">
       <form class="ws-login-card" id="waiterLoginForm">
+        <div class="ws-login-language" aria-label="Избери език / Choose language"><span>Език / Language</span><button type="button" data-language="bg">BG</button><button type="button" data-language="en">EN</button></div>
         <p class="ws-kicker">RESTAURANT ZORBAS</p>
         <h1>Сервитьори</h1>
         <label class="ws-field">Вашето име<input name="display_name" required autocomplete="name"></label>
@@ -29,16 +30,17 @@
       <header class="ws-topbar">
         <button class="ws-icon-button" id="waiterStableMenuToggle" type="button" aria-label="Отвори меню">☰</button>
         <div class="ws-top-title"><small id="waiterStableSubtitle">ZORBAS</small><strong id="waiterStableTitle">Сервитьори</strong></div>
-        <span class="ws-status-dot" id="waiterStableStatusDot" aria-label="Връзка"></span>
+        <span class="ws-status-dot" id="waiterStableStatusDot" aria-label="Връзка / Connection"></span>
+        <div class="ws-language-switch" aria-label="Избери език / Choose language"><button type="button" data-language="bg">BG</button><button type="button" data-language="en">EN</button></div>
         <button class="ws-top-refresh" id="waiterStableRefresh" type="button" aria-label="Обнови">↻</button>
       </header>
       <button class="ws-drawer-backdrop ws-hidden" id="waiterStableBackdrop" type="button" aria-label="Затвори менюто"></button>
       <aside class="ws-drawer" id="waiterStableMenu" aria-label="Меню">
         <div class="ws-drawer-head"><div class="ws-drawer-brand"><small>RESTAURANT</small><strong>ZORBAS</strong><span id="waiterStableSession"></span></div><button class="ws-close" id="waiterStableMenuClose" type="button" aria-label="Затвори">×</button></div>
         <nav class="ws-nav">
-          <button type="button" data-nav-screen="areas">＋ Нова бележка</button>
-          <button type="button" data-nav-screen="notes">☰ Бележки</button>
-          <button type="button" data-nav-screen="reservations">◷ Резервации</button>
+          <button type="button" data-nav-screen="areas">＋ Нова бележка / New note</button>
+          <button type="button" data-nav-screen="notes">☰ Бележки / Notes</button>
+          <button type="button" data-nav-screen="reservations">◷ Резервации / Reservations</button>
           <a href="/admin.html?view=manager">◎ Пълно управление</a>
           <a href="/kitchen.html">▤ Кухня</a>
           <a href="/print.html">⌁ Печат</a>
