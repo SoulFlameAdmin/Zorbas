@@ -188,3 +188,80 @@ button:disabled { cursor: not-allowed; opacity: .52; }
   .ws-card strong { font-size: 16px; }
   .ws-route-grid { grid-template-columns: 1fr; }
 }
+
+/* Tap-first receipt cards for waiters. Keep the paper card visually distinct
+   from the dark navigation so the newest notes are obvious at a glance. */
+.ws-language-switch, .ws-login-language { display: inline-flex; align-items: center; gap: 3px; padding: 3px; border: 1px solid var(--ws-line); border-radius: 10px; background: var(--ws-panel); }
+.ws-language-switch button, .ws-login-language button { min-width: 30px; min-height: 28px; padding: 0 6px; border: 0; border-radius: 7px; background: transparent; color: var(--ws-muted); font-size: 10px; font-weight: 950; }
+.ws-language-switch button.active, .ws-login-language button.active { background: var(--ws-blue); color: #07111f; }
+.ws-login-language { float: right; margin: -5px 0 12px; }
+.ws-login-language span { padding: 0 5px 0 3px; color: var(--ws-muted); font-size: 10px; font-weight: 800; }
+.ws-notes-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+.ws-notes-toolbar > div { min-width: 0; }
+.ws-notes-toolbar strong, .ws-notes-toolbar small { display: block; }
+.ws-notes-toolbar strong { font-size: 15px; }
+.ws-notes-toolbar small { margin-top: 4px; color: var(--ws-muted); font-size: 11px; }
+.ws-notes-toolbar .ws-primary { min-height: 44px; padding: 0 12px; font-size: 11px; white-space: nowrap; }
+.ws-note-card.ws-note-clickable {
+  cursor: pointer; background: #f7f0e4; color: #172130; border-color: rgba(23,33,48,.16);
+  box-shadow: 0 10px 25px rgba(0,0,0,.16); transition: transform .15s ease, box-shadow .15s ease;
+}
+.ws-note-card.ws-note-clickable:active { transform: scale(.988); box-shadow: 0 4px 14px rgba(0,0,0,.18); }
+.ws-note-card.ws-note-clickable:focus-visible { outline: 3px solid var(--ws-blue); outline-offset: 3px; }
+.ws-note-card.ws-note-clickable .ws-note-head strong { color: #172130; font-size: 19px; }
+.ws-note-card.ws-note-clickable .ws-note-head small { color: #69717d; }
+.ws-note-card .ws-note-kicker { color: #9d6d0e !important; font-size: 10px !important; font-weight: 950; letter-spacing: .08em; }
+.ws-note-card .ws-badge { background: #f5ded5; color: #ba3d36; }
+.ws-note-card .ws-badge.done { background: #dcefe3; color: #167247; }
+.ws-note-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; margin: 12px 0 0; padding-top: 10px; border-top: 1px dashed rgba(23,33,48,.19); color: #65707c; font-size: 11px; font-weight: 750; }
+.ws-note-card .ws-note-items { margin-top: 12px; color: #172130; }
+.ws-note-card .ws-note-items b { color: #9d6d0e; }
+.ws-note-card .ws-note-items li { line-height: 1.35; }
+.ws-note-card .ws-note-more { color: #69717d; font-size: 11px; }
+.ws-note-order-note { margin: 12px 0 0; padding: 9px 10px; border-radius: 9px; background: #eee4d4; color: #596473; font-size: 12px; }
+.ws-note-open { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 13px; padding-top: 10px; border-top: 1px dashed rgba(23,33,48,.19); color: #426f9f; font-size: 11px; font-weight: 900; }
+.ws-note-open strong { font-size: 22px; line-height: 1; }
+.ws-receipt { overflow: hidden; border: 1px solid rgba(23,33,48,.16); border-radius: 19px; background: #f7f0e4; color: #172130; box-shadow: 0 12px 30px rgba(0,0,0,.18); }
+.ws-receipt-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 16px 15px; border-bottom: 1px dashed rgba(23,33,48,.22); }
+.ws-receipt-head > div { min-width: 0; }
+.ws-receipt-head small { display: block; color: #9d6d0e; font-size: 10px; font-weight: 950; letter-spacing: .08em; }
+.ws-receipt-head h2 { margin: 5px 0 0; font-size: 23px; letter-spacing: -.03em; }
+.ws-receipt-head p { margin: 5px 0 0; color: #69717d; font-size: 12px; }
+.ws-receipt-head .ws-badge { margin-top: 2px; }
+.ws-receipt-meta { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); border-bottom: 1px solid rgba(23,33,48,.12); }
+.ws-receipt-meta span { display: grid; gap: 4px; min-width: 0; padding: 10px 9px; color: #172130; text-align: center; font-size: 11px; }
+.ws-receipt-meta span + span { border-left: 1px dashed rgba(23,33,48,.16); }
+.ws-receipt-meta b { color: #69717d; font-size: 9px; letter-spacing: .04em; }
+.ws-receipt-items { display: grid; }
+.ws-receipt-item { display: grid; grid-template-columns: auto minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 13px 12px; border-bottom: 1px solid rgba(23,33,48,.11); }
+.ws-receipt-item.is-issued { background: rgba(79,208,138,.1); }
+.ws-receipt-item.is-cancelled { opacity: .55; }
+.ws-receipt-toggle { display: grid; grid-template-columns: 44px; gap: 3px; place-items: center; min-width: 56px; min-height: 57px; padding: 5px; border: 2px solid #7c8999; border-radius: 13px; background: #fffdf7; color: #172130; }
+.ws-receipt-toggle:active { transform: scale(.96); }
+.ws-receipt-toggle:disabled { opacity: .55; }
+.ws-receipt-check { display: grid; place-items: center; width: 27px; height: 27px; border: 1px solid #8a97a6; border-radius: 8px; color: #167247; font-size: 18px; font-weight: 950; }
+.ws-receipt-item.is-issued .ws-receipt-check { border-color: #2faf70; background: #dcefe3; }
+.ws-receipt-toggle strong { font-size: 11px; }
+.ws-receipt-item-main { min-width: 0; }
+.ws-receipt-item-main > strong, .ws-receipt-item-main > small { display: block; }
+.ws-receipt-item-main > strong { overflow: hidden; font-size: 14px; text-overflow: ellipsis; white-space: nowrap; }
+.ws-receipt-item-main > small { margin-top: 3px; color: #69717d; font-size: 11px; }
+.ws-receipt-item-state { max-width: 100px; color: #b03f35; text-align: right; font-size: 9px; font-weight: 950; line-height: 1.2; }
+.ws-receipt-item.is-issued .ws-receipt-item-state { color: #167247; }
+.ws-receipt-note { display: grid; gap: 5px; margin: 13px 12px 0; padding: 10px; border-radius: 10px; background: #eee4d4; color: #596473; font-size: 12px; }
+.ws-receipt-note b { color: #9d6d0e; font-size: 10px; letter-spacing: .05em; }
+.ws-receipt-total { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 13px; padding: 12px 16px; border-top: 1px dashed rgba(23,33,48,.2); color: #172130; font-size: 12px; font-weight: 950; }
+.ws-receipt-total strong { font-size: 22px; }
+.ws-receipt-actions { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; padding: 0 12px 12px; }
+.ws-receipt-actions button { min-height: 48px; padding: 0 8px; border-color: rgba(23,33,48,.17); background: #fffdf7; color: #172130; font-size: 10px; }
+.ws-receipt-gate { margin: 0 12px 14px; padding: 14px 12px; border: 1px solid rgba(23,33,48,.13); border-radius: 12px; background: #ded7ca; color: #6d7580; text-align: center; font-size: 11px; font-weight: 950; line-height: 1.35; }
+.ws-receipt-gate.complete { border-color: rgba(22,114,71,.3); background: #dcefe3; color: #167247; }
+
+@media (max-width: 390px) {
+  .ws-notes-toolbar { align-items: stretch; flex-direction: column; }
+  .ws-notes-toolbar .ws-primary { width: 100%; }
+  .ws-receipt-head h2 { font-size: 20px; }
+  .ws-receipt-item { grid-template-columns: auto minmax(0,1fr); }
+  .ws-receipt-item-state { grid-column: 2; max-width: none; text-align: left; }
+  .ws-receipt-actions { grid-template-columns: 1fr; }
+}
