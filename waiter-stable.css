@@ -122,6 +122,11 @@ button:disabled { cursor: not-allowed; opacity: .52; }
 
 .ws-toolbar { display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 12px; }
 .ws-toolbar .ws-search { min-width: 190px; flex: 1; }
+.ws-product-toolbar { align-items: stretch; margin-bottom: 0; }
+.ws-product-toggle { display: inline-flex; align-items: center; justify-content: space-between; gap: 10px; min-width: 175px; padding: 0 13px; }
+.ws-product-toggle.active { border-color: var(--ws-blue); background: rgba(105,169,255,.15); }
+.ws-product-toggle-icon { color: var(--ws-blue); font-size: 18px; font-weight: 950; line-height: 1; }
+.ws-product-panel { margin-top: 12px; padding-top: 12px; border-top: 1px dashed var(--ws-line); }
 .ws-chips { display: flex; gap: 7px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 13px; scrollbar-width: none; }
 .ws-chips::-webkit-scrollbar { display: none; }
 .ws-chip { min-height: 38px; padding: 0 12px; flex: 0 0 auto; border: 1px solid var(--ws-line); border-radius: 999px; background: var(--ws-panel); color: var(--ws-muted); font-size: 12px; font-weight: 850; }
@@ -165,6 +170,9 @@ button:disabled { cursor: not-allowed; opacity: .52; }
 .ws-danger { background: rgba(255,116,116,.16); border-color: rgba(255,116,116,.35); color: #ffc0c0; }
 .ws-full { width: 100%; margin-top: 12px; }
 .ws-empty { padding: 22px 8px; color: var(--ws-muted); text-align: center; font-size: 13px; }
+.ws-search-empty { display: grid; gap: 6px; padding: 24px 12px; border: 1px dashed var(--ws-line); border-radius: 15px; color: var(--ws-muted); text-align: center; }
+.ws-search-empty strong { color: var(--ws-text); font-size: 13px; }
+.ws-search-empty small { font-size: 11px; line-height: 1.4; }
 .ws-search-result-meta { grid-column: 1 / -1; padding: 2px 2px 4px; color: var(--ws-blue); font-size: 11px; font-weight: 800; }
 
 .ws-note-list, .ws-reservation-list { display: grid; gap: 10px; }
@@ -188,6 +196,7 @@ button:disabled { cursor: not-allowed; opacity: .52; }
   .ws-area-grid, .ws-table-grid { grid-template-columns: 1fr 1fr; gap: 8px; }
   .ws-card { padding: 13px; }
   .ws-card strong { font-size: 16px; }
+  .ws-product-toggle { width: 100%; }
   .ws-route-grid { grid-template-columns: 1fr; }
 }
 
