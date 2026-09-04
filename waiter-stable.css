@@ -138,6 +138,7 @@ button:disabled { cursor: not-allowed; opacity: .52; }
 }
 .ws-product-main { min-width: 0; flex: 1; }
 .ws-product-main strong { display: block; font-size: 14px; }
+.ws-product-main strong em { margin-left: 4px; color: var(--ws-muted); font-size: 11px; font-style: normal; font-weight: 700; }
 .ws-product-main small { display: block; margin-top: 4px; overflow: hidden; color: var(--ws-muted); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
 .ws-product-price { color: var(--ws-yellow); font-size: 13px; font-weight: 900; }
 .ws-product-add { display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 11px; background: rgba(105,169,255,.18); color: var(--ws-blue); font-size: 22px; font-weight: 900; }
@@ -164,6 +165,7 @@ button:disabled { cursor: not-allowed; opacity: .52; }
 .ws-danger { background: rgba(255,116,116,.16); border-color: rgba(255,116,116,.35); color: #ffc0c0; }
 .ws-full { width: 100%; margin-top: 12px; }
 .ws-empty { padding: 22px 8px; color: var(--ws-muted); text-align: center; font-size: 13px; }
+.ws-search-result-meta { grid-column: 1 / -1; padding: 2px 2px 4px; color: var(--ws-blue); font-size: 11px; font-weight: 800; }
 
 .ws-note-list, .ws-reservation-list { display: grid; gap: 10px; }
 .ws-note-card, .ws-reservation-card { padding: 14px; border: 1px solid var(--ws-line); border-radius: 17px; background: var(--ws-panel); }
