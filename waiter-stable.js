@@ -10,7 +10,7 @@
   const STORAGE_KEY = 'zorbas_waiter_stable_state_v2';
   const state = {
     session: null, snapshot: null, screen: 'notes', areaId: null, tableId: null, visitId: null, noteId: null, lang: 'bg',
-    newGuest: false, query: '', categoryId: 'all', route: 'both', cart: [], orderNote: '',
+    newGuest: false, query: '', productsOpen: false, categoryId: 'all', route: 'both', cart: [], orderNote: '',
     menuOpen: false, refreshing: false, refreshAgain: false, submitting: false, online: navigator.onLine !== false,
     itemBusy: new Set()
   };
@@ -40,7 +40,7 @@
   function saveState() {
     try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify({screen: state.screen, areaId: state.areaId, tableId: state.tableId, visitId: state.visitId, noteId: state.noteId, lang: state.lang, newGuest: state.newGuest, route: state.route, orderNote: state.orderNote, cart: state.cart})); } catch {}
   }
-  function clearOrder() { state.cart = []; state.orderNote = ''; state.query = ''; state.categoryId = 'all'; state.visitId = null; state.noteId = null; state.newGuest = false; saveState(); }
+  function clearOrder() { state.cart = []; state.orderNote = ''; state.query = ''; state.productsOpen = false; state.categoryId = 'all'; state.visitId = null; state.noteId = null; state.newGuest = false; saveState(); }
   function setAlert(message = '', type = '') {
     const root = $('waiterStableAlert'); if (!root) return;
     root.textContent = message; root.className = `ws-alert ${type}`.trim(); root.classList.toggle('ws-hidden', !message);
@@ -177,10 +177,28 @@
   }
   function productMarkup() {
     const query = searchKey(state.query);
+    if (!query) return '<div class="ws-search-empty"><strong>Напиши име на продукт / Type a product name</strong><small>Например: вода, вода кирилица или voda. / Example: вода or voda.</small></div>';
     const filtered = searchableItems();
     if (!filtered.length) return '<div class="ws-empty">Няма намерени продукти. / No products found.</div>';
     const resultLabel = query ? `<div class="ws-search-result-meta">${filtered.length} намерени / found · най-близките са първи / closest first</div>` : '';
     return resultLabel + filtered.map(item => { const unavailable = Boolean(item.price_pending) || Number(item.price || 0) <= 0; const alternateName = item.name_en || item.english_name || item.name_english || item.name_bg || ''; const description = item.description || (unavailable ? 'Цената още не е потвърдена / Price pending' : 'Добави към бележката / Add to note'); return `<button class="ws-product" data-add-item="${esc(item.id)}" ${unavailable ? 'disabled' : ''}><span class="ws-product-main"><strong>${esc(item.name)}${alternateName && alternateName !== item.name ? ` <em>${esc(alternateName)}</em>` : ''}</strong><small>${esc(description)}</small></span><span class="ws-product-price">${unavailable ? '—' : money(item.price)}</span><span class="ws-product-add">＋</span></button>`; }).join('');
+  }
+  function productBrowserMarkup() {
+    const open = state.productsOpen;
+    return `<div class="ws-toolbar ws-product-toolbar"><input class="ws-search" id="stableProductSearch" value="${esc(state.query)}" placeholder="Търси продукт / Search product…" autocomplete="off"><button class="ws-secondary" data-clear-search="1">Изчисти / Clear</button><button class="ws-product-toggle ${open ? 'active' : ''}" data-toggle-products="1" type="button" aria-expanded="${open}"><span data-toggle-products-label>${open ? 'Скрий продуктите / Hide products' : 'Покажи продукти / Show products'}</span><span class="ws-product-toggle-icon" data-toggle-products-icon aria-hidden="true">${open ? '⌃' : '⌄'}</span></button></div><div class="ws-product-panel ${open ? '' : 'ws-hidden'}" data-product-panel><div class="ws-chips"><button class="ws-chip ${state.categoryId === 'all' ? 'active' : ''}" data-category-id="all">Всички / All</button>${categories().map(category => `<button class="ws-chip ${String(state.categoryId) === String(category.id) ? 'active' : ''}" data-category-id="${esc(category.id)}">${esc(category.name)}</button>`).join('')}</div><div class="ws-products">${productMarkup()}</div></div>`;
+  }
+  function syncProductPanel(root = $('waiterStableContent')) {
+    const open = Boolean(state.productsOpen);
+    const panel = root?.querySelector('[data-product-panel]');
+    const toggle = root?.querySelector('[data-toggle-products]');
+    panel?.classList.toggle('ws-hidden', !open);
+    if (!toggle) return;
+    toggle.classList.toggle('active', open);
+    toggle.setAttribute('aria-expanded', String(open));
+    const label = toggle.querySelector('[data-toggle-products-label]');
+    const icon = toggle.querySelector('[data-toggle-products-icon]');
+    if (label) label.textContent = open ? 'Скрий продуктите / Hide products' : 'Покажи продукти / Show products';
+    if (icon) icon.textContent = open ? '⌃' : '⌄';
   }
   function cartMarkup() {
     if (!state.cart.length) return '<div class="ws-empty">Бележката е празна. / Note is empty. Избери продукт по-горе. / Choose a product above.</div>';
@@ -188,7 +206,7 @@
   }
   function orderMarkup() {
     const table = tableFor(state.tableId);
-    return `<div class="ws-view-head"><button class="ws-back" data-screen="tables">← Маси / Tables</button><div><h2>Маса / Table ${esc(table?.table_number || '—')}</h2><p>Добавяй спокойно — написаното остава при обновяване. / Keep writing; your note survives refresh.</p></div></div>${guestBarMarkup()}<div class="ws-section"><div class="ws-toolbar"><input class="ws-search" id="stableProductSearch" value="${esc(state.query)}" placeholder="Търси продукт / Search product…" autocomplete="off"><button class="ws-secondary" data-clear-search="1">Изчисти / Clear</button></div><div class="ws-chips"><button class="ws-chip ${state.categoryId === 'all' ? 'active' : ''}" data-category-id="all">Всички / All</button>${categories().map(category => `<button class="ws-chip ${String(state.categoryId) === String(category.id) ? 'active' : ''}" data-category-id="${esc(category.id)}">${esc(category.name)}</button>`).join('')}</div><div class="ws-products">${productMarkup()}</div></div><div class="ws-section"><div class="ws-section-head"><strong>Бележка / Note</strong><small>${cartQuantity()} позиции / items</small></div><div class="ws-cart">${cartMarkup()}</div><label class="ws-field"><span>Обща бележка / Order note</span><textarea id="stableOrderNote" rows="2" placeholder="Например / Example: без лук / no onion…">${esc(state.orderNote)}</textarea></label><div class="ws-total"><span>Общо / Total</span><strong>${money(cartTotal())}</strong></div><div class="ws-route-grid"><button class="ws-route ${state.route === 'both' ? 'active' : ''}" data-route="both">БАР + КУХНЯ / BAR + KITCHEN</button><button class="ws-route ${state.route === 'kitchen' ? 'active' : ''}" data-route="kitchen">САМО КУХНЯ / KITCHEN</button><button class="ws-route ${state.route === 'staff' ? 'active' : ''}" data-route="staff">САМО БАР / BAR</button></div><button class="ws-primary ws-full" data-submit-order="1" ${!state.cart.length || state.submitting ? 'disabled' : ''}>${state.submitting ? 'ИЗПРАЩА СЕ / SENDING…' : 'ИЗПРАТИ БЕЛЕЖКАТА / SEND NOTE'}</button></div>`;
+    return `<div class="ws-view-head"><button class="ws-back" data-screen="tables">← Маси / Tables</button><div><h2>Маса / Table ${esc(table?.table_number || '—')}</h2><p>Добавяй спокойно — написаното остава при обновяване. / Keep writing; your note survives refresh.</p></div></div>${guestBarMarkup()}<div class="ws-section"><div class="ws-product-browser">${productBrowserMarkup()}</div></div><div class="ws-section"><div class="ws-section-head"><strong>Бележка / Note</strong><small>${cartQuantity()} позиции / items</small></div><div class="ws-cart">${cartMarkup()}</div><label class="ws-field"><span>Обща бележка / Order note</span><textarea id="stableOrderNote" rows="2" placeholder="Например / Example: без лук / no onion…">${esc(state.orderNote)}</textarea></label><div class="ws-total"><span>Общо / Total</span><strong>${money(cartTotal())}</strong></div><div class="ws-route-grid"><button class="ws-route ${state.route === 'both' ? 'active' : ''}" data-route="both">БАР + КУХНЯ / BAR + KITCHEN</button><button class="ws-route ${state.route === 'kitchen' ? 'active' : ''}" data-route="kitchen">САМО КУХНЯ / KITCHEN</button><button class="ws-route ${state.route === 'staff' ? 'active' : ''}" data-route="staff">САМО БАР / BAR</button></div><button class="ws-primary ws-full" data-submit-order="1" ${!state.cart.length || state.submitting ? 'disabled' : ''}>${state.submitting ? 'ИЗПРАЩА СЕ / SENDING…' : 'ИЗПРАТИ БЕЛЕЖКАТА / SEND NOTE'}</button></div>`;
   }
   function notesMarkup() {
     const orders = [...activeOrders()].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
@@ -214,7 +232,7 @@
   function goToNoteTable() {
     const order = orderFor(state.noteId);
     if (!order?.table_id) return;
-    state.tableId = order.table_id; state.areaId = tableFor(order.table_id)?.area_id || state.areaId; state.visitId = order.visit_id || null; state.newGuest = false; state.screen = 'order'; saveState(); renderContent(); setTimeout(() => $('stableProductSearch')?.focus({preventScroll: true}), 30);
+    state.tableId = order.table_id; state.areaId = tableFor(order.table_id)?.area_id || state.areaId; state.visitId = order.visit_id || null; state.newGuest = false; state.query = ''; state.productsOpen = false; state.screen = 'order'; saveState(); renderContent(); setTimeout(() => $('stableProductSearch')?.focus({preventScroll: true}), 30);
   }
   async function toggleServiceItem(itemId, button) {
     const order = orderFor(state.noteId); const item = order?.items?.find(entry => String(entry.id) === String(itemId));
@@ -229,19 +247,20 @@
   function bindContent() {
     const root = $('waiterStableContent');
     root.querySelectorAll('[data-area-id]').forEach(button => button.onclick = () => { state.areaId = button.dataset.areaId; state.screen = 'tables'; saveState(); renderContent(); });
-    root.querySelectorAll('[data-table-id]').forEach(button => button.onclick = () => { state.tableId = button.dataset.tableId; state.areaId = tableFor(state.tableId)?.area_id || state.areaId; const visits = visitsForTable(state.tableId); state.visitId = visits[0]?.id || null; state.newGuest = !state.visitId; state.screen = 'order'; saveState(); renderContent(); setTimeout(() => $('stableProductSearch')?.focus({preventScroll: true}), 30); });
+    root.querySelectorAll('[data-table-id]').forEach(button => button.onclick = () => { state.tableId = button.dataset.tableId; state.areaId = tableFor(state.tableId)?.area_id || state.areaId; const visits = visitsForTable(state.tableId); state.visitId = visits[0]?.id || null; state.newGuest = !state.visitId; state.query = ''; state.productsOpen = false; state.screen = 'order'; saveState(); renderContent(); setTimeout(() => $('stableProductSearch')?.focus({preventScroll: true}), 30); });
     root.querySelectorAll('[data-screen]').forEach(button => button.onclick = () => { state.screen = button.dataset.screen; if (state.screen === 'areas') state.areaId = null; saveState(); renderContent(); });
     root.querySelectorAll('[data-open-note]').forEach(card => { const open = () => openNote(card.dataset.openNote); card.onclick = open; card.onkeydown = event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); open(); } }; });
-    root.querySelectorAll('[data-new-note]').forEach(button => button.onclick = () => { state.screen = 'areas'; state.areaId = null; state.tableId = null; state.visitId = null; state.noteId = null; state.newGuest = false; state.menuOpen = false; saveState(); renderContent(); });
+    root.querySelectorAll('[data-new-note]').forEach(button => button.onclick = () => { state.screen = 'areas'; state.areaId = null; state.tableId = null; state.visitId = null; state.noteId = null; state.newGuest = false; state.query = ''; state.productsOpen = false; state.menuOpen = false; saveState(); renderContent(); });
     root.querySelectorAll('[data-toggle-service-item]').forEach(button => button.onclick = () => toggleServiceItem(button.dataset.toggleServiceItem, button));
     root.querySelector('[data-go-to-table]')?.addEventListener('click', goToNoteTable);
     root.querySelector('[data-refresh-note]')?.addEventListener('click', async () => { await refresh(); });
     root.querySelectorAll('[data-visit-id]').forEach(button => button.onclick = () => { state.visitId = button.dataset.visitId; state.newGuest = false; saveState(); renderContent(); });
     root.querySelectorAll('[data-new-guest]').forEach(button => button.onclick = () => { state.visitId = null; state.newGuest = true; saveState(); renderContent(); });
     root.querySelectorAll('[data-category-id]').forEach(button => button.onclick = () => { state.categoryId = button.dataset.categoryId; renderContent(); });
+    root.querySelector('[data-toggle-products]')?.addEventListener('click', () => { state.productsOpen = !state.productsOpen; syncProductPanel(root); saveState(); if (state.productsOpen) root.querySelector('#stableProductSearch')?.focus({preventScroll: true}); });
     const search = $('stableProductSearch');
-    if (search) search.oninput = () => { state.query = search.value; const products = document.querySelector('.ws-products'); if (products) products.innerHTML = productMarkup(); bindProductButtons(); };
-    root.querySelector('[data-clear-search]')?.addEventListener('click', () => { state.query = ''; renderContent(); $('stableProductSearch')?.focus({preventScroll: true}); });
+    if (search) search.oninput = () => { state.query = search.value; state.productsOpen = Boolean(searchKey(state.query)); syncProductPanel(root); const products = root.querySelector('.ws-products'); if (products) products.innerHTML = productMarkup(); bindProductButtons(); };
+    root.querySelector('[data-clear-search]')?.addEventListener('click', () => { state.query = ''; state.productsOpen = false; renderContent(); $('stableProductSearch')?.focus({preventScroll: true}); });
     bindProductButtons();
     root.querySelectorAll('[data-cart-action]').forEach(button => button.onclick = () => { const index = Number(button.dataset.cartIndex); const row = state.cart[index]; if (!row) return; row.quantity += button.dataset.cartAction === 'plus' ? 1 : -1; if (row.quantity <= 0) state.cart.splice(index, 1); saveState(); renderContent(); });
     root.querySelectorAll('[data-cart-note]').forEach(input => input.oninput = () => { const row = state.cart[Number(input.dataset.cartNote)]; if (row) { row.note = input.value.slice(0, 160); saveState(); } });
@@ -252,7 +271,7 @@
     root.querySelectorAll('[data-arrived-reservation]').forEach(button => button.onclick = () => markReservationArrived(button.dataset.arrivedReservation, button));
   }
   function bindProductButtons() { document.querySelectorAll('[data-add-item]').forEach(button => button.onclick = () => addItem(button.dataset.addItem)); }
-  function addItem(itemId) { const item = items().find(entry => String(entry.id) === String(itemId)); if (!item || item.price_pending || Number(item.price || 0) <= 0) return; const row = state.cart.find(entry => String(entry.menu_item_id) === String(item.id)); if (row) row.quantity += 1; else state.cart.push({menu_item_id: item.id, quantity: 1, note: '', meta: {mode: item.quantity_mode === 'piece' ? 'piece' : 'portion', options: {}}}); state.query = ''; saveState(); renderContent(); setTimeout(() => $('stableProductSearch')?.focus({preventScroll: true}), 20); }
+  function addItem(itemId) { const item = items().find(entry => String(entry.id) === String(itemId)); if (!item || item.price_pending || Number(item.price || 0) <= 0) return; const row = state.cart.find(entry => String(entry.menu_item_id) === String(item.id)); if (row) row.quantity += 1; else state.cart.push({menu_item_id: item.id, quantity: 1, note: '', meta: {mode: item.quantity_mode === 'piece' ? 'piece' : 'portion', options: {}}}); state.query = ''; state.productsOpen = false; saveState(); renderContent(); setTimeout(() => $('stableProductSearch')?.focus({preventScroll: true}), 20); }
   async function submitOrder() {
     if (state.submitting || !state.cart.length || !state.tableId) return;
     const invalid = state.cart.some(row => { const item = items().find(entry => String(entry.id) === String(row.menu_item_id)); return !item || item.price_pending || Number(item.price || 0) <= 0; });
