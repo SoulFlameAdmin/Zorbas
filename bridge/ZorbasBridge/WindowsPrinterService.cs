@@ -118,7 +118,21 @@ internal sealed class WindowsPrinterService
             eventArgs.HasMorePages = false;
         };
 
-        document.Print();
+        try
+        {
+            document.Print();
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception error)
+        {
+            throw new PrinterDeliveryException(
+                "[AMBIGUOUS_PRINT] Windows spooler не потвърди крайния резултат. Провери физическия принтер преди повторение.",
+                true,
+                error);
+        }
     }
 
     private static Font CreateReceiptFont(float size, bool bold)

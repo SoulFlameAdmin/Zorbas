@@ -30,11 +30,32 @@ internal sealed class NetworkPrinterService
         using var timeout = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
         timeout.CancelAfter(TimeSpan.FromSeconds(12));
 
-        using var client = new TcpClient { NoDelay = true };
-        await client.ConnectAsync(host, port, timeout.Token).ConfigureAwait(false);
-        await using var stream = client.GetStream();
-        await stream.WriteAsync(payload, timeout.Token).ConfigureAwait(false);
-        await stream.FlushAsync(timeout.Token).ConfigureAwait(false);
+        var outputMayExist = false;
+        try
+        {
+            using var client = new TcpClient { NoDelay = true };
+            await client.ConnectAsync(host, port, timeout.Token).ConfigureAwait(false);
+            await using var stream = client.GetStream();
+
+            // From this point on a partial TCP write can already have reached the printer.
+            // Any later failure is physically ambiguous and must not be auto-retried.
+            outputMayExist = true;
+            await stream.WriteAsync(payload, timeout.Token).ConfigureAwait(false);
+            await stream.FlushAsync(timeout.Token).ConfigureAwait(false);
+        }
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
+        {
+            throw;
+        }
+        catch (Exception error)
+        {
+            throw new PrinterDeliveryException(
+                outputMayExist
+                    ? "[AMBIGUOUS_PRINT] LAN печатът прекъсна след започнало изпращане. Провери принтера преди повторение."
+                    : "[SAFE_NO_OUTPUT] LAN принтерът не прие връзката. Безопасно е да се опита отново.",
+                outputMayExist,
+                error);
+        }
     }
 
     private static Bitmap RenderReceipt(ReceiptDocument receipt)
@@ -130,8 +151,8 @@ internal sealed class NetworkPrinterService
         var raster = PackMonochrome(bitmap, bytesPerRow);
 
         using var output = new MemoryStream(raster.Length + 128);
-        output.Write(new byte[] { 0x1B, 0x40 }); // Initialize printer.
-        output.Write(new byte[] { 0x1B, 0x61, 0x00 }); // Left alignment.
+        output.Write(new byte[] { 0x1B, 0x40 });
+        output.Write(new byte[] { 0x1B, 0x61, 0x00 });
 
         for (var top = 0; top < bitmap.Height; top += RasterStripeHeight)
         {
@@ -147,8 +168,8 @@ internal sealed class NetworkPrinterService
             output.Write(raster, top * bytesPerRow, stripeHeight * bytesPerRow);
         }
 
-        output.Write(new byte[] { 0x1B, 0x64, 0x04 }); // Feed four lines.
-        output.Write(new byte[] { 0x1D, 0x56, 0x01 }); // Partial cut.
+        output.Write(new byte[] { 0x1B, 0x64, 0x04 });
+        output.Write(new byte[] { 0x1D, 0x56, 0x01 });
         return output.ToArray();
     }
 

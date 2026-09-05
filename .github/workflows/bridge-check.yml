@@ -1,0 +1,32 @@
+name: Zorbas Bridge checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'bridge/ZorbasBridge/**'
+      - '.github/workflows/bridge-check.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'bridge/ZorbasBridge/**'
+      - '.github/workflows/bridge-check.yml'
+  workflow_dispatch:
+
+jobs:
+  build-bridge:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore Bridge
+        run: dotnet restore bridge/ZorbasBridge/ZorbasBridge.csproj
+
+      - name: Build Bridge
+        run: dotnet build bridge/ZorbasBridge/ZorbasBridge.csproj -c Release --no-restore

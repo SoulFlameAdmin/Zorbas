@@ -14,12 +14,12 @@
     <PublishSingleFile>true</PublishSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <Version>1.2.2</Version>
-    <AssemblyVersion>1.2.2.0</AssemblyVersion>
-    <FileVersion>1.2.2.0</FileVersion>
+    <Version>1.2.3</Version>
+    <AssemblyVersion>1.2.3.0</AssemblyVersion>
+    <FileVersion>1.2.3.0</FileVersion>
     <Product>Zorbas Bridge by SoulFlame</Product>
     <Company>SoulFlame</Company>
-    <Description>Print 1 receives the complete order, Print 2 receives kitchen items only, and bills retain the full total.</Description>
+    <Description>Print 1 receives the complete order, Print 2 receives kitchen items only, and ambiguous physical print outcomes require manual review before retry.</Description>
   </PropertyGroup>
 
   <ItemGroup>

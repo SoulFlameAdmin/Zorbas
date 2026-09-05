@@ -34,8 +34,10 @@ jobs:
           node --check waiter-order-idempotency.js
           node --check waiter-reservation-guests.js
           node --check waiter-reservation-status.js
+          node --check print-browser-safety.js
           node --check print.js
           node --check kitchen.js
+          node --check sw.js
 
       - name: Test waiter flow
         run: node tests/waiter-flow.test.js
@@ -45,3 +47,6 @@ jobs:
 
       - name: Test waiter reservation status controls
         run: node tests/waiter-reservation-status.test.js
+
+      - name: Test print and offline recovery safety
+        run: node tests/print-recovery-safety.test.js
