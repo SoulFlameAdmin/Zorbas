@@ -51,8 +51,8 @@ internal sealed class NetworkPrinterService
         {
             throw new PrinterDeliveryException(
                 outputMayExist
-                    ? "LAN печатът прекъсна след започнало изпращане. Провери принтера преди повторение."
-                    : "LAN принтерът не прие връзката. Безопасно е да се опита отново.",
+                    ? "[AMBIGUOUS_PRINT] LAN печатът прекъсна след започнало изпращане. Провери принтера преди повторение."
+                    : "[SAFE_NO_OUTPUT] LAN принтерът не прие връзката. Безопасно е да се опита отново.",
                 outputMayExist,
                 error);
         }
