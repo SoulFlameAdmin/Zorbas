@@ -34,9 +34,13 @@ jobs:
           node --check kitchen.js
           node --check print.js
           node --check public.js
+          node --check reserve-launcher.js
 
       - name: Test waiter keyboard flow
         run: node tests/waiter-flow.test.js
 
       - name: Test reservation and kitchen flow
         run: node tests/reservation-kitchen-flow.test.js
+
+      - name: Test public reservation client stability
+        run: node tests/public-reservation-client-stability.test.js
