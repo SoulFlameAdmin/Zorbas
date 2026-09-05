@@ -118,8 +118,6 @@ internal sealed class WindowsPrinterService
             eventArgs.HasMorePages = false;
         };
 
-        // Once Print() is entered, Windows may already have accepted the spool even if
-        // an exception is returned to us. Treat such failures as physically ambiguous.
         try
         {
             document.Print();
@@ -131,7 +129,7 @@ internal sealed class WindowsPrinterService
         catch (Exception error)
         {
             throw new PrinterDeliveryException(
-                "Windows spooler не потвърди крайния резултат. Провери физическия принтер преди повторение.",
+                "[AMBIGUOUS_PRINT] Windows spooler не потвърди крайния резултат. Провери физическия принтер преди повторение.",
                 true,
                 error);
         }
