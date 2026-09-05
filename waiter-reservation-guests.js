@@ -90,9 +90,10 @@
         card.appendChild(badge);
       }
 
-      badge.textContent = info.kind === 'present'
+      const label = info.kind === 'present'
         ? `👥 ${info.count} човека вътре / ${info.count} people now`
         : `👥 Резервация: ${info.count} човека / ${info.count} guests`;
+      if (badge.textContent !== label) badge.textContent = label;
     });
   }
 
