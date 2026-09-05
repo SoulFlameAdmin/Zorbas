@@ -25,15 +25,15 @@ assert(deliveryError.includes('MayHaveProducedOutput'), 'printer delivery error 
 assert(guardMigration.includes("j.status in ('claimed','preparing')"), 'expired safe leases may be reclaimed');
 assert(guardMigration.includes("j.status in ('sending','printing')"), 'expired physical stages must be quarantined');
 assert(guardMigration.includes("status='failed'"), 'ambiguous physical stages must become manual-review failures');
-assert(guardMigration.includes('auto_retry\',false'), 'ambiguous lease recovery must disable automatic retry');
+assert(guardMigration.includes("'auto_retry',false"), 'ambiguous lease recovery must disable automatic retry');
 
 assert(retryMigration.includes("v_current_status in ('sending','printing')"), 'retry gate must inspect physical stage');
 assert(retryMigration.includes("not like '[SAFE_NO_OUTPUT]%'"), 'only proven no-output failures may auto retry');
 assert(retryMigration.includes("v_effective_status := 'failed'"), 'unknown physical outcome must fail closed');
 assert(retryMigration.includes('physical_retry_guard'), 'print attempts must record retry-guard metadata');
 
-assert(sw.includes("zorbas-v59-print-recovery-20260905"), 'service worker cache must be bumped');
-assert(sw.includes("ignoreSearch:true"), 'offline fallback must tolerate cache-bust query changes');
+assert(sw.includes('zorbas-v59-print-recovery-20260905'), 'service worker cache must be bumped');
+assert(sw.includes('ignoreSearch:true'), 'offline fallback must tolerate cache-bust query changes');
 assert(sw.includes("url.pathname.startsWith('/print')"), 'print surface must be network-first');
 assert(sw.includes("url.pathname==='/live-sync.js'"), 'live sync must be network-first');
 assert(sw.includes('/reserve-live.js?v=20260905-stable1'), 'current reservation realtime helper must be cached for emergency offline load');
