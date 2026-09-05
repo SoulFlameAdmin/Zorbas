@@ -210,8 +210,10 @@ internal sealed class BridgeEngine : IAsyncDisposable
 
     private async Task<bool> ProcessDestinationAsync(string destination, CancellationToken cancellationToken)
     {
+        var networkHost = string.Empty;
+        var networkPort = 0;
         var usesNetworkPrinter = destination.Equals("kitchen", StringComparison.OrdinalIgnoreCase)
-            && TryGetNetworkEndpoint(destination, out var networkHost, out var networkPort);
+            && TryGetNetworkEndpoint(destination, out networkHost, out networkPort);
         var printerName = GetPrinterName(destination);
 
         if (!usesNetworkPrinter
@@ -304,7 +306,9 @@ internal sealed class BridgeEngine : IAsyncDisposable
         }
         catch (Exception error)
         {
-            var retry = job.Attempts < job.MaxAttempts;
+            var ambiguousPhysicalOutput = error is PrinterDeliveryException deliveryError
+                && deliveryError.MayHaveProducedOutput;
+            var retry = !ambiguousPhysicalOutput && job.Attempts < job.MaxAttempts;
             var status = retry ? "retrying" : "failed";
             try
             {
@@ -318,7 +322,9 @@ internal sealed class BridgeEngine : IAsyncDisposable
                     {
                         output = usesNetworkPrinter
                             ? $"{networkHost}:{networkPort}"
-                            : printerName
+                            : printerName,
+                        ambiguous_physical_output = ambiguousPhysicalOutput,
+                        auto_retry = retry
                     },
                     CancellationToken.None).ConfigureAwait(false);
             }
