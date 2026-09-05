@@ -29,6 +29,9 @@ jobs:
           node --check admin-waiter-v2.js
           node --check admin-keyboard-fix-v3.js
           node --check admin-menu.js
+          node --check live-sync.js
+          node --check waiter-stable.js
+          node --check waiter-reservation-guests.js
           node --check print.js
           node --check kitchen.js
 

@@ -121,7 +121,16 @@ assert.strictEqual(context.renderCount, 4, 'Preview navigation must rerender');
 // Static wiring checks for the deployed waiter entry and current guard.
 const loader = fs.readFileSync('admin.js', 'utf8');
 const entry = fs.readFileSync('waiter.html', 'utf8');
+const reservationGuests = fs.readFileSync('waiter-reservation-guests.js', 'utf8');
 assert(loader.includes('admin-keyboard-fix-v3.js'), 'Admin loader must use keyboard fix v3');
-assert(entry.includes('20260730-reservation1'), 'Waiter entry must force the fresh reservation loader');
+assert(/\/waiter-stable\.js\?v=[^"']+/.test(entry), 'Waiter entry must load the stable waiter runtime with cache busting');
+assert(/\/waiter-reservation-guests\.js\?v=[^"']+/.test(entry), 'Waiter entry must load the staff reservation guest bridge with cache busting');
+assert(
+  entry.indexOf('/waiter-stable.js?') < entry.indexOf('/waiter-reservation-guests.js?'),
+  'Reservation guest bridge must load after the stable waiter runtime'
+);
+assert(reservationGuests.includes("name === 'zorbas_staff_snapshot'"), 'Reservation guest bridge must use the protected staff snapshot');
+assert(reservationGuests.includes("row.status === 'seated'"), 'Reservation guest bridge must show seated guest counts');
+assert(reservationGuests.includes("['requested', 'confirmed']"), 'Reservation guest bridge must show upcoming reservation guest counts');
 
 console.log('WAITER_FLOW_TEST_OK');
