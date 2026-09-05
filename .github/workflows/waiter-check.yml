@@ -29,6 +29,7 @@ jobs:
           node --check admin-waiter-v2.js
           node --check admin-keyboard-fix-v3.js
           node --check admin-menu.js
+          node --check login-challenge-guard.js
           node --check live-sync.js
           node --check waiter-stable.js
           node --check waiter-order-idempotency.js
@@ -50,3 +51,6 @@ jobs:
 
       - name: Test print and offline recovery safety
         run: node tests/print-recovery-safety.test.js
+
+      - name: Test security hardening
+        run: node tests/security-hardening.test.js
