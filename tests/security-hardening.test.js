@@ -5,6 +5,7 @@ const read = path => fs.readFileSync(path, 'utf8');
 
 const surface = read('supabase/migrations/20260905013646_zorbas_security_surface_hardening_v1.sql');
 const loginMigration = read('supabase/migrations/20260905013733_zorbas_login_challenge_v2.sql');
+const publicRateMigration = read('supabase/migrations/20260905014142_zorbas_public_submission_rate_limits_v1.sql');
 const guard = read('login-challenge-guard.js');
 const waiter = read('waiter.html');
 const kitchen = read('kitchen.html');
@@ -28,6 +29,13 @@ assert(loginMigration.includes('update public.zorbas_login_challenges set used_a
 assert(loginMigration.includes("perform pg_sleep(0.35)"), 'invalid credentials must have a minimum server-side cost');
 assert(loginMigration.includes("jsonb_build_object('error','Грешен потребител или парола')"), 'v2 login must fail without rolling back challenge consumption');
 
+assert(publicRateMigration.includes(">=4 then"), 'web reservations must have burst protection');
+assert(publicRateMigration.includes("r.created_at>now()-interval '15 minutes'"), 'reservation rate window must be time bounded');
+assert(publicRateMigration.includes(">=5 then"), 'public pickup orders must have burst protection');
+assert(publicRateMigration.includes("o.created_at>now()-interval '15 minutes'"), 'pickup rate window must be time bounded');
+assert(publicRateMigration.includes('mi.restaurant_id=v_restaurant'), 'public pickup menu lookup must stay restaurant scoped');
+assert(publicRateMigration.includes('insert into public.zorbas_orders(restaurant_id'), 'public pickup order must set restaurant explicitly');
+
 assert(guard.includes("name !== 'zorbas_staff_login'"), 'guard must intercept the legacy login call transparently');
 assert(guard.includes("rawRpc('zorbas_login_challenge'"), 'guard must request a one-time challenge first');
 assert(guard.includes("rawRpc('zorbas_staff_login_v2'"), 'guard must use challenge-bound login v2');
@@ -43,4 +51,4 @@ assert(sw.includes('zorbas-v60-security-20260905'), 'service-worker cache must b
 assert(sw.includes('/login-challenge-guard.js?v=20260905-1'), 'offline staff shell must include login guard');
 assert(sw.includes("url.pathname==='/login-challenge-guard.js'"), 'login guard must be network-first while online');
 
-console.log('PASS Zorbas security hardening: no anonymous writes, internal helpers closed, login challenge is rate-limited and one-time.');
+console.log('PASS Zorbas security hardening: anon writes closed, login challenge is rate-limited/single-use, public submissions have burst limits.');
