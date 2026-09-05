@@ -31,9 +31,13 @@ jobs:
           node --check admin-menu.js
           node --check live-sync.js
           node --check waiter-stable.js
+          node --check waiter-order-idempotency.js
           node --check waiter-reservation-guests.js
           node --check print.js
           node --check kitchen.js
 
       - name: Test waiter flow
         run: node tests/waiter-flow.test.js
+
+      - name: Test waiter order retry idempotency
+        run: node tests/waiter-order-idempotency.test.js
