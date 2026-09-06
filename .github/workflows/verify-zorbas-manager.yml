@@ -22,9 +22,12 @@ jobs:
           node --check admin-core.js
           node --check admin-ops-health.js
           node --check admin-mobile-nav.js
+          node --check admin-owner-dashboard.js
+          node --check admin-role-shell.js
           node --check admin-order.js
           node --check admin-manager.js
           node --check admin-live-state.js
+          node --check kitchen.js
           node --check print.js
       - name: Manager screen wiring
         run: |
@@ -44,6 +47,9 @@ jobs:
       - name: Admin burger navigation
         run: |
           node tests/admin-mobile-shell.test.js
+      - name: Simplified restaurant roles
+        run: |
+          node tests/role-simplification.test.js
       - name: Operational health wiring
         run: |
           node tests/admin-ops-health.test.js
