@@ -2,9 +2,9 @@
   const files = [
     '/login-challenge-guard.js?v=20260905-1',
     '/admin-login-stability.js?v=20260801-login1',
-    '/admin-core.js?v=20260801-boot3',
+    '/admin-core.js?v=20260906-owner1',
     '/admin-ops-health.js?v=20260906-ops1',
-    '/admin-mobile-nav.js?v=20260904-mobile-admin1',
+    '/admin-mobile-nav.js?v=20260906-owner1',
     '/admin-order.js?v=20260730-routing3',
     '/admin-auto-routing.js?v=20260730-routing3',
     '/admin-waiter.js?v=20260730-waiter1',
@@ -27,7 +27,8 @@
     '/admin-waiter-note-final.js?v=20260801-note4',
     '/admin-manager-active-final.js?v=20260801-manager-active1',
     '/admin-manager-stability-v2.js?v=20260801-manager-stable2',
-    '/admin-waiter-receipts-final.js?v=20260801-waiter-receipts2'
+    '/admin-waiter-receipts-final.js?v=20260801-waiter-receipts2',
+    '/admin-role-shell.js?v=20260906-owner1'
   ];
 
   const load = src => new Promise((resolve, reject) => {
