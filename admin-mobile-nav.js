@@ -20,15 +20,13 @@
 
   const labels = {
     tables: 'Маси',
-    order: 'Нова поръчка',
-    orders: 'Бележки',
-    manager: 'Manager',
     reservations: 'Резервации',
     archive: 'Архив',
     adminStats: 'Отчети',
     menuAdmin: 'Меню и цени',
     ops: 'Система'
   };
+  const operationalViews = new Set(['order', 'orders', 'manager']);
 
   function ensureNavigationStyles() {
     if (document.getElementById('adminBurgerMenuStyles')) return;
@@ -36,6 +34,7 @@
     style.id = 'adminBurgerMenuStyles';
     style.textContent = `
       #adminSidebar .nav .admin-nav-section{display:none}
+      #adminSidebar .nav [data-owner-operational-hidden]{display:none!important}
       @media (max-width:860px){
         #adminSidebar .nav .admin-nav-section{
           display:block;
@@ -72,9 +71,6 @@
     };
 
     rename('tables', '▦ Маси');
-    rename('order', '＋ Нова поръчка');
-    rename('orders', '☰ Бележки');
-    rename('manager', '◎ Manager');
     rename('reservations', '◷ Резервации');
     rename('archive', '▣ Архив');
     rename('adminStats', '▥ Отчети');
@@ -82,9 +78,17 @@
     rename('ops', '◉ Система');
     if (print) print.textContent = '⌁ Печат';
 
+    operationalViews.forEach(view => {
+      const node = byView(view);
+      if (!node) return;
+      node.dataset.ownerOperationalHidden = '1';
+      node.hidden = true;
+      known.add(node);
+    });
+
     const sections = [
-      {label: 'РАБОТА', items: ['tables', 'order', 'orders', 'manager', 'reservations']},
-      {label: 'ИСТОРИЯ И ОТЧЕТИ', items: ['archive', 'adminStats']},
+      {label: 'НАЧАЛО', items: ['adminStats']},
+      {label: 'НАБЛЮДЕНИЕ', items: ['tables', 'reservations', 'archive']},
       {label: 'НАСТРОЙКИ', items: ['menuAdmin', 'ops', 'print']}
     ];
 
@@ -103,6 +107,11 @@
       });
     }
 
+    operationalViews.forEach(view => {
+      const node = byView(view);
+      if (node) fragment.appendChild(node);
+    });
+
     [...nav.children].filter(node => !known.has(node) && !node.matches('[data-admin-nav-section]')).forEach(node => fragment.appendChild(node));
     nav.replaceChildren(fragment);
   }
@@ -117,7 +126,7 @@
       if (item === active) item.setAttribute('aria-current', 'page');
       else item.removeAttribute('aria-current');
     });
-    const view = active?.dataset.view || new URLSearchParams(location.search).get('view') || 'tables';
+    const view = active?.dataset.view || new URLSearchParams(location.search).get('view') || 'adminStats';
     if (title) title.textContent = labels[view] || 'Управление';
   }
 
@@ -171,7 +180,7 @@
       return;
     }
     if (event.key !== 'Tab') return;
-    const focusable = [...sidebar.querySelectorAll('button:not([disabled]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
+    const focusable = [...sidebar.querySelectorAll('button:not([disabled]):not([hidden]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])')]
       .filter(item => !item.hidden && item.getClientRects().length);
     if (!focusable.length) return;
     const first = focusable[0];

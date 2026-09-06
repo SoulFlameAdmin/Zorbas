@@ -1,5 +1,5 @@
 const Z=window.Zorbas;
-let snapshot=null,activeView='tables',selectedArea=null,selectedTable=null,orderType='dine_in',orderCategory='all',cart=[],editingProduct=null,dirtyPrices=new Map();
+let snapshot=null,activeView='adminStats',selectedArea=null,selectedTable=null,orderType='dine_in',orderCategory='all',cart=[],editingProduct=null,dirtyPrices=new Map();
 Z.registerPwa();document.querySelectorAll('[data-install-pwa]').forEach(b=>b.onclick=Z.installPwa);
 const $=id=>document.getElementById(id);
 
@@ -21,7 +21,8 @@ async function init(){
     await refresh();
     await loadShift();
     const requested=new URLSearchParams(location.search).get('view');
-    if(['tables','order','orders','manager','archive','reservations','menuAdmin','adminStats'].includes(requested))switchView(requested);
+    const allowed=['tables','order','orders','manager','archive','reservations','menuAdmin','adminStats','ops'];
+    switchView(allowed.includes(requested)?requested:'adminStats');
     finishBoot();
   }catch(error){
     console.error('Zorbas init failed',error);

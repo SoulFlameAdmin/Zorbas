@@ -1,12 +1,12 @@
-const CACHE='zorbas-v60-security-20260905';
+const CACHE='zorbas-v61-roles-20260906';
 const CORE=[
   '/','/index.html',
   '/reserve.html','/reserve.css?v=20260730-2','/config.js?v=20260730-live1','/login-challenge-guard.js?v=20260905-1','/live-sync.js?v=20260730-live1','/reserve.js?v=20260730-live1','/reserve-live.js?v=20260905-stable1',
   '/menu.html','/order.html','/cart.html','/browse-menu.css?v=20260729-aegean6','/browse-menu.js?v=20260729-aegean4','/menu.css?v=20260729-pen3','/order.js?v=20260729-order1','/cart.js?v=20260729-cart2','/zorbas-menu-logo.jpg','/site.css?v=20260729-loader4','/public.js?v=20260729-pwa6',
   '/staff.css','/staff-mobile-2026.css?v=20260801-mobile1','/staff-simple-notes-2026.css?v=20260801-simple1',
   '/waiter.html','/waiter-stable.css?v=20260904-stable2','/waiter-stable.js?v=20260904-stable2','/waiter-order-idempotency.js?v=20260905-1','/waiter-reservation-guests.js?v=20260905-1','/waiter-reservation-status.js?v=20260905-1',
-  '/admin.html','/admin.js?v=20260801-bill-visible1','/admin-core.js?v=20260801-boot3','/admin-mobile.css?v=20260904-mobile-admin1','/admin-mobile-nav.js?v=20260904-mobile-admin1','/admin-waiter-home-v1.js?v=20260801-home2','/admin-waiter-note-final.js?v=20260801-note4','/admin-manager-active-final.js?v=20260801-manager-active1','/admin-manager-stability-v2.js?v=20260801-manager-stable2','/admin-waiter-receipts-final.js?v=20260801-waiter-receipts2',
-  '/kitchen.html','/kitchen-v2.css?v=20260730-kitchen2','/kitchen.js?v=20260730-live1','/kitchen-live.js?v=20260730-live1',
+  '/admin.html','/admin.js?v=20260906-owner1','/admin-core.js?v=20260906-owner1','/admin-mobile.css?v=20260904-mobile-admin1','/admin-mobile-nav.js?v=20260906-owner1','/admin-owner-dashboard.js?v=20260906-owner1','/admin-role-shell.js?v=20260906-owner1','/admin-waiter-home-v1.js?v=20260801-home2','/admin-waiter-note-final.js?v=20260801-note4','/admin-manager-active-final.js?v=20260801-manager-active1','/admin-manager-stability-v2.js?v=20260801-manager-stable2','/admin-waiter-receipts-final.js?v=20260801-waiter-receipts2',
+  '/kitchen.html','/kitchen-v2.css?v=20260730-kitchen2','/kitchen.js?v=20260906-manager1','/kitchen-live.js?v=20260730-live1',
   '/print.html','/print-browser-safety.js?v=20260905-1','/print.js?v=20260730-correction1-v5-prod2',
   '/manifest.webmanifest?v=launch8','/icon-192.png?v=tower6','/icon-512.png?v=tower6','/apple-touch-icon.png?v=tower6'
 ];
