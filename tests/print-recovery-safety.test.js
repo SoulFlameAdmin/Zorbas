@@ -43,7 +43,7 @@ assert(!restartMigration.includes("status = 'retrying'"), 'cross-session physica
 assert(printJs.includes("['pending', 'retrying'].includes(job.status)"), 'AUTO mode may only select safe pending/retrying jobs');
 assert(!/\['pending',\s*'retrying',\s*'failed'\]\.includes\(job\.status\)/.test(printJs), 'AUTO mode must never include failed/ambiguous jobs');
 
-assert(sw.includes('zorbas-v60-security-20260905'), 'service worker cache must include the current recovery/security generation');
+assert(sw.includes('zorbas-v61-roles-20260906'), 'service worker cache must include the current recovery/role generation');
 assert(sw.includes('ignoreSearch:true'), 'offline fallback must tolerate cache-bust query changes');
 assert(sw.includes("url.pathname.startsWith('/print')"), 'print surface must be network-first');
 assert(sw.includes("url.pathname==='/live-sync.js'"), 'live sync must be network-first');
