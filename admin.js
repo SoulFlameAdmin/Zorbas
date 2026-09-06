@@ -3,6 +3,7 @@
     '/login-challenge-guard.js?v=20260905-1',
     '/admin-login-stability.js?v=20260801-login1',
     '/admin-core.js?v=20260801-boot3',
+    '/admin-ops-health.js?v=20260906-ops1',
     '/admin-mobile-nav.js?v=20260904-mobile-admin1',
     '/admin-order.js?v=20260730-routing3',
     '/admin-auto-routing.js?v=20260730-routing3',
