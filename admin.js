@@ -1,5 +1,6 @@
 (() => {
   const files = [
+    '/login-challenge-guard.js?v=20260905-1',
     '/admin-login-stability.js?v=20260801-login1',
     '/admin-core.js?v=20260801-boot3',
     '/admin-mobile-nav.js?v=20260904-mobile-admin1',

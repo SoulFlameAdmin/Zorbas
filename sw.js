@@ -1,7 +1,7 @@
-const CACHE='zorbas-v59-print-recovery-20260905';
+const CACHE='zorbas-v60-security-20260905';
 const CORE=[
   '/','/index.html',
-  '/reserve.html','/reserve.css?v=20260730-2','/config.js?v=20260730-live1','/live-sync.js?v=20260730-live1','/reserve.js?v=20260730-live1','/reserve-live.js?v=20260905-stable1',
+  '/reserve.html','/reserve.css?v=20260730-2','/config.js?v=20260730-live1','/login-challenge-guard.js?v=20260905-1','/live-sync.js?v=20260730-live1','/reserve.js?v=20260730-live1','/reserve-live.js?v=20260905-stable1',
   '/menu.html','/order.html','/cart.html','/browse-menu.css?v=20260729-aegean6','/browse-menu.js?v=20260729-aegean4','/menu.css?v=20260729-pen3','/order.js?v=20260729-order1','/cart.js?v=20260729-cart2','/zorbas-menu-logo.jpg','/site.css?v=20260729-loader4','/public.js?v=20260729-pwa6',
   '/staff.css','/staff-mobile-2026.css?v=20260801-mobile1','/staff-simple-notes-2026.css?v=20260801-simple1',
   '/waiter.html','/waiter-stable.css?v=20260904-stable2','/waiter-stable.js?v=20260904-stable2','/waiter-order-idempotency.js?v=20260905-1','/waiter-reservation-guests.js?v=20260905-1','/waiter-reservation-status.js?v=20260905-1',
@@ -61,8 +61,6 @@ self.addEventListener('fetch',event=>{
   if(event.request.method!=='GET'||url.hostname.includes('supabase.co')) return;
   if(url.origin!==self.location.origin) return;
 
-  // Operational surfaces are always network-first while online. Cache is emergency
-  // fallback only, so a stale PWA cannot silently own live restaurant state.
   const networkFirstPath=
     event.request.mode==='navigate'||
     url.pathname.startsWith('/reserve')||
@@ -72,6 +70,7 @@ self.addEventListener('fetch',event=>{
     url.pathname.startsWith('/manager')||
     url.pathname.startsWith('/kitchen')||
     url.pathname.startsWith('/print')||
+    url.pathname==='/login-challenge-guard.js'||
     url.pathname==='/live-sync.js'||
     url.pathname==='/browse-menu.js'||
     url.pathname==='/public.js'||

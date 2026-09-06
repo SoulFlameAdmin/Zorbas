@@ -32,7 +32,7 @@ assert(retryMigration.includes("not like '[SAFE_NO_OUTPUT]%'"), 'only proven no-
 assert(retryMigration.includes("v_effective_status := 'failed'"), 'unknown physical outcome must fail closed');
 assert(retryMigration.includes('physical_retry_guard'), 'print attempts must record retry-guard metadata');
 
-assert(sw.includes('zorbas-v59-print-recovery-20260905'), 'service worker cache must be bumped');
+assert(sw.includes('zorbas-v60-security-20260905'), 'service worker cache must include the current recovery/security generation');
 assert(sw.includes('ignoreSearch:true'), 'offline fallback must tolerate cache-bust query changes');
 assert(sw.includes("url.pathname.startsWith('/print')"), 'print surface must be network-first');
 assert(sw.includes("url.pathname==='/live-sync.js'"), 'live sync must be network-first');
