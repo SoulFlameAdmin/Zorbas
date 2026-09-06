@@ -23,11 +23,89 @@
     order: 'Нова поръчка',
     orders: 'Бележки',
     manager: 'Manager',
-    archive: 'Архив',
     reservations: 'Резервации',
+    archive: 'Архив',
+    adminStats: 'Отчети',
     menuAdmin: 'Меню и цени',
-    adminStats: 'Админ отчет'
+    ops: 'Система'
   };
+
+  function ensureNavigationStyles() {
+    if (document.getElementById('adminBurgerMenuStyles')) return;
+    const style = document.createElement('style');
+    style.id = 'adminBurgerMenuStyles';
+    style.textContent = `
+      #adminSidebar .nav .admin-nav-section{display:none}
+      @media (max-width:860px){
+        #adminSidebar .nav .admin-nav-section{
+          display:block;
+          margin:14px 5px 3px;
+          padding:10px 8px 5px;
+          border-top:1px solid rgba(122,153,187,.15);
+          color:#71869e;
+          font-size:9px;
+          font-weight:900;
+          letter-spacing:.17em;
+          text-transform:uppercase;
+        }
+        #adminSidebar .nav .admin-nav-section:first-child{
+          margin-top:0;
+          padding-top:2px;
+          border-top:0;
+        }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function organizeNavigation() {
+    nav.querySelectorAll('[data-admin-nav-section]').forEach(node => node.remove());
+
+    const byView = view => nav.querySelector(`[data-view="${view}"]`);
+    const print = nav.querySelector('a[href="/print.html"]');
+    const known = new Set();
+
+    const rename = (view, text) => {
+      const node = byView(view);
+      if (node) node.textContent = text;
+      return node;
+    };
+
+    rename('tables', '▦ Маси');
+    rename('order', '＋ Нова поръчка');
+    rename('orders', '☰ Бележки');
+    rename('manager', '◎ Manager');
+    rename('reservations', '◷ Резервации');
+    rename('archive', '▣ Архив');
+    rename('adminStats', '▥ Отчети');
+    rename('menuAdmin', '✎ Меню и цени');
+    rename('ops', '◉ Система');
+    if (print) print.textContent = '⌁ Печат';
+
+    const sections = [
+      {label: 'РАБОТА', items: ['tables', 'order', 'orders', 'manager', 'reservations']},
+      {label: 'ИСТОРИЯ И ОТЧЕТИ', items: ['archive', 'adminStats']},
+      {label: 'НАСТРОЙКИ', items: ['menuAdmin', 'ops', 'print']}
+    ];
+
+    const fragment = document.createDocumentFragment();
+    for (const section of sections) {
+      const items = section.items.map(key => key === 'print' ? print : byView(key)).filter(Boolean);
+      if (!items.length) continue;
+      const sectionLabel = document.createElement('span');
+      sectionLabel.className = 'admin-nav-section';
+      sectionLabel.dataset.adminNavSection = section.label;
+      sectionLabel.textContent = section.label;
+      fragment.appendChild(sectionLabel);
+      items.forEach(item => {
+        known.add(item);
+        fragment.appendChild(item);
+      });
+    }
+
+    [...nav.children].filter(node => !known.has(node) && !node.matches('[data-admin-nav-section]')).forEach(node => fragment.appendChild(node));
+    nav.replaceChildren(fragment);
+  }
 
   function syncSession() {
     if (mobileSession && session) mobileSession.textContent = session.textContent || 'Управление';
@@ -128,6 +206,8 @@
   });
   if (session) new MutationObserver(syncSession).observe(session, {childList: true, subtree: true});
 
+  ensureNavigationStyles();
+  organizeNavigation();
   syncSession();
   syncActiveView();
   setMenu(false, false);
