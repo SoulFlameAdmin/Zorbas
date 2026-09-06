@@ -26,7 +26,16 @@ assert(navigation.includes("aria-current', 'page'"), 'Active navigation must be 
 assert(navigation.includes("toggle.setAttribute('aria-expanded'"), 'Burger state must be accessible');
 assert(navigation.includes('sidebar.inert'), 'Closed drawer must not receive keyboard focus');
 
-assert(serviceWorker.includes('zorbas-v56-mobile-admin-20260904'), 'PWA cache must be refreshed');
+assert(navigation.includes("label: 'РАБОТА'"), 'Burger must group the live work screens');
+assert(navigation.includes("label: 'ИСТОРИЯ И ОТЧЕТИ'"), 'Burger must group archive and reporting');
+assert(navigation.includes("label: 'НАСТРОЙКИ'"), 'Burger must group settings and system tools');
+assert(navigation.includes("items: ['tables', 'order', 'orders', 'manager', 'reservations']"), 'Work group must keep the intended operational order');
+assert(navigation.includes("items: ['archive', 'adminStats']"), 'History group must keep archive before reports');
+assert(navigation.includes("items: ['menuAdmin', 'ops', 'print']"), 'Settings group must keep menu, system and print together');
+assert(navigation.includes("adminStats: 'Отчети'"), 'Admin stats must be presented as Reports');
+assert(navigation.includes("ops: 'Система'"), 'Operational health must be presented as System');
+
+assert(serviceWorker.includes('zorbas-v60-security-20260905'), 'PWA cache must be on the current security generation');
 assert(serviceWorker.includes('/admin-mobile.css?v=20260904-mobile-admin1'), 'PWA must cache mobile CSS');
 assert(serviceWorker.includes('/admin-mobile-nav.js?v=20260904-mobile-admin1'), 'PWA must cache mobile navigation');
 
