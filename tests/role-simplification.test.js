@@ -10,6 +10,9 @@ const adminNav = read('admin-mobile-nav.js');
 const adminLoader = read('admin.js');
 const ownerDashboard = read('admin-owner-dashboard.js');
 const ownerRole = read('admin-role-shell.js');
+const staffCss = read('staff.css');
+const whiteUi = read('zorbas-white-ui.css');
+const sw = read('sw.js');
 const serviceDay = read('supabase/migrations/20260906133500_zorbas_service_day_0500.sql');
 const dashboardMigration = read('supabase/migrations/20260906133000_zorbas_owner_dashboard_v2.sql');
 
@@ -44,5 +47,12 @@ assert(serviceDay.includes("time '05:00'"), 'Service day must roll at 05:00 Euro
 assert(serviceDay.includes('zorbas_private_service_day_start'), 'Service-day helper must be installed');
 assert(serviceDay.includes('v.opened_at>=public.zorbas_private_service_day_start(now())'), 'Old visits must stop being live after the service-day boundary');
 assert(serviceDay.includes('rr.start_at>=v_day_start'), 'Staff reservation snapshot must start from the current service day');
+
+assert(staffCss.startsWith("@import url('/zorbas-white-ui.css?v=20260906-white1')"), 'Shared staff surfaces must load the clean white theme');
+assert(waiter.includes('/zorbas-white-ui.css?v=20260906-white1'), 'Waiter must load the clean white theme after stable CSS');
+assert(whiteUi.includes('--panel:#ffffff'), 'White theme must use white primary panels');
+assert(whiteUi.includes('.kitchen-reservation-card'), 'White theme must cover Manager reservation cards');
+assert(whiteUi.includes('.waiter-stable-page'), 'White theme must cover waiter phone UI');
+assert(sw.includes('/zorbas-white-ui.css?v=20260906-white1'), 'White theme must be available offline');
 
 console.log('ROLE_SIMPLIFICATION_TEST_OK');

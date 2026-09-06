@@ -1,0 +1,180 @@
+/* ZORBAS 1.0 · clean white operational theme
+   Shared visual layer for Waiter, Manager/Kitchen, Owner/Admin and Print.
+   Keeps status colours for fast recognition while removing the dark chrome. */
+:root{
+  --bg:#f6f7f9;
+  --panel:#ffffff;
+  --panel2:#f8fafc;
+  --text:#111827;
+  --muted:#667085;
+  --line:#e4e7ec;
+  --blue:#2563eb;
+  --green:#16845b;
+  --red:#c2414b;
+  --yellow:#b7791f;
+  --paper:#ffffff;
+  --ink:#111827;
+  --clean-shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px rgba(16,24,40,.05);
+  --clean-shadow-lg:0 18px 50px rgba(16,24,40,.10);
+}
+html,body{background:var(--bg)!important;color:var(--text)!important}
+body{font-family:Inter,Manrope,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important}
+
+/* Shared staff shell */
+.login-view{background:#f6f7f9!important}
+.login-card{border:1px solid var(--line)!important;background:#fff!important;color:var(--text)!important;box-shadow:var(--clean-shadow-lg)!important;border-radius:22px!important}
+.kicker{color:#475467!important;font-weight:800!important}
+.field{color:#475467!important;font-weight:650!important}
+.field input,.field select,.field textarea,.search,.small-input,.quick-price{
+  border:1px solid #d0d5dd!important;background:#fff!important;color:#101828!important;box-shadow:0 1px 2px rgba(16,24,40,.04)!important
+}
+.field input:focus,.field select:focus,.field textarea:focus,.search:focus,.small-input:focus,.quick-price:focus{
+  border-color:#98a2b3!important;box-shadow:0 0 0 3px rgba(16,24,40,.06)!important;outline:0!important
+}
+input::placeholder,textarea::placeholder{color:#98a2b3!important}
+
+.topbar{border-bottom:1px solid var(--line)!important;background:rgba(255,255,255,.96)!important;color:#101828!important;box-shadow:0 1px 0 rgba(16,24,40,.02)!important}
+.topbar small{color:#667085!important}.topbar h2{color:#101828!important}
+.app-shell{background:#f6f7f9!important}
+.sidebar{border-color:var(--line)!important;background:#fff!important}
+.side-title{color:#98a2b3!important;font-weight:850!important}
+.nav button,.nav a{color:#475467!important;border-radius:12px!important}
+.nav button:hover,.nav a:hover{background:#f8fafc!important;color:#101828!important}
+.nav button.active,.nav a.active{border-color:#e4e7ec!important;background:#f2f4f7!important;color:#101828!important;box-shadow:inset 3px 0 0 #111827!important}
+.shift-box{border-color:var(--line)!important;background:#f8fafc!important}
+.content{background:#f6f7f9!important;color:#101828!important}
+.view-head h3{color:#101828!important;letter-spacing:-.025em!important}.view-head p{color:#667085!important;line-height:1.55!important}
+
+.btn{
+  border:1px solid #d0d5dd!important;background:#fff!important;color:#344054!important;box-shadow:0 1px 2px rgba(16,24,40,.04)!important;border-radius:10px!important
+}
+.btn:hover{background:#f9fafb!important;border-color:#98a2b3!important}
+.btn.primary{border-color:#111827!important;background:#111827!important;color:#fff!important}
+.btn.primary:hover{background:#1f2937!important}
+.btn.green{border-color:#a6e3cf!important;background:#ecfdf3!important;color:#087443!important}
+.btn.red{border-color:#fecdd3!important;background:#fff1f2!important;color:#b42318!important}
+.btn.yellow{border-color:#f8dd9b!important;background:#fffaeb!important;color:#8a4b0f!important}
+.btn.light{background:#fff!important;color:#111827!important;border-color:#d0d5dd!important}
+
+.tab{border:1px solid #d0d5dd!important;background:#fff!important;color:#475467!important;font-weight:750!important}
+.tab.active{border-color:#111827!important;background:#111827!important;color:#fff!important}
+.panel,.order-card,.reservation-card,.stat,.product,.cart-row,.admin-item{
+  border-color:var(--line)!important;background:#fff!important;color:#101828!important;box-shadow:var(--clean-shadow)!important
+}
+.panel{border-radius:16px!important}.panel-head,.card-head,.order-card header{border-color:var(--line)!important;background:#f8fafc!important;color:#101828!important}
+.panel-body,.card-body{background:#fff!important}.empty{border-color:#d0d5dd!important;color:#98a2b3!important;background:#fff!important}
+.badge{background:#f2f4f7!important;color:#475467!important}.badge.ready{background:#ecfdf3!important;color:#087443!important}.badge.cancelled{background:#fff1f2!important;color:#b42318!important}
+.data-table th{background:#f8fafc!important;color:#475467!important;font-weight:800!important}.data-table th,.data-table td{border-color:#eaecf0!important}.data-table td{color:#344054!important}
+.stat small{color:#667085!important}.stat strong{color:#101828!important}
+.map{border-color:#d0d5dd!important;background:#eef2f6!important;box-shadow:inset 0 0 0 1px #fff!important}
+.product p,.admin-item p,.cart-row small,.order-card footer{color:#667085!important}
+.product:hover{border-color:#98a2b3!important;background:#f9fafb!important}
+.kitchen-item{border-color:#eaecf0!important}.kitchen-item .qty{background:#f2f4f7!important;color:#101828!important}.kitchen-item p{color:#9a6700!important}
+.notice{background:#fffaeb!important;color:#8a4b0f!important;border-radius:10px!important}
+#toast{background:#101828!important;color:#fff!important;box-shadow:var(--clean-shadow-lg)!important}
+
+/* Owner/Admin mobile drawer */
+.zorbas-admin-shell .admin-mobile-menu-toggle,.zorbas-admin-shell #adminMobileMenuClose{
+  border-color:#d0d5dd!important;background:#fff!important;color:#101828!important
+}
+.zorbas-admin-shell .admin-mobile-menu-toggle i{background:#101828!important}
+.zorbas-admin-shell .admin-mobile-drawer-head{background:#fff!important;border-color:#eaecf0!important;color:#101828!important}
+.zorbas-admin-shell .admin-mobile-drawer-head small,.zorbas-admin-shell .admin-mobile-drawer-head span{color:#667085!important}
+.zorbas-admin-shell .admin-mobile-quick-actions{border-color:#eaecf0!important;background:#fff!important}
+.zorbas-admin-shell .admin-mobile-nav-backdrop{background:rgba(15,23,42,.28)!important;backdrop-filter:blur(2px)!important}
+
+/* Manager / kitchen */
+.kitchen-primary-tabs{gap:8px!important}
+.kitchen-primary-tabs button{
+  min-height:50px!important;border:1px solid #d0d5dd!important;border-radius:12px!important;background:#fff!important;color:#475467!important;box-shadow:0 1px 2px rgba(16,24,40,.03)!important
+}
+.kitchen-primary-tabs button.active{border-color:#111827!important;background:#111827!important;color:#fff!important;box-shadow:0 5px 14px rgba(17,24,39,.14)!important}
+.kitchen-guests{background:#eff6ff!important;color:#1d4ed8!important}
+.kitchen-reservation-card{border-color:var(--line)!important;background:#fff!important;color:#101828!important;box-shadow:var(--clean-shadow)!important;border-radius:18px!important}
+.kitchen-reservation-card.seated{border-color:#9ed7c2!important;box-shadow:0 0 0 1px #d1fae5,var(--clean-shadow)!important}
+.kitchen-reservation-card header,.reservation-food{border-color:#eaecf0!important}
+.kitchen-reservation-card header small,.reservation-food>small,.reservation-food p{color:#667085!important}
+.kitchen-reservation-card header strong,.reservation-person b,.reservation-food li{color:#101828!important}
+.reservation-time b{color:#667085!important}.reservation-time strong{color:#8a4b0f!important}.reservation-time span{color:#344054!important}
+.reservation-person{border-color:#eaecf0!important;background:#f8fafc!important}.reservation-person span{color:#667085!important}
+.reservation-note{border-color:#f2d28a!important;background:#fffaeb!important;color:#8a4b0f!important}
+.reservation-status{border-color:#f2d28a!important;background:#fffaeb!important;color:#8a4b0f!important}
+.reservation-status.seated{border-color:#a6e3cf!important;background:#ecfdf3!important;color:#087443!important}
+.reservation-status.requested{border-color:#d8c5ff!important;background:#f7f2ff!important;color:#6941c6!important}
+.reservation-food li{border-color:#eaecf0!important}.reservation-food li small{color:#9a6700!important}.reservation-food .food-state{color:#087443!important}
+
+/* Print page */
+.phone-tests{border-color:#dbeafe!important;background:#eff6ff!important;color:#1e3a8a!important}
+.phone-tests p,.bridge-warning{color:#667085!important}.bridge-status{border-color:#a6e3cf!important;background:#ecfdf3!important;color:#087443!important}
+
+/* Stable waiter phone shell */
+.waiter-stable-page{
+  --ws-bg:#f6f7f9;
+  --ws-panel:#ffffff;
+  --ws-panel-2:#f8fafc;
+  --ws-line:#e4e7ec;
+  --ws-text:#101828;
+  --ws-muted:#667085;
+  --ws-blue:#2563eb;
+  --ws-green:#16845b;
+  --ws-yellow:#b7791f;
+  --ws-red:#c2414b;
+  background:#f6f7f9!important;color:#101828!important
+}
+.waiter-stable-page .ws-login{background:#f6f7f9!important}
+.waiter-stable-page .ws-login-card{border-color:#e4e7ec!important;background:#fff!important;box-shadow:var(--clean-shadow-lg)!important;border-radius:22px!important}
+.waiter-stable-page .ws-kicker{color:#475467!important}
+.waiter-stable-page .ws-field{color:#475467!important}
+.waiter-stable-page .ws-field input,.waiter-stable-page .ws-field textarea,.waiter-stable-page .ws-search{
+  border-color:#d0d5dd!important;background:#fff!important;color:#101828!important;box-shadow:0 1px 2px rgba(16,24,40,.04)!important
+}
+.waiter-stable-page .ws-shell{background:#f6f7f9!important}
+.waiter-stable-page .ws-topbar{border-color:#e4e7ec!important;background:rgba(255,255,255,.97)!important;box-shadow:0 1px 0 rgba(16,24,40,.03)!important}
+.waiter-stable-page .ws-icon-button,.waiter-stable-page .ws-top-refresh,.waiter-stable-page .ws-close,.waiter-stable-page .ws-back{
+  border-color:#d0d5dd!important;background:#fff!important;color:#101828!important;box-shadow:0 1px 2px rgba(16,24,40,.04)!important
+}
+.waiter-stable-page .ws-drawer{border-color:#e4e7ec!important;background:#fff!important;color:#101828!important;box-shadow:20px 0 55px rgba(16,24,40,.12)!important}
+.waiter-stable-page .ws-drawer-backdrop{background:rgba(15,23,42,.25)!important;backdrop-filter:blur(2px)!important}
+.waiter-stable-page .ws-drawer-brand small{color:#667085!important}.waiter-stable-page .ws-drawer-brand strong{color:#101828!important}
+.waiter-stable-page .ws-nav button,.waiter-stable-page .ws-nav a{color:#344054!important}
+.waiter-stable-page .ws-nav button.active,.waiter-stable-page .ws-nav button:active,.waiter-stable-page .ws-nav a:active{border-color:#e4e7ec!important;background:#f2f4f7!important;color:#101828!important}
+.waiter-stable-page .ws-content{padding-top:16px!important}
+.waiter-stable-page .ws-alert{border-color:#e4e7ec!important;background:#fff!important;color:#667085!important}
+.waiter-stable-page .ws-alert.error{border-color:#fecdd3!important;background:#fff1f2!important;color:#b42318!important}
+.waiter-stable-page .ws-alert.success{border-color:#a6e3cf!important;background:#ecfdf3!important;color:#087443!important}
+.waiter-stable-page .ws-card,.waiter-stable-page .ws-product,.waiter-stable-page .ws-section,.waiter-stable-page .ws-cart-row{
+  border-color:#e4e7ec!important;background:#fff!important;color:#101828!important;box-shadow:var(--clean-shadow)!important
+}
+.waiter-stable-page .ws-card{background:#fff!important;border-radius:16px!important;min-height:104px!important}
+.waiter-stable-page .ws-card small,.waiter-stable-page .ws-card span,.waiter-stable-page .ws-product-main small,.waiter-stable-page .ws-section-head small{color:#667085!important}
+.waiter-stable-page .ws-table-card.free{border-color:#b7e4d4!important;background:#f7fffb!important}
+.waiter-stable-page .ws-table-card.occupied{border-color:#f1d38a!important;background:#fffcf4!important}
+.waiter-stable-page .ws-table-card.reserved{border-color:#bfdbfe!important;background:#f7fbff!important}
+.waiter-stable-page .ws-table-card.blocked{border-color:#fecdd3!important;background:#fff8f8!important}
+.waiter-stable-page .ws-chip,.waiter-stable-page .ws-guest{border-color:#d0d5dd!important;background:#fff!important;color:#475467!important}
+.waiter-stable-page .ws-chip.active{border-color:#111827!important;background:#111827!important;color:#fff!important}
+.waiter-stable-page .ws-guest.active{border-color:#f1d38a!important;background:#fffaeb!important;color:#8a4b0f!important}
+.waiter-stable-page .ws-guest.new{border-color:#a6e3cf!important;background:#ecfdf3!important;color:#087443!important}
+.waiter-stable-page .ws-product-add{background:#f2f4f7!important;color:#101828!important}
+.waiter-stable-page .ws-product-price,.waiter-stable-page .ws-cart-price{color:#8a4b0f!important}
+.waiter-stable-page .ws-qty button{border-color:#d0d5dd!important;background:#fff!important;color:#101828!important}
+.waiter-stable-page .ws-cart-note{border-color:#d0d5dd!important;background:#fff!important;color:#101828!important}
+.waiter-stable-page .ws-primary{border-color:#111827!important;background:#111827!important;color:#fff!important;box-shadow:0 1px 2px rgba(16,24,40,.08)!important}
+.waiter-stable-page .ws-danger{border-color:#fecdd3!important;background:#fff1f2!important;color:#b42318!important}
+.waiter-stable-page .ws-language-switch button,.waiter-stable-page .ws-login-language button{border-color:#d0d5dd!important;background:#fff!important;color:#475467!important}
+.waiter-stable-page .ws-language-switch button.active,.waiter-stable-page .ws-login-language button.active{border-color:#111827!important;background:#111827!important;color:#fff!important}
+
+@media(max-width:860px){
+  .content{padding:16px!important}
+  .panel,.order-card,.reservation-card,.stat{border-radius:14px!important}
+  .topbar{min-height:64px!important}
+  .waiter-stable-page .ws-content{padding-left:12px!important;padding-right:12px!important}
+  .waiter-stable-page .ws-area-grid,.waiter-stable-page .ws-table-grid{gap:9px!important}
+  .kitchen-primary-tabs{position:sticky;top:0;background:#f6f7f9!important;padding:8px 0 12px!important}
+}
+@media(max-width:520px){
+  .login-card,.waiter-stable-page .ws-login-card{padding:22px!important;border-radius:18px!important}
+  .view-head h3,.waiter-stable-page .ws-view-head h2{font-size:24px!important}
+  .btn{min-height:44px!important}
+  .waiter-stable-page .ws-card{padding:14px!important}
+}
