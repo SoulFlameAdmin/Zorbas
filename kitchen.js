@@ -7,6 +7,26 @@
   let filter = 'active';
   let view = 'notes';
   let timer = null;
+  const busyItems = new Set();
+
+  function ensureManagerStyles() {
+    if (document.getElementById('kitchenManagerStyles')) return;
+    const style = document.createElement('style');
+    style.id = 'kitchenManagerStyles';
+    style.textContent = `
+      .manager-handoff{display:grid;gap:8px;min-width:170px}
+      .manager-handoff-line{display:flex;align-items:center;justify-content:flex-end;gap:7px}
+      .manager-handoff-line button{min-width:38px;min-height:36px;border:1px solid var(--line);border-radius:10px;background:#132235;color:#fff;font-weight:900}
+      .manager-handoff-line strong{min-width:58px;text-align:center;font-size:15px}
+      .manager-assignee-select{width:100%;min-height:36px;border:1px solid var(--line);border-radius:10px;background:#0d1826;color:#fff;padding:0 9px}
+      .manager-give-state{font-size:10px;font-weight:900;letter-spacing:.08em;color:var(--muted);text-align:right}
+      .manager-give-state.done{color:#72d6a5}
+      .manager-order-summary{display:flex;gap:10px;flex-wrap:wrap;margin:8px 0 0;color:var(--muted);font-size:11px}
+      .manager-complete{margin-top:12px;width:100%}
+      @media(max-width:650px){.kitchen-item{grid-template-columns:auto 1fr}.manager-handoff{grid-column:1/-1}.manager-handoff-line{justify-content:space-between}}
+    `;
+    document.head.appendChild(style);
+  }
 
   async function login(event) {
     event.preventDefault();
@@ -31,7 +51,7 @@
     if (!session) return;
     $('loginView').classList.add('hidden');
     $('appView').classList.remove('hidden');
-    $('sessionName').textContent = `${session.display_name} · свързано със Supabase`;
+    $('sessionName').textContent = `${session.display_name} · Manager`;
     await Promise.all([refresh(), loadShift()]);
     clearInterval(timer);
     timer = setInterval(refresh, 5000);
@@ -69,8 +89,6 @@
         renderQueue();
       };
     });
-    const current = snapshot?.stations?.find(station => station.id === stationId);
-    $('stationTitle').textContent = current?.name || 'Кухня';
   }
 
   function metaText(meta = {}) {
@@ -99,8 +117,31 @@
   }
 
   function visibleKitchenOrder(order) {
-    if (['cancelled', 'completed', 'returned'].includes(order.status)) return false;
+    if (['cancelled', 'returned'].includes(order.status)) return false;
+    if (order.manager_state === 'completed' && filter === 'active') return false;
     return wasSentToKitchen(order);
+  }
+
+  function deliveredQuantity(item) {
+    return Math.max(0, Math.min(Number(item.delivered_quantity || 0), Number(item.quantity || 0)));
+  }
+
+  function isFullyDelivered(item) {
+    return deliveredQuantity(item) >= Number(item.quantity || 0);
+  }
+
+  function isKitchenItemVisible(item) {
+    if (item.station_id !== stationId || item.status === 'cancelled') return false;
+    return filter === 'ready' ? isFullyDelivered(item) : !isFullyDelivered(item);
+  }
+
+  function orderKitchenItems(order) {
+    return (order.items || []).filter(item => item.send_to_kitchen_snapshot && item.status !== 'cancelled');
+  }
+
+  function canCompleteOrder(order) {
+    const items = orderKitchenItems(order);
+    return items.length > 0 && items.every(isFullyDelivered);
   }
 
   function renderQueue() {
@@ -108,25 +149,59 @@
     const groups = [];
     (snapshot.orders || []).forEach(order => {
       if (!visibleKitchenOrder(order)) return;
-      const items = (order.items || []).filter(item => {
-        if (item.station_id !== stationId) return false;
-        if (filter === 'ready') return item.status === 'ready';
-        return ['pending', 'sent', 'preparing'].includes(item.status);
-      });
+      const items = (order.items || []).filter(isKitchenItemVisible);
       if (items.length) groups.push({...order, stationItems: items});
     });
     groups.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+    const current = snapshot?.stations?.find(station => station.id === stationId);
+    $('stationTitle').textContent = `${current?.name || 'Кухня'} · ${groups.length} бележки`;
     $('kitchenQueue').innerHTML = groups.length
       ? groups.map(orderCard).join('')
-      : '<div class="empty">Няма изпратени бележки за тази станция.</div>';
+      : `<div class="empty">${filter === 'active' ? 'Няма чакащи бележки за тази станция.' : 'Няма напълно издадени бележки за тази станция.'}</div>`;
+
     document.querySelectorAll('[data-item-status]').forEach(button => {
       button.onclick = () => setItemStatus(button.dataset.itemId, button.dataset.itemStatus);
+    });
+    document.querySelectorAll('[data-delivered-minus]').forEach(button => {
+      button.onclick = () => adjustDelivered(button.dataset.deliveredMinus, -1, button);
+    });
+    document.querySelectorAll('[data-delivered-plus]').forEach(button => {
+      button.onclick = () => adjustDelivered(button.dataset.deliveredPlus, 1, button);
+    });
+    document.querySelectorAll('[data-manager-assignee]').forEach(select => {
+      select.onchange = () => assignItem(select.dataset.managerAssignee, select.value, select);
+    });
+    document.querySelectorAll('[data-complete-manager-order]').forEach(button => {
+      button.onclick = () => completeOrder(button.dataset.completeManagerOrder, button);
     });
   }
 
   function clock(value) {
     if (!value) return '';
     return new Date(value).toLocaleTimeString('bg-BG', {hour:'2-digit', minute:'2-digit', timeZone:'Europe/Sofia'});
+  }
+
+  function staffOptions(item) {
+    const people = (snapshot?.staff || []).map(person => person.name).filter(Boolean);
+    const current = item.assigned_to || '';
+    const unique = [...new Set(current ? [current, ...people] : people)];
+    return `<option value="">На кого се дава?</option>${unique.map(name => `<option value="${Z.esc(name)}" ${name === current ? 'selected' : ''}>${Z.esc(name)}</option>`).join('')}`;
+  }
+
+  function itemHandoff(item) {
+    const quantity = Number(item.quantity || 0);
+    const delivered = deliveredQuantity(item);
+    const ready = item.status === 'ready' || delivered > 0;
+    const done = delivered >= quantity;
+    return `<div class="manager-handoff">
+      <select class="manager-assignee-select" data-manager-assignee="${item.id}" ${done ? 'disabled' : ''}>${staffOptions(item)}</select>
+      <div class="manager-handoff-line">
+        <button type="button" data-delivered-minus="${item.id}" ${delivered <= 0 ? 'disabled' : ''}>−</button>
+        <strong>${delivered}/${quantity}</strong>
+        <button type="button" data-delivered-plus="${item.id}" ${!ready || done ? 'disabled' : ''}>＋</button>
+      </div>
+      <span class="manager-give-state ${done ? 'done' : ''}">${done ? `✓ ДАДЕНО${item.assigned_to ? ` · ${Z.esc(item.assigned_to)}` : ''}` : ready ? 'ГОТОВО · ПРЕДАЙ НА СЕРВИТЬОР' : 'ПЪРВО ОТБЕЛЕЖИ ГОТОВО'}</span>
+    </div>`;
   }
 
   function orderCard(order) {
@@ -138,11 +213,16 @@
       : `МАСА ${table?.table_number || '—'}`;
     const late = age >= 10 ? 'late' : '';
     const guests = reservation ? `<span class="kitchen-guests">👥 ${Number(reservation.guests || 0)} души</span>` : '';
+    const allKitchen = orderKitchenItems(order);
+    const deliveredTotal = allKitchen.reduce((sum, item) => sum + deliveredQuantity(item), 0);
+    const orderedTotal = allKitchen.reduce((sum, item) => sum + Number(item.quantity || 0), 0);
+    const complete = canCompleteOrder(order) && order.manager_state !== 'completed';
     return `<article class="order-card ${late}">
       <header>
-        <div><strong>${label}</strong><small>Поръчка №${order.order_number} · ${Z.esc(order.created_by_name || '')}</small>${guests}</div>
+        <div><strong>${label}</strong><small>Бележка №${order.order_number} · Сервитьор: ${Z.esc(order.created_by_name || '—')}</small>${guests}</div>
         <span class="badge">${age} мин.</span>
       </header>
+      <div class="manager-order-summary"><span>Издадени ${deliveredTotal}/${orderedTotal}</span><span>Час ${clock(order.created_at)}</span></div>
       ${order.note ? `<p class="notice">⚠ ${Z.esc(order.note)}</p>` : ''}
       <div class="order-items">${order.stationItems.map(item => `
         <div class="kitchen-item">
@@ -152,8 +232,10 @@
             ${item.status !== 'preparing' && item.status !== 'ready' ? `<button class="btn" data-item-id="${item.id}" data-item-status="preparing">ЗАПОЧВАМ</button>` : ''}
             ${item.status !== 'ready' ? `<button class="btn green" data-item-id="${item.id}" data-item-status="ready">ГОТОВО</button>` : '<span class="badge ready">ГОТОВО</span>'}
           </div>
+          ${itemHandoff(item)}
         </div>`).join('')}</div>
-      <footer><span>${Z.formatDate(order.created_at)}</span>${order.order_type === 'pickup' && order.ready_at ? `<b>За ${clock(order.ready_at)}</b>` : ''}</footer>
+      ${complete ? `<button class="btn green manager-complete" type="button" data-complete-manager-order="${order.id}">✓ ВСИЧКО Е ДАДЕНО · ПРИКЛЮЧИ БЕЛЕЖКАТА</button>` : ''}
+      <footer><span>Бележка №${order.order_number}</span>${order.order_type === 'pickup' && order.ready_at ? `<b>За ${clock(order.ready_at)}</b>` : ''}</footer>
     </article>`;
   }
 
@@ -178,7 +260,7 @@
       ? 'Няма предварително избрана храна.'
       : preorder.status === 'open'
         ? 'Храната чака пристигането на гостите.'
-        : 'Храната е изпратена към кухнята.';
+        : 'Храната е изпратена към Manager.';
 
     return `<article class="kitchen-reservation-card ${statusClass}">
       <header>
@@ -188,7 +270,7 @@
       <div class="reservation-time"><b>${day}</b><strong>${clock(reservation.start_at)}</strong><span>👥 ${Number(reservation.guests || 0)} души</span></div>
       <div class="reservation-person"><b>${Z.esc(reservation.customer_name)}</b><span>${Z.esc(reservation.customer_phone)}</span></div>
       ${reservation.note ? `<p class="reservation-note">${Z.esc(reservation.note)}</p>` : ''}
-      <section class="reservation-food"><small>КАКВО ЩЕ ЯДАТ</small>${food ? `<ul>${food}</ul>` : `<p>${foodState}</p>`}${food ? `<p class="food-state">${foodState}</p>` : ''}</section>
+      <section class="reservation-food"><small>ПРЕДВАРИТЕЛНА ХРАНА</small>${food ? `<ul>${food}</ul>` : `<p>${foodState}</p>`}${food ? `<p class="food-state">${foodState}</p>` : ''}</section>
     </article>`;
   }
 
@@ -202,12 +284,77 @@
       : '<div class="empty">Няма предстоящи резервации.</div>';
   }
 
+  function itemById(id) {
+    for (const order of snapshot?.orders || []) {
+      const item = (order.items || []).find(entry => entry.id === id);
+      if (item) return item;
+    }
+    return null;
+  }
+
   async function setItemStatus(id, status) {
     try {
       await Z.rpc('zorbas_set_item_status_v3', {p_token: Z.token(), p_item_id: id, p_status: status});
       await refresh();
     } catch (error) {
       Z.toast(error.message, 'error');
+    }
+  }
+
+  async function adjustDelivered(id, delta, button) {
+    const item = itemById(id);
+    if (!item || busyItems.has(id)) return;
+    const current = deliveredQuantity(item);
+    const next = Math.max(0, Math.min(Number(item.quantity || 0), current + delta));
+    if (next === current) return;
+    busyItems.add(id);
+    button.disabled = true;
+    try {
+      await Z.rpc('zorbas_manager_set_delivered_quantity_v1', {
+        p_token: Z.token(),
+        p_item_id: id,
+        p_quantity: next,
+        p_expected_version: Number(item.manager_version || 1)
+      });
+      await refresh();
+    } catch (error) {
+      Z.toast(error.message, 'error');
+    } finally {
+      busyItems.delete(id);
+    }
+  }
+
+  async function assignItem(id, name, select) {
+    const item = itemById(id);
+    if (!item || !name || busyItems.has(id)) return;
+    busyItems.add(id);
+    select.disabled = true;
+    try {
+      await Z.rpc('zorbas_manager_update_item_v1', {
+        p_token: Z.token(),
+        p_item_id: id,
+        p_action: 'assign',
+        p_assigned_to: name,
+        p_note: null,
+        p_expected_version: Number(item.manager_version || 1)
+      });
+      await refresh();
+    } catch (error) {
+      Z.toast(error.message, 'error');
+    } finally {
+      busyItems.delete(id);
+    }
+  }
+
+  async function completeOrder(id, button) {
+    button.disabled = true;
+    try {
+      await Z.rpc('zorbas_manager_complete_order_v1', {p_token: Z.token(), p_order_id: id});
+      Z.toast('Бележката е приключена и влиза в архива.', 'success');
+      await refresh();
+    } catch (error) {
+      Z.toast(error.message, 'error');
+      button.disabled = false;
     }
   }
 
@@ -239,6 +386,7 @@
   }
 
   document.addEventListener('DOMContentLoaded', () => {
+    ensureManagerStyles();
     Z.registerPwa();
     $('loginForm').onsubmit = login;
     $('logoutButton').onclick = Z.logout;
