@@ -36,8 +36,10 @@ assert(navigation.includes("new Set(['order', 'orders', 'manager'])"), 'Owner bu
 assert(navigation.includes("adminStats: 'Отчети'"), 'Admin stats must be presented as Reports');
 assert(navigation.includes("ops: 'Система'"), 'Operational health must be presented as System');
 
-assert(serviceWorker.includes('zorbas-v60-security-20260905'), 'PWA cache must be on the current security generation');
+assert(serviceWorker.includes('zorbas-v61-roles-20260906'), 'PWA cache must be on the current role generation');
 assert(serviceWorker.includes('/admin-mobile.css?v=20260904-mobile-admin1'), 'PWA must cache mobile CSS');
-assert(serviceWorker.includes('/admin-mobile-nav.js?v=20260904-mobile-admin1'), 'PWA must cache mobile navigation fallback');
+assert(serviceWorker.includes('/admin-mobile-nav.js?v=20260906-owner1'), 'PWA must cache current mobile navigation');
+assert(serviceWorker.includes('/admin-owner-dashboard.js?v=20260906-owner1'), 'PWA must cache owner dashboard enhancements');
+assert(serviceWorker.includes('/admin-role-shell.js?v=20260906-owner1'), 'PWA must cache owner role shell');
 
 console.log('ADMIN_MOBILE_SHELL_TEST_OK');
