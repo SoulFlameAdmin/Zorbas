@@ -15,7 +15,7 @@ assert(html.includes('id="adminMobileNavBackdrop"'), 'Admin needs a dismissible 
 assert(html.includes('data-admin-mobile-logout'), 'Logout must remain available inside the drawer');
 assert(html.includes('/admin-mobile.css?v=20260904-mobile-admin1'), 'Admin must load the mobile stylesheet');
 
-assert(loader.includes('/admin-mobile-nav.js?v=20260904-mobile-admin1'), 'Admin must load mobile navigation behavior');
+assert(loader.includes('/admin-mobile-nav.js?v=20260906-owner1'), 'Admin must load current owner mobile navigation behavior');
 assert(css.includes('@media (max-width: 860px)'), 'Mobile layout needs a phone/tablet breakpoint');
 assert(css.includes('body.admin-mobile-menu-open #appView .sidebar'), 'Open state must reveal the drawer');
 assert(css.includes('#appView .waiter-mobile-top'), 'Admin must suppress duplicate waiter navigation');
@@ -26,17 +26,18 @@ assert(navigation.includes("aria-current', 'page'"), 'Active navigation must be 
 assert(navigation.includes("toggle.setAttribute('aria-expanded'"), 'Burger state must be accessible');
 assert(navigation.includes('sidebar.inert'), 'Closed drawer must not receive keyboard focus');
 
-assert(navigation.includes("label: 'РАБОТА'"), 'Burger must group the live work screens');
-assert(navigation.includes("label: 'ИСТОРИЯ И ОТЧЕТИ'"), 'Burger must group archive and reporting');
-assert(navigation.includes("label: 'НАСТРОЙКИ'"), 'Burger must group settings and system tools');
-assert(navigation.includes("items: ['tables', 'order', 'orders', 'manager', 'reservations']"), 'Work group must keep the intended operational order');
-assert(navigation.includes("items: ['archive', 'adminStats']"), 'History group must keep archive before reports');
-assert(navigation.includes("items: ['menuAdmin', 'ops', 'print']"), 'Settings group must keep menu, system and print together');
+assert(navigation.includes("label: 'НАЧАЛО'"), 'Owner burger must have a home group');
+assert(navigation.includes("label: 'НАБЛЮДЕНИЕ'"), 'Owner burger must group live monitoring');
+assert(navigation.includes("label: 'НАСТРОЙКИ'"), 'Owner burger must group settings and system tools');
+assert(navigation.includes("items: ['adminStats']"), 'Reports must be the owner home entry');
+assert(navigation.includes("items: ['tables', 'reservations', 'archive']"), 'Monitoring must keep tables, reservations and archive');
+assert(navigation.includes("items: ['menuAdmin', 'ops', 'print']"), 'Settings must keep menu, system and print together');
+assert(navigation.includes("new Set(['order', 'orders', 'manager'])"), 'Owner burger must hide waiter and manager work screens');
 assert(navigation.includes("adminStats: 'Отчети'"), 'Admin stats must be presented as Reports');
 assert(navigation.includes("ops: 'Система'"), 'Operational health must be presented as System');
 
 assert(serviceWorker.includes('zorbas-v60-security-20260905'), 'PWA cache must be on the current security generation');
 assert(serviceWorker.includes('/admin-mobile.css?v=20260904-mobile-admin1'), 'PWA must cache mobile CSS');
-assert(serviceWorker.includes('/admin-mobile-nav.js?v=20260904-mobile-admin1'), 'PWA must cache mobile navigation');
+assert(serviceWorker.includes('/admin-mobile-nav.js?v=20260904-mobile-admin1'), 'PWA must cache mobile navigation fallback');
 
 console.log('ADMIN_MOBILE_SHELL_TEST_OK');
