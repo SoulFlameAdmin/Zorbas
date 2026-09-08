@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="bg">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b0d10">
+  <meta name="description" content="Снимки от ZORBAS Greek Grill House в Сливен.">
+  <title>Снимки | ZORBAS Greek Grill House</title>
+  <link rel="icon" href="/icon-192.png?v=tower6" type="image/png">
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=tower6">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Forum&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/gallery.css?v=20260908-1">
+</head>
+<body>
+  <header class="gallery-bar">
+    <a class="back" href="/" aria-label="Назад към началото">←</a>
+    <a class="gallery-brand" href="/" aria-label="ZORBAS начало"><strong>ZORBAS</strong><span>СНИМКИ</span></a>
+    <a class="facebook" href="https://www.facebook.com/profile.php?id=100078458821839&sk=photos" target="_blank" rel="noopener noreferrer" aria-label="Още снимки във Facebook">f</a>
+  </header>
+
+  <main class="gallery-shell" aria-label="Галерия ZORBAS">
+    <section class="photo-grid" id="photoGrid" aria-live="polite"></section>
+  </main>
+
+  <dialog class="lightbox" id="lightbox" aria-label="Преглед на снимка">
+    <button class="lightbox-close" type="button" data-close aria-label="Затвори">×</button>
+    <button class="lightbox-nav prev" type="button" data-prev aria-label="Предишна снимка">‹</button>
+    <figure>
+      <img id="lightboxImage" alt="Снимка от ZORBAS">
+      <figcaption id="lightboxCount"></figcaption>
+    </figure>
+    <button class="lightbox-nav next" type="button" data-next aria-label="Следваща снимка">›</button>
+  </dialog>
+
+  <script src="/gallery.js?v=20260908-1"></script>
+</body>
+</html>
