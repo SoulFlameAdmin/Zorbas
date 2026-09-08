@@ -39,6 +39,8 @@ jobs:
           node --check print.js
           node --check kitchen.js
           node --check sw.js
+          node --check reserve-launcher.js
+          node --check gallery.js
 
       - name: Test waiter flow
         run: node tests/waiter-flow.test.js
@@ -54,3 +56,6 @@ jobs:
 
       - name: Test security hardening
         run: node tests/security-hardening.test.js
+
+      - name: Test public photo gallery
+        run: node tests/gallery.test.js
