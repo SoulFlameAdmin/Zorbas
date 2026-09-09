@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="bg">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#0b5f9b">
+  <meta name="description" content="Снимки от ZORBAS Greek Grill House — Сливен.">
+  <title>Снимки | ZORBAS Greek Grill House</title>
+  <link rel="icon" href="/icon-192.png" type="image/png">
+  <link rel="preconnect" href="https://cdn.oink.bg">
+  <link rel="stylesheet" href="/gallery.css?v=1">
+</head>
+<body>
+  <header class="gallery-header">
+    <a class="gallery-back" href="/" aria-label="Назад към началната страница">←</a>
+    <div class="gallery-brand">
+      <strong>ZORBAS</strong>
+      <span>СНИМКИ</span>
+    </div>
+    <a class="gallery-menu" href="/menu.html">МЕНЮ</a>
+  </header>
+
+  <main>
+    <section class="gallery-grid" id="galleryGrid" aria-label="Галерия ZORBAS"></section>
+  </main>
+
+  <div class="lightbox" id="lightbox" aria-hidden="true" role="dialog" aria-modal="true" aria-label="Преглед на снимка">
+    <button class="lightbox-close" id="lightboxClose" type="button" aria-label="Затвори">×</button>
+    <button class="lightbox-nav lightbox-prev" id="lightboxPrev" type="button" aria-label="Предишна снимка">‹</button>
+    <figure class="lightbox-stage">
+      <img id="lightboxImage" alt="ZORBAS Greek Grill House">
+      <figcaption id="lightboxCounter"></figcaption>
+    </figure>
+    <button class="lightbox-nav lightbox-next" id="lightboxNext" type="button" aria-label="Следваща снимка">›</button>
+  </div>
+
+  <noscript>За да отвориш галерията, включи JavaScript.</noscript>
+  <script src="/gallery.js?v=1" defer></script>
+</body>
+</html>
