@@ -37,6 +37,18 @@ menuToggle?.addEventListener('click', () => {
 
 mobileLinks.forEach((link) => link.addEventListener('click', closeMenu));
 
+// Keep the photo experience inside ZORBAS. Any existing navigation item named
+// "СНИМКИ" now opens the dedicated gallery instead of sending guests away.
+document.querySelectorAll('a').forEach((link) => {
+  const label = String(link.textContent || '').trim().toLocaleUpperCase('bg-BG');
+  if (label === 'СНИМКИ' || label === 'PHOTOS') {
+    link.href = '/gallery.html';
+    link.removeAttribute('target');
+    link.removeAttribute('rel');
+    link.addEventListener('click', closeMenu);
+  }
+});
+
 const observer = new IntersectionObserver(
   (entries) => {
     entries.forEach((entry) => {
