@@ -37,6 +37,18 @@ menuToggle?.addEventListener('click', () => {
 
 mobileLinks.forEach((link) => link.addEventListener('click', closeMenu));
 
+// Keep photo browsing inside ZORBAS: every existing navigation link labelled
+// "СНИМКИ" / "PHOTOS" opens the dedicated site gallery, never Facebook.
+document.querySelectorAll('a').forEach((link) => {
+  const label = String(link.textContent || '').trim().toLocaleUpperCase('bg-BG');
+  if (label === 'СНИМКИ' || label === 'PHOTOS') {
+    link.href = '/gallery.html';
+    link.removeAttribute('target');
+    link.removeAttribute('rel');
+    link.addEventListener('click', closeMenu);
+  }
+});
+
 const observer = new IntersectionObserver(
   (entries) => {
     entries.forEach((entry) => {
