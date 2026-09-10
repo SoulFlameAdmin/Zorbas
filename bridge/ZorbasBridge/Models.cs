@@ -130,6 +130,9 @@ internal sealed class PrintJob
 
     [JsonPropertyName("created_at")]
     public DateTimeOffset CreatedAt { get; set; }
+
+    [JsonPropertyName("operating_mode")]
+    public string OperatingMode { get; set; } = string.Empty;
 }
 
 internal sealed class ModeResponse
