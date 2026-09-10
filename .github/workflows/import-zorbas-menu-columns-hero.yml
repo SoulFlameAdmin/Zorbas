@@ -1,7 +1,9 @@
-name: Import Zorbas hero from Supabase
+name: Build high-density Zorbas hero
 
 on:
   push:
+    branches:
+      - main
     paths:
       - '.github/workflows/import-zorbas-menu-columns-hero.yml'
 
@@ -9,7 +11,7 @@ permissions:
   contents: write
 
 jobs:
-  import-hero:
+  build-2x-hero:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main
@@ -17,31 +19,121 @@ jobs:
         with:
           ref: main
 
-      - name: Download exact Supabase PNG
+      - name: Verify exact source image
         shell: bash
         run: |
           set -euo pipefail
-          curl -fL --retry 3 --retry-delay 2 'https://frhletkiuupgksmgxoxc.supabase.co/storage/v1/object/public/zorbas-public-assets/homepage/zorbasentrancedesktopclear-e2711813c5c3187a.png' -o ZORBASMENUCOLUMNS.png
           test -s ZORBASMENUCOLUMNS.png
-          file ZORBASMENUCOLUMNS.png
-          sha256sum ZORBASMENUCOLUMNS.png
+          ACTUAL_SHA="$(sha256sum ZORBASMENUCOLUMNS.png | awk '{print $1}')"
+          EXPECTED_SHA='fcb4200270db7f35965e203310a5806eb818ef0191dd269797259cfecec14355'
+          echo "SOURCE_SHA256=$ACTUAL_SHA"
+          test "$ACTUAL_SHA" = "$EXPECTED_SHA"
 
-      - name: Point homepage hero to repository PNG with no blur
+      - name: Build lossless 2x high-density hero
         shell: bash
         run: |
           set -euo pipefail
-          python3 -c "from pathlib import Path; Path('site.css').write_text(\"@import url('/site-base.css?v=hero-local-zorbasmenucolumns-20260910');\\n\\n.hero:before{background-image:url('/ZORBASMENUCOLUMNS.png?v=20260910-2225')!important;background-position:center center!important;background-size:cover!important;background-repeat:no-repeat!important;transform:none!important;animation:none!important;filter:none!important;opacity:1!important}\\n.hero:after{background:linear-gradient(180deg,rgba(8,7,5,.06),rgba(8,7,5,.12))!important}\\n.home:before{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}\\n@media(max-width:680px){.hero:before{background-image:url('/ZORBASMENUCOLUMNS.png?v=20260910-2225')!important;background-position:center center!important;background-size:cover!important;transform:none!important;animation:none!important;filter:none!important;opacity:1!important}}\\n\", encoding='utf-8')"
+          python3 -m pip install --quiet pillow
+          python3 - <<'PY'
+          from PIL import Image, ImageFilter
+          src = Image.open('ZORBASMENUCOLUMNS.png').convert('RGBA')
+          assert src.size == (1672, 941), src.size
+          hi = src.resize((3344, 1882), Image.Resampling.LANCZOS)
+          hi = hi.filter(ImageFilter.UnsharpMask(radius=1.0, percent=115, threshold=2))
+          hi.save('ZORBASMENUCOLUMNS-2X.png', format='PNG', compress_level=0)
+          print('OUTPUT_SIZE=', hi.size)
+          PY
+          file ZORBASMENUCOLUMNS-2X.png
+          ls -lh ZORBASMENUCOLUMNS-2X.png
+          sha256sum ZORBASMENUCOLUMNS-2X.png
 
-      - name: Commit hero asset and CSS
+      - name: Use 2x asset for sharp high-DPI rendering
+        shell: bash
+        run: |
+          cat > site.css <<'CSS'
+          @import url('/site-base.css?v=hero-2x-sharp-20260910');
+
+          /* High-density lossless hero. The source is 2x so the browser downscales instead of upscaling on 125%/150% displays. */
+          .hero{
+            transform:none!important;
+            filter:none!important;
+            backdrop-filter:none!important;
+            -webkit-backdrop-filter:none!important;
+            will-change:auto!important;
+            background:#111!important;
+          }
+
+          .hero:before{
+            inset:0!important;
+            left:0!important;
+            top:0!important;
+            width:100%!important;
+            height:100%!important;
+            background-image:url('/ZORBASMENUCOLUMNS-2X.png?v=2x-sharp-20260910')!important;
+            background-position:center center!important;
+            background-size:cover!important;
+            background-repeat:no-repeat!important;
+            transform:none!important;
+            animation:none!important;
+            filter:none!important;
+            backdrop-filter:none!important;
+            -webkit-backdrop-filter:none!important;
+            will-change:auto!important;
+            opacity:1!important;
+            image-rendering:auto!important;
+          }
+
+          .hero:after{
+            background:transparent!important;
+            filter:none!important;
+            backdrop-filter:none!important;
+            -webkit-backdrop-filter:none!important;
+            opacity:0!important;
+          }
+
+          .home:before{
+            display:none!important;
+            background:none!important;
+            filter:none!important;
+            backdrop-filter:none!important;
+            -webkit-backdrop-filter:none!important;
+          }
+
+          @media(max-width:680px){
+            .hero:before{
+              inset:0!important;
+              left:0!important;
+              top:0!important;
+              width:100%!important;
+              height:100%!important;
+              background-image:url('/ZORBASMENUCOLUMNS-2X.png?v=2x-sharp-20260910')!important;
+              background-position:center center!important;
+              background-size:cover!important;
+              background-repeat:no-repeat!important;
+              transform:none!important;
+              animation:none!important;
+              filter:none!important;
+              backdrop-filter:none!important;
+              -webkit-backdrop-filter:none!important;
+              will-change:auto!important;
+              opacity:1!important;
+              image-rendering:auto!important;
+            }
+            .hero:after{background:transparent!important;opacity:0!important}
+            .home:before{display:none!important}
+          }
+          CSS
+
+      - name: Commit 2x hero and CSS
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'SoulFlameAdmin'
           git config user.email 'soulflame.mitko@gmail.com'
-          git add ZORBASMENUCOLUMNS.png site.css
+          git add ZORBASMENUCOLUMNS-2X.png site.css
           if git diff --cached --quiet; then
             echo 'No changes to commit.'
             exit 0
           fi
-          git commit -m 'Use ZORBASMENUCOLUMNS original hero from Supabase'
+          git commit -m 'Use lossless 2x Zorbas hero for sharp high-DPI rendering'
           git push origin main
