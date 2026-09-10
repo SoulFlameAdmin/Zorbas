@@ -1,6 +1,6 @@
-@import url('/site-base.css?v=hero-2x-sharp-20260910');
+@import url('/site-base.css?v=hero-random-4k-restaurant-20260910');
 
-/* High-density lossless hero. The source is 2x so the browser downscales instead of upscaling on 125%/150% displays. */
+/* Temporary external 4K restaurant hero for sharpness comparison. */
 .hero{
   transform:none!important;
   filter:none!important;
@@ -16,7 +16,7 @@
   top:0!important;
   width:100%!important;
   height:100%!important;
-  background-image:url('/ZORBASMENUCOLUMNS-2X.png?v=2x-sharp-20260910')!important;
+  background-image:url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=3840&q=95')!important;
   background-position:center center!important;
   background-size:cover!important;
   background-repeat:no-repeat!important;
@@ -53,7 +53,7 @@
     top:0!important;
     width:100%!important;
     height:100%!important;
-    background-image:url('/ZORBASMENUCOLUMNS-2X.png?v=2x-sharp-20260910')!important;
+    background-image:url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=3840&q=95')!important;
     background-position:center center!important;
     background-size:cover!important;
     background-repeat:no-repeat!important;
