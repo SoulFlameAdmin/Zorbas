@@ -18,6 +18,11 @@ assert(health.includes('live_table_mismatch'), 'table/live-state mismatch must b
 assert(health.includes("card('Bridge версия'"), 'Bridge version must be visible');
 assert(health.includes('safe_test_no_print_ready'), 'System view must expose safe no-print readiness');
 assert(health.includes('ОБНОВИ до'), 'old Bridge must have an explicit update warning');
+assert(health.includes("BRIDGE_RELEASE_BASE = 'https://github.com/SoulFlameAdmin/Zorbas/releases/download'"), 'outdated Bridge guidance must use the official repository release path');
+assert(health.includes('Zorbas-Bridge-Setup.exe'), 'System view must link to the installer asset');
+assert(health.includes('validVersion(requiredVersion)'), 'installer link must only be built for a validated semantic version');
+assert(health.includes("download.rel = 'noopener noreferrer'"), 'external installer link must be opened safely');
+assert(health.includes('actions.hidden = false'), 'upgrade action must become visible when Bridge is outdated');
 assert(health.includes('textContent'), 'health values must be rendered as text');
 assert(!health.includes('innerHTML = data'), 'RPC response must never be inserted as raw HTML');
 assert(!health.includes('customer_name'), 'ops view must not request/render customer PII');
