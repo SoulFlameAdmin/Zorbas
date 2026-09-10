@@ -3,7 +3,7 @@ const assert = require('assert');
 
 const read = path => fs.readFileSync(path, 'utf8');
 const migration = read('supabase/migrations/20260910171000_zorbas_operational_core_health_rollover_v2.sql');
-const claimMode = read('supabase/migrations/20260910172500_zorbas_bridge_claim_mode_v1.sql');
+const globalPrintSafety = read('supabase/migrations/20260910184500_zorbas_test_no_print_global_safety_v1.sql');
 const bridgeEngine = read('bridge/ZorbasBridge/BridgeEngine.cs');
 const live = read('live-sync.js');
 const health = read('admin-ops-health.js');
@@ -37,10 +37,26 @@ assert(migration.includes('v_lifecycle_conflicts'), 'health must detect impossib
 assert(migration.includes("v_bridge_online = 0"), 'required offline bridge must be action-required');
 assert(migration.includes("or v_bridge_stale > 0"), 'extra stale bridge registrations should be a warning, not silently ignored');
 
-// Safe test-no-print is a dedicated print simulation, never a disguised normal-order E2E path.
-assert(claimMode.includes("v_mode in ('parallel','soulflame')"), 'physical operating modes must be explicit');
-assert(claimMode.includes("v_mode='test_no_print' and j.job_type='test'"), 'test_no_print must claim TEST jobs only');
-assert(claimMode.includes("jsonb_build_object('operating_mode',v_mode)"), 'each print claim must carry authoritative operating mode');
+// Global test-no-print safety must hold across mode changes, Bridge claims and browser consumers.
+assert(globalPrintSafety.includes("v_required_version text := '1.2.4'"), 'mode gate must name the minimum safe Bridge release');
+assert(globalPrintSafety.includes('v_required_number integer := 1002004'), 'mode/claim gates must compare the minimum safe Bridge version numerically');
+assert(globalPrintSafety.includes('v_unsafe_devices'), 'entering test_no_print must reject old or unknown active Bridges');
+assert(globalPrintSafety.includes('TEST_NO_PRINT_REQUIRES_EMPTY_QUEUE'), 'test mode must require an empty unresolved print queue');
+assert(globalPrintSafety.includes('TEST_NO_PRINT_REQUIRES_NO_AMBIGUOUS_PRINT'), 'test mode must reject unresolved ambiguous physical outcomes');
+assert((globalPrintSafety.match(/hashtextextended\('zorbas-print-mode:'/g) || []).length >= 4, 'mode set, Bridge claim, browser claim and browser ACK must share the same advisory lock');
+assert(globalPrintSafety.includes("v_mode in ('parallel','soulflame')"), 'physical operating modes must be explicit');
+assert(globalPrintSafety.includes("v_mode='test_no_print' and j.job_type='test'"), 'test_no_print must claim TEST jobs only');
+assert(globalPrintSafety.includes('v_version_number is null or v_version_number < v_required_number'), 'old/unknown Bridge must receive no TEST claim in test_no_print');
+assert(globalPrintSafety.includes("jsonb_build_object('operating_mode',v_mode)"), 'each Bridge print claim must carry authoritative operating mode');
+assert(globalPrintSafety.includes('TEST_NO_PRINT_BROWSER_CLAIM_BLOCKED'), 'web Print Center must not claim jobs in test_no_print');
+assert(globalPrintSafety.includes("p_status in ('preparing','sending','printing','printed')"), 'browser physical print stages must be explicitly identified');
+assert(globalPrintSafety.includes('TEST_NO_PRINT_BROWSER_PHYSICAL_STATE_BLOCKED'), 'browser/session ACK must fail closed in test_no_print');
+assert(globalPrintSafety.includes('revoke all on function public.sf_bridge_set_operating_mode'), 'security-definer mode RPC must not retain generic PUBLIC execution');
+assert(globalPrintSafety.includes('revoke all on function public.sf_bridge_claim_next_print_job'), 'security-definer Bridge claim RPC must not retain generic PUBLIC execution');
+assert(globalPrintSafety.includes('revoke all on function public.zorbas_claim_print_job_v4'), 'security-definer browser claim RPC must not retain generic PUBLIC execution');
+assert(globalPrintSafety.includes('revoke all on function public.zorbas_ack_print_job_v4'), 'security-definer browser ACK RPC must not retain generic PUBLIC execution');
+
+// Bridge itself must still make the final physical/simulation decision from the mode bound to the claim.
 assert(bridgeEngine.includes('var authoritativeMode = job.OperatingMode;'), 'Bridge must decide from the mode bound to the claim');
 assert(bridgeEngine.includes('var simulateOnly = authoritativeMode == BridgeModes.TestNoPrint;'), 'test_no_print must enter simulation mode');
 assert(bridgeEngine.includes('no_physical_output = true'), 'simulation ACK must explicitly state no physical output');
@@ -71,4 +87,4 @@ assert(live.includes('lastPollOkAt'), 'polling success must participate in conne
 assert(live.includes('isPollFresh()'), 'a fresh polling fallback must count as connected');
 assert(!live.includes('get connected() { return Boolean(realtimeChannel); }'), 'channel allocation alone must not claim healthy realtime');
 
-console.log('PASS Zorbas operational core P1: rollover, race guards, bridge health, safe print simulation and reconnect invariants are protected.');
+console.log('PASS Zorbas operational core P1: rollover, race guards, global print safety, Bridge health and reconnect invariants are protected.');
