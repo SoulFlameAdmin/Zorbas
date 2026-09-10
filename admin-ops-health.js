@@ -18,7 +18,7 @@
   section.id = 'view-ops';
   section.innerHTML = `
     <div class="view-head">
-      <div><h3>Състояние на системата</h3><p>Оперативна проверка без клиентски или служебни лични данни.</p></div>
+      <div><h3>Състояние на системата</h3><p>Bridge, принтери, lifecycle и база данни без клиентски или служебни лични данни.</p></div>
       <button class="btn" id="opsHealthRefresh" type="button">Провери</button>
     </div>
     <section class="panel">
@@ -37,6 +37,7 @@
   const refreshButton = document.getElementById('opsHealthRefresh');
 
   const number = value => Number.isFinite(Number(value)) ? Number(value) : 0;
+  const dateText = value => value ? new Date(value).toLocaleString('bg-BG') : 'няма';
   const card = (label, value, note = '') => {
     const node = document.createElement('article');
     node.className = 'stat-card';
@@ -52,15 +53,29 @@
 
   function render(data) {
     const printing = data?.printing || {};
+    const bridge = data?.bridge || {};
     const service = data?.service || {};
     const maintenance = data?.maintenance || {};
     const state = data?.status || 'action_required';
+    const bridgeRequired = Boolean(bridge.required);
+    const bridgeOnline = number(bridge.online);
+    const bridgeState = !bridgeRequired ? 'НЕ СЕ ИЗИСКВА' : bridgeOnline > 0 ? 'ONLINE' : 'OFFLINE';
+    const printerValue = `${number(printing.active_printers)}/${number(printing.expected_printers)}`;
+
     title.textContent = state === 'ok' ? '🟢 Системата е здрава' : state === 'warning' ? '🟡 Има предупреждение' : '🔴 Нужно е действие';
     checked.textContent = data?.checked_at ? new Date(data.checked_at).toLocaleString('bg-BG') : '—';
+
     cards.replaceChildren(
+      card('Bridge', bridgeState, `Режим: ${bridge.operating_mode || '—'} · последно: ${dateText(bridge.last_seen_at)}`),
+      card('Bridge устройства', `${bridgeOnline}/${number(bridge.devices)}`, `Стари/offline: ${number(bridge.stale)}`),
+      card('Активни принтери', printerValue, `Невалидна конфигурация: ${number(printing.bad_printer_config)}`),
+      card('Успешни печати · 24ч', number(printing.printed_last_24h), `Последен успешен: ${dateText(printing.last_printed_at)}`),
       card('Непотвърден физически печат', number(printing.ambiguous_last_48h), 'Изисква физическа проверка преди повторение.'),
       card('Изтекли print leases', number(printing.expired_leases), 'Задачи, останали заключени след прекъсване.'),
       card('Изчерпани опити за печат', number(printing.exhausted_last_48h), 'Печатът не трябва да се счита за успешен.'),
+      card('Lifecycle конфликти', number(service.lifecycle_conflicts), 'Невъзможни комбинации между кухня, item delivery и order state.'),
+      card('Стари незатворени поръчки', number(service.stale_nonfinal_orders), 'Поръчки от предишен service day, които чакат 05:00 rollover.'),
+      card('Стари active посещения', number(service.historical_stale_active_visits), 'Исторически visits извън текущия service day.'),
       card('Проблемни dine-in поръчки', number(service.recent_dinein_without_visit), 'Текущи поръчки без посещение на маса.'),
       card('Несъответствие маса/състояние', number(service.live_table_mismatch), 'Живо обслужване и статусът на масата не съвпадат.'),
       card('Живи посещения', number(service.current_live_visits), 'Текущи обслужвани групи.'),
@@ -68,16 +83,17 @@
       card('Резервации за 24 часа', number(service.confirmed_reservations_next_24h), 'Само потвърдени предстоящи резервации.'),
       card('Изтекли сесии', number(maintenance.expired_sessions), 'Информационна стойност за поддръжка.')
     );
+
     message.textContent = state === 'ok'
-      ? 'Няма открит текущ блокиращ проблем.'
+      ? 'Няма открит текущ блокиращ проблем. Bridge, принтери и lifecycle са в норма.'
       : state === 'warning'
-        ? 'Провери последните неуспешни печати.'
-        : 'Провери червените показатели преди следваща натоварена смяна.';
+        ? 'Има исторически или неблокиращи записи за почистване. Системата може да работи, но провери жълтите показатели.'
+        : 'Има текущ operational риск. Провери Bridge, принтерите и lifecycle конфликтите преди натоварена смяна.';
   }
 
   async function loadHealth() {
     refreshButton.disabled = true;
-    message.textContent = 'Проверка на базата, печата и текущото обслужване…';
+    message.textContent = 'Проверка на Bridge, принтерите, базата и текущото обслужване…';
     try {
       const data = await Z.rpc('zorbas_ops_health_v1', { p_token: Z.token() });
       render(data);
