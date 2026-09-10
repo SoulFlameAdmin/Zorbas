@@ -1,0 +1,644 @@
+/* ZORBAS Classic Premium — visual-only skin
+   Scope: admin.html only via html.zorbas-admin-shell.
+   No JS, IDs, data attributes, routes, Supabase/RPC logic or DOM structure changed. */
+
+html.zorbas-admin-shell {
+  --zp-navy: #0f3f73;
+  --zp-navy-2: #174f8c;
+  --zp-navy-3: #0a2d55;
+  --zp-blue: #1b67bf;
+  --zp-gold: #c99b35;
+  --zp-gold-soft: #f5ead0;
+  --zp-green: #0faa7c;
+  --zp-green-soft: #e7f8f2;
+  --zp-red: #df4b4b;
+  --zp-red-soft: #fff0f0;
+  --zp-ink: #102c4d;
+  --zp-text: #29435f;
+  --zp-muted: #71849a;
+  --zp-line: #dbe3ec;
+  --zp-line-strong: #c8d3df;
+  --zp-surface: rgba(255,255,255,.92);
+  --zp-surface-2: #f7fafd;
+  --zp-bg: #f3f7fb;
+  --zp-shadow-sm: 0 1px 2px rgba(21,54,87,.04), 0 6px 18px rgba(21,54,87,.05);
+  --zp-shadow-md: 0 12px 34px rgba(21,54,87,.08);
+  --zp-radius: 14px;
+}
+
+html.zorbas-admin-shell,
+html.zorbas-admin-shell body {
+  background:
+    radial-gradient(circle at 12% 0%, rgba(201,155,53,.06), transparent 24%),
+    linear-gradient(180deg, #f8fbfe 0%, #f2f6fa 100%) !important;
+  color: var(--zp-text) !important;
+}
+
+html.zorbas-admin-shell body {
+  font-family: Inter, Manrope, "Segoe UI", system-ui, sans-serif !important;
+}
+
+/* Top bar */
+.zorbas-admin-shell #appView > .topbar {
+  min-height: 76px !important;
+  padding: 10px clamp(16px,2.2vw,30px) !important;
+  border-bottom: 1px solid rgba(174,191,208,.58) !important;
+  background: rgba(255,255,255,.93) !important;
+  box-shadow: 0 8px 26px rgba(26,58,91,.055) !important;
+  backdrop-filter: blur(18px) saturate(1.15) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(1.15) !important;
+}
+
+.zorbas-admin-shell .topbar-brand small {
+  color: var(--zp-gold) !important;
+  font-size: 9px !important;
+  font-weight: 900 !important;
+  letter-spacing: .18em !important;
+  text-transform: uppercase !important;
+}
+
+.zorbas-admin-shell .topbar-brand h2 {
+  margin-top: 2px !important;
+  color: var(--zp-ink) !important;
+  font-size: 21px !important;
+  font-weight: 850 !important;
+  letter-spacing: -.025em !important;
+}
+
+.zorbas-admin-shell .top-actions {
+  gap: 8px !important;
+}
+
+/* Buttons */
+.zorbas-admin-shell .btn {
+  min-height: 42px !important;
+  padding: 0 14px !important;
+  border: 1px solid var(--zp-line-strong) !important;
+  border-radius: 10px !important;
+  background: rgba(255,255,255,.96) !important;
+  color: var(--zp-ink) !important;
+  box-shadow: 0 2px 8px rgba(24,61,99,.045) !important;
+  font-size: 11px !important;
+  font-weight: 800 !important;
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease, background .16s ease !important;
+}
+
+.zorbas-admin-shell .btn:hover {
+  border-color: #aebdcb !important;
+  background: #fff !important;
+  box-shadow: 0 6px 16px rgba(24,61,99,.08) !important;
+  transform: translateY(-1px);
+}
+
+.zorbas-admin-shell .btn:active {
+  transform: translateY(0) scale(.985);
+}
+
+.zorbas-admin-shell .btn.primary {
+  border-color: var(--zp-navy) !important;
+  background: linear-gradient(135deg, var(--zp-navy-2), var(--zp-navy)) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 18px rgba(15,63,115,.15) !important;
+}
+
+.zorbas-admin-shell .btn.green {
+  border-color: #a7decf !important;
+  background: var(--zp-green-soft) !important;
+  color: #08785a !important;
+}
+
+.zorbas-admin-shell .btn.red {
+  border-color: #efc2c2 !important;
+  background: var(--zp-red-soft) !important;
+  color: #c93434 !important;
+}
+
+.zorbas-admin-shell .btn.yellow {
+  border-color: #e8d6aa !important;
+  background: #fff9eb !important;
+  color: #8a661a !important;
+}
+
+/* Main shell */
+.zorbas-admin-shell #appView .app-shell {
+  grid-template-columns: 224px minmax(0,1fr) !important;
+  min-height: calc(100dvh - 76px) !important;
+  background: transparent !important;
+}
+
+/* Sidebar */
+.zorbas-admin-shell #appView .sidebar {
+  padding: 20px 14px 28px !important;
+  border-right: 1px solid rgba(204,216,227,.82) !important;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.96), rgba(248,251,253,.94)) !important;
+  box-shadow: 8px 0 28px rgba(21,54,87,.025) !important;
+}
+
+.zorbas-admin-shell #appView .sidebar .nav {
+  gap: 7px !important;
+}
+
+.zorbas-admin-shell #appView .sidebar .nav button,
+.zorbas-admin-shell #appView .sidebar .nav a {
+  min-height: 48px !important;
+  padding: 0 13px !important;
+  border: 1px solid transparent !important;
+  border-radius: 11px !important;
+  background: transparent !important;
+  color: #516a84 !important;
+  font-size: 12px !important;
+  font-weight: 780 !important;
+  transition: background .16s ease, color .16s ease, border-color .16s ease, transform .16s ease !important;
+}
+
+.zorbas-admin-shell #appView .sidebar .nav button:hover,
+.zorbas-admin-shell #appView .sidebar .nav a:hover {
+  border-color: #e0e7ee !important;
+  background: #f3f7fb !important;
+  color: var(--zp-navy) !important;
+  transform: translateX(2px);
+}
+
+.zorbas-admin-shell #appView .sidebar .nav button.active,
+.zorbas-admin-shell #appView .sidebar .nav a.active {
+  border-color: #cdddf0 !important;
+  background: linear-gradient(135deg, #eaf3ff, #dbeafd) !important;
+  color: #0b5db5 !important;
+  box-shadow: inset 3px 0 0 #1971d4, 0 7px 16px rgba(41,111,184,.07) !important;
+}
+
+.zorbas-admin-shell #appView .sidebar .shift-box {
+  margin-top: 22px !important;
+  padding: 13px !important;
+  border: 1px solid var(--zp-line) !important;
+  border-radius: 12px !important;
+  background: rgba(255,255,255,.88) !important;
+  box-shadow: var(--zp-shadow-sm) !important;
+}
+
+.zorbas-admin-shell #appView .sidebar .shift-box p {
+  color: var(--zp-muted) !important;
+  line-height: 1.45 !important;
+}
+
+/* Content */
+.zorbas-admin-shell #appView .content {
+  padding: clamp(18px,2.2vw,30px) !important;
+  background: transparent !important;
+}
+
+.zorbas-admin-shell .view-head {
+  align-items: center !important;
+  margin-bottom: 18px !important;
+}
+
+.zorbas-admin-shell .view-head h3 {
+  margin: 0 !important;
+  color: var(--zp-ink) !important;
+  font-size: clamp(25px,2.1vw,31px) !important;
+  font-weight: 860 !important;
+  letter-spacing: -.035em !important;
+  line-height: 1.08 !important;
+}
+
+.zorbas-admin-shell .view-head p {
+  margin-top: 6px !important;
+  color: var(--zp-muted) !important;
+  font-size: 11px !important;
+  line-height: 1.5 !important;
+}
+
+/* Tabs */
+.zorbas-admin-shell .tabs {
+  gap: 8px !important;
+}
+
+.zorbas-admin-shell .tab {
+  min-height: 39px !important;
+  padding: 0 17px !important;
+  border: 1px solid var(--zp-line-strong) !important;
+  border-radius: 10px !important;
+  background: rgba(255,255,255,.92) !important;
+  color: #45607c !important;
+  box-shadow: 0 2px 7px rgba(24,61,99,.03) !important;
+  font-size: 11px !important;
+  font-weight: 820 !important;
+  transition: .16s ease !important;
+}
+
+.zorbas-admin-shell .tab:hover {
+  border-color: #afbfce !important;
+  background: #fff !important;
+}
+
+.zorbas-admin-shell .tab.active {
+  border-color: var(--zp-navy) !important;
+  background: linear-gradient(135deg, var(--zp-navy-2), var(--zp-navy)) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 17px rgba(15,63,115,.14) !important;
+}
+
+/* Panels / cards */
+.zorbas-admin-shell .panel,
+.zorbas-admin-shell .order-card,
+.zorbas-admin-shell .reservation-card,
+.zorbas-admin-shell .archive-card,
+.zorbas-admin-shell .manager-visit-card,
+.zorbas-admin-shell .stat,
+.zorbas-admin-shell .product,
+.zorbas-admin-shell .cart-row,
+.zorbas-admin-shell .admin-item {
+  border-color: var(--zp-line) !important;
+  background: var(--zp-surface) !important;
+  color: var(--zp-text) !important;
+  box-shadow: var(--zp-shadow-sm) !important;
+}
+
+.zorbas-admin-shell .panel,
+.zorbas-admin-shell .order-card,
+.zorbas-admin-shell .reservation-card,
+.zorbas-admin-shell .archive-card,
+.zorbas-admin-shell .manager-visit-card {
+  border-radius: var(--zp-radius) !important;
+  overflow: hidden !important;
+}
+
+.zorbas-admin-shell .panel-head,
+.zorbas-admin-shell .card-head,
+.zorbas-admin-shell .order-card header {
+  padding: 13px 15px !important;
+  border-color: #e2e8ee !important;
+  background: linear-gradient(180deg, #fff, #f8fafc) !important;
+}
+
+.zorbas-admin-shell .panel-head h4,
+.zorbas-admin-shell .card-head strong {
+  color: var(--zp-ink) !important;
+  font-weight: 850 !important;
+}
+
+.zorbas-admin-shell .panel-body,
+.zorbas-admin-shell .card-body {
+  background: rgba(255,255,255,.72) !important;
+}
+
+/* Map / tables */
+.zorbas-admin-shell .map {
+  border: 1px solid #cbd7e2 !important;
+  border-radius: 16px !important;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(255,255,255,.7), transparent 34%),
+    linear-gradient(135deg, #eef4f9, #e8eff6) !important;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.75), var(--zp-shadow-md) !important;
+}
+
+.zorbas-admin-shell .table-node {
+  border: 2px solid rgba(255,255,255,.9) !important;
+  border-radius: 13px !important;
+  box-shadow: 0 9px 22px rgba(18,57,91,.16) !important;
+  transition: transform .16s ease, box-shadow .16s ease !important;
+}
+
+.zorbas-admin-shell .table-node:hover {
+  transform: translateY(-2px) scale(1.015);
+  box-shadow: 0 13px 28px rgba(18,57,91,.2) !important;
+}
+
+.zorbas-admin-shell .table-node:not(.occupied):not(.blocked) {
+  background: linear-gradient(145deg, #12b98a, #079a72) !important;
+}
+
+.zorbas-admin-shell .table-node.occupied {
+  background: linear-gradient(145deg, #f06565, #d94848) !important;
+}
+
+.zorbas-admin-shell .table-node.blocked {
+  background: linear-gradient(145deg, #6f8295, #536679) !important;
+}
+
+.zorbas-admin-shell .table-node.selected {
+  outline: 4px solid rgba(27,103,191,.2) !important;
+  outline-offset: 4px !important;
+}
+
+/* Form fields */
+.zorbas-admin-shell .search,
+.zorbas-admin-shell .small-input,
+.zorbas-admin-shell .quick-price,
+.zorbas-admin-shell .field input,
+.zorbas-admin-shell .field select,
+.zorbas-admin-shell .field textarea {
+  border: 1px solid var(--zp-line-strong) !important;
+  border-radius: 10px !important;
+  background: #fff !important;
+  color: var(--zp-ink) !important;
+  box-shadow: inset 0 1px 2px rgba(18,57,91,.025) !important;
+}
+
+.zorbas-admin-shell .search::placeholder,
+.zorbas-admin-shell .field input::placeholder,
+.zorbas-admin-shell .field textarea::placeholder {
+  color: #94a3b4 !important;
+}
+
+.zorbas-admin-shell .search:focus,
+.zorbas-admin-shell .small-input:focus,
+.zorbas-admin-shell .quick-price:focus,
+.zorbas-admin-shell .field input:focus,
+.zorbas-admin-shell .field select:focus,
+.zorbas-admin-shell .field textarea:focus {
+  outline: none !important;
+  border-color: #74a2d0 !important;
+  box-shadow: 0 0 0 3px rgba(27,103,191,.09) !important;
+}
+
+.zorbas-admin-shell .field {
+  color: #647991 !important;
+}
+
+/* Products */
+.zorbas-admin-shell .product,
+.zorbas-admin-shell .cart-row,
+.zorbas-admin-shell .admin-item {
+  border-radius: 12px !important;
+}
+
+.zorbas-admin-shell .product:hover {
+  border-color: #b9cad9 !important;
+  background: #fff !important;
+  box-shadow: 0 9px 22px rgba(21,54,87,.075) !important;
+}
+
+.zorbas-admin-shell .product h5,
+.zorbas-admin-shell .cart-row h5,
+.zorbas-admin-shell .admin-item h5 {
+  color: var(--zp-ink) !important;
+}
+
+.zorbas-admin-shell .product p,
+.zorbas-admin-shell .cart-row small,
+.zorbas-admin-shell .admin-item p {
+  color: var(--zp-muted) !important;
+}
+
+/* Status badges */
+.zorbas-admin-shell .badge {
+  border: 1px solid #d5dee7 !important;
+  background: #f4f7fa !important;
+  color: #5d7085 !important;
+}
+
+.zorbas-admin-shell .badge.ready {
+  border-color: #b9e6d8 !important;
+  background: var(--zp-green-soft) !important;
+  color: #08775a !important;
+}
+
+.zorbas-admin-shell .badge.cancelled {
+  border-color: #f0c6c6 !important;
+  background: var(--zp-red-soft) !important;
+  color: #c53b3b !important;
+}
+
+/* Stats */
+.zorbas-admin-shell .stats-grid {
+  gap: 11px !important;
+}
+
+.zorbas-admin-shell .stat {
+  position: relative;
+  min-height: 88px !important;
+  padding: 15px 16px !important;
+  border-radius: 13px !important;
+  overflow: hidden;
+}
+
+.zorbas-admin-shell .stat::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background: linear-gradient(90deg, var(--zp-gold), var(--zp-navy-2));
+  opacity: .75;
+}
+
+.zorbas-admin-shell .stat small {
+  color: var(--zp-muted) !important;
+  font-size: 10px !important;
+  font-weight: 720 !important;
+}
+
+.zorbas-admin-shell .stat strong {
+  margin-top: 8px !important;
+  color: var(--zp-ink) !important;
+  font-size: 24px !important;
+  font-weight: 880 !important;
+  letter-spacing: -.035em !important;
+}
+
+/* Tables */
+.zorbas-admin-shell .data-table {
+  color: var(--zp-text) !important;
+}
+
+.zorbas-admin-shell .data-table th {
+  padding: 11px 13px !important;
+  border-color: #e2e8ee !important;
+  background: #f2f6fa !important;
+  color: #3b5672 !important;
+  font-size: 10px !important;
+  font-weight: 850 !important;
+}
+
+.zorbas-admin-shell .data-table td {
+  padding: 11px 13px !important;
+  border-color: #e8edf2 !important;
+  background: rgba(255,255,255,.58) !important;
+  color: #445f79 !important;
+}
+
+.zorbas-admin-shell .data-table tbody tr:hover td {
+  background: #f8fbfd !important;
+}
+
+.zorbas-admin-shell .empty {
+  border-color: #cfdbe6 !important;
+  background: rgba(255,255,255,.62) !important;
+  color: #8393a5 !important;
+}
+
+/* Login */
+.zorbas-admin-shell .login-view {
+  background:
+    radial-gradient(circle at 50% 0%, rgba(201,155,53,.11), transparent 34%),
+    linear-gradient(180deg,#f8fbfe,#edf3f8) !important;
+}
+
+.zorbas-admin-shell .login-card {
+  border: 1px solid #d4dee8 !important;
+  border-radius: 18px !important;
+  background: rgba(255,255,255,.95) !important;
+  color: var(--zp-ink) !important;
+  box-shadow: 0 28px 80px rgba(17,49,82,.14) !important;
+}
+
+.zorbas-admin-shell .login-card .kicker {
+  color: var(--zp-gold) !important;
+  font-weight: 900 !important;
+}
+
+.zorbas-admin-shell .login-card h1 {
+  color: var(--zp-ink) !important;
+  letter-spacing: -.035em !important;
+}
+
+/* Mobile: preserve existing drawer logic, only improve visuals. */
+@media (max-width: 1050px) {
+  .zorbas-admin-shell #appView .app-shell {
+    display: block !important;
+  }
+
+  .zorbas-admin-shell #appView > .topbar {
+    min-height: 72px !important;
+  }
+
+  .zorbas-admin-shell #appView .content {
+    padding: 17px 14px 28px !important;
+  }
+}
+
+@media (max-width: 860px) {
+  html.zorbas-admin-shell,
+  html.zorbas-admin-shell body {
+    background: #f3f7fb !important;
+  }
+
+  .zorbas-admin-shell #appView > .topbar {
+    border-bottom-color: #d5e0ea !important;
+    background: rgba(255,255,255,.96) !important;
+    box-shadow: 0 8px 24px rgba(21,54,87,.07) !important;
+  }
+
+  .zorbas-admin-shell .topbar-brand small {
+    color: #8292a4 !important;
+  }
+
+  .zorbas-admin-shell .topbar-brand h2 {
+    color: var(--zp-ink) !important;
+  }
+
+  .zorbas-admin-shell .admin-mobile-menu-toggle {
+    border-color: #cfdae5 !important;
+    background: linear-gradient(145deg,#fff,#f0f5f9) !important;
+    box-shadow: 0 5px 14px rgba(21,54,87,.08) !important;
+  }
+
+  .zorbas-admin-shell .admin-mobile-menu-toggle i {
+    background: var(--zp-navy) !important;
+  }
+
+  .zorbas-admin-shell #appView .sidebar {
+    border-right-color: #d4dee8 !important;
+    background:
+      radial-gradient(circle at 0 0, rgba(201,155,53,.1), transparent 240px),
+      linear-gradient(180deg,#fff,#f6f9fc 75%) !important;
+    box-shadow: 26px 0 70px rgba(21,54,87,.18) !important;
+  }
+
+  .zorbas-admin-shell .admin-mobile-drawer-head {
+    border-bottom-color: #dfe6ed !important;
+    background: rgba(255,255,255,.97) !important;
+  }
+
+  .zorbas-admin-shell .admin-mobile-drawer-head small {
+    color: var(--zp-gold) !important;
+  }
+
+  .zorbas-admin-shell .admin-mobile-drawer-head strong {
+    color: var(--zp-navy) !important;
+  }
+
+  .zorbas-admin-shell .admin-mobile-drawer-head span {
+    color: #76899d !important;
+  }
+
+  .zorbas-admin-shell #adminMobileMenuClose {
+    border-color: #d6e0e9 !important;
+    background: #f2f6fa !important;
+    color: var(--zp-navy) !important;
+  }
+
+  .zorbas-admin-shell #appView .sidebar .nav button,
+  .zorbas-admin-shell #appView .sidebar .nav a {
+    min-height: 54px !important;
+    border-color: #e1e8ef !important;
+    background: rgba(255,255,255,.75) !important;
+    color: #536b83 !important;
+  }
+
+  .zorbas-admin-shell #appView .sidebar .nav button.active,
+  .zorbas-admin-shell #appView .sidebar .nav a.active {
+    border-color: #bfd5ee !important;
+    background: linear-gradient(135deg,#e9f3ff,#d8e9fb) !important;
+    color: #075eb8 !important;
+    box-shadow: inset 3px 0 0 #1971d4, 0 8px 18px rgba(41,111,184,.08) !important;
+  }
+
+  .zorbas-admin-shell #appView > .admin-mobile-nav-backdrop {
+    background: rgba(11,31,52,.42) !important;
+    backdrop-filter: blur(5px) !important;
+    -webkit-backdrop-filter: blur(5px) !important;
+  }
+}
+
+@media (max-width: 650px) {
+  .zorbas-admin-shell .view-head {
+    align-items: flex-start !important;
+  }
+
+  .zorbas-admin-shell .view-head h3 {
+    font-size: 25px !important;
+  }
+
+  .zorbas-admin-shell .panel,
+  .zorbas-admin-shell .order-card,
+  .zorbas-admin-shell .reservation-card,
+  .zorbas-admin-shell .archive-card,
+  .zorbas-admin-shell .manager-visit-card {
+    border-radius: 13px !important;
+  }
+
+  .zorbas-admin-shell .map {
+    border-radius: 13px !important;
+  }
+
+  .zorbas-admin-shell .tab {
+    min-height: 38px !important;
+    padding: 0 14px !important;
+  }
+
+  .zorbas-admin-shell .stats-grid {
+    gap: 9px !important;
+  }
+
+  .zorbas-admin-shell .stat {
+    min-height: 80px !important;
+    padding: 13px !important;
+  }
+
+  .zorbas-admin-shell .stat strong {
+    font-size: 21px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .zorbas-admin-shell *,
+  .zorbas-admin-shell *::before,
+  .zorbas-admin-shell *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}
