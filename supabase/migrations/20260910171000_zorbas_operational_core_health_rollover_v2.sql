@@ -1,6 +1,7 @@
 -- ZORBAS operational core P1 v2
 -- 1) Service-day rollover closes stale operational orders together with stale visits.
--- 2) System health includes bridge heartbeat, printer configuration and lifecycle integrity.
+-- 2) New-day records created after 05:00 are never closed by a delayed reset run.
+-- 3) System health includes bridge heartbeat, printer configuration and lifecycle integrity.
 
 create or replace function public.zorbas_daily_reset()
 returns void
@@ -29,13 +30,17 @@ begin
 
   v_day_start := public.zorbas_private_service_day_start(now());
 
+  -- Only yesterday's shifts may be auto-ended. A shift started after 05:00
+  -- belongs to the new service day even if the cron invocation is delayed.
   update public.zorbas_shifts
   set ended_at = now(), end_reason = 'auto_05'
-  where ended_at is null;
+  where ended_at is null
+    and started_at < v_day_start;
 
   update public.zorbas_work_shifts
   set ended_at = now(), end_reason = 'auto_05'
-  where ended_at is null;
+  where ended_at is null
+    and started_at < v_day_start;
 
   -- Preserve an audit record before stale dine-in orders leave the live queue.
   insert into public.zorbas_manager_events(
@@ -127,9 +132,20 @@ begin
   where status = 'active'
     and opened_at < v_day_start;
 
-  update public.zorbas_restaurant_tables
-  set status = 'free', updated_at = now()
-  where status in ('occupied','cleaning');
+  -- Reconcile table state from live records instead of blindly freeing every
+  -- occupied table. This protects a table opened after the 05:00 boundary.
+  update public.zorbas_restaurant_tables t
+  set status = case
+        when public.zorbas_private_table_has_live_records(t.restaurant_id,t.id) then 'occupied'
+        else 'free'
+      end,
+      updated_at = now()
+  where t.active
+    and t.status <> 'blocked'
+    and (
+      t.status in ('occupied','cleaning')
+      or public.zorbas_private_table_has_live_records(t.restaurant_id,t.id)
+    );
 
   update public.zorbas_reservations
   set status = 'completed', updated_at = now()
@@ -220,12 +236,16 @@ begin
     and attempts >= max_attempts
     and updated_at >= now() - interval '48 hours';
 
-  select count(*), max(printed_at)
-    into v_printed_last_24h, v_last_printed_at
+  select count(*) into v_printed_last_24h
   from public.zorbas_print_jobs
   where restaurant_id = v_restaurant
     and status = 'printed'
     and printed_at >= now() - interval '24 hours';
+
+  select max(printed_at) into v_last_printed_at
+  from public.zorbas_print_jobs
+  where restaurant_id = v_restaurant
+    and status = 'printed';
 
   select
     count(*) filter (where p.active),
@@ -305,16 +325,8 @@ begin
             and coalesce(oi.delivered_quantity,0) < oi.quantity
         )
       )
-      or
-      (
-        o.manager_state <> 'completed'
-        and o.manager_completed_at is not null
-      )
-      or
-      (
-        o.manager_state = 'completed'
-        and o.manager_completed_at is null
-      )
+      or (o.manager_state <> 'completed' and o.manager_completed_at is not null)
+      or (o.manager_state = 'completed' and o.manager_completed_at is null)
     );
 
   select count(*) into v_live_table_mismatch
@@ -353,12 +365,13 @@ begin
      or v_live_table_mismatch > 0
      or v_lifecycle_conflicts > 0
      or v_bad_printer_config > 0
-     or (v_bridge_required and (v_bridge_online = 0 or v_bridge_stale > 0))
+     or (v_bridge_required and v_bridge_online = 0)
      or (v_expected_printers > 0 and v_active_printers < v_expected_printers) then
     v_status := 'action_required';
   elsif v_recent_failed_prints > 0
      or v_historical_stale_active_visits > 0
-     or v_stale_nonfinal_orders > 0 then
+     or v_stale_nonfinal_orders > 0
+     or v_bridge_stale > 0 then
     v_status := 'warning';
   end if;
 
