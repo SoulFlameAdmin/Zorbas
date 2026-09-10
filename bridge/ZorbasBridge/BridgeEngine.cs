@@ -100,6 +100,14 @@ internal sealed class BridgeEngine : IAsyncDisposable
 
     public async Task PrintTestAsync(string destination, CancellationToken cancellationToken = default)
     {
+        if (IsNoPrintMode())
+        {
+            _ = ReceiptFormatter.TestReceipt(destination, GetPrinterTargetLabel(destination));
+            _log.Info($"Тест без печат за {destination}: документът е форматиран успешно; физически изход не е изпращан.");
+            ActivityChanged?.Invoke("Тест без печат: документът е валидиран, без хартия.");
+            return;
+        }
+
         if (destination.Equals("kitchen", StringComparison.OrdinalIgnoreCase)
             && TryGetNetworkEndpoint(destination, out var host, out var port))
         {
@@ -184,7 +192,7 @@ internal sealed class BridgeEngine : IAsyncDisposable
 
                     if (!staffPrinted && !kitchenPrinted && mode == BridgeModes.TestNoPrint)
                     {
-                        ActivityChanged?.Invoke("Тестов режим: приема само TEST от телефона.");
+                        ActivityChanged?.Invoke("Тест без печат: приема само TEST задачи и не изпраща физически изход.");
                     }
                     else if (!staffPrinted && !kitchenPrinted)
                     {
@@ -210,13 +218,18 @@ internal sealed class BridgeEngine : IAsyncDisposable
 
     private async Task<bool> ProcessDestinationAsync(string destination, CancellationToken cancellationToken)
     {
+        var simulateOnly = IsNoPrintMode();
         var networkHost = string.Empty;
         var networkPort = 0;
         var usesNetworkPrinter = destination.Equals("kitchen", StringComparison.OrdinalIgnoreCase)
             && TryGetNetworkEndpoint(destination, out networkHost, out networkPort);
         var printerName = GetPrinterName(destination);
 
-        if (!usesNetworkPrinter
+        // A no-print simulation must be able to validate queue/formatting even if the
+        // physical printer is powered off. Hardware availability matters only when
+        // bytes may actually be sent.
+        if (!simulateOnly
+            && !usesNetworkPrinter
             && (string.IsNullOrWhiteSpace(printerName) || !_printerService.IsPrinterAvailable(printerName)))
         {
             ActivityChanged?.Invoke(destination == "kitchen"
@@ -250,6 +263,30 @@ internal sealed class BridgeEngine : IAsyncDisposable
             var receipt = ReceiptFormatter.Format(
                 job,
                 _config?.Restaurant.Name ?? _settings.RestaurantName);
+
+            if (simulateOnly)
+            {
+                // Never enter sending/printing in test_no_print. Those statuses mean
+                // physical output may exist and intentionally trigger ambiguity guards.
+                await _client.AckAsync(
+                    _settings.DeviceId,
+                    token,
+                    job.Id,
+                    "printed",
+                    metadata: new
+                    {
+                        simulated = true,
+                        no_physical_output = true,
+                        operating_mode = BridgeModes.TestNoPrint,
+                        destination,
+                        receipt_profile = "icash-photo-match-v1"
+                    },
+                    cancellationToken: cancellationToken).ConfigureAwait(false);
+
+                ActivityChanged?.Invoke($"Тест без печат: №{orderNumber} е валидиран без физически изход.");
+                _log.Info($"TEST задача {job.Id} е симулирана успешно. Не са изпращани данни към принтер.");
+                return true;
+            }
 
             await _client.AckAsync(
                 _settings.DeviceId,
@@ -306,7 +343,8 @@ internal sealed class BridgeEngine : IAsyncDisposable
         }
         catch (Exception error)
         {
-            var ambiguousPhysicalOutput = error is PrinterDeliveryException deliveryError
+            var ambiguousPhysicalOutput = !simulateOnly
+                && error is PrinterDeliveryException deliveryError
                 && deliveryError.MayHaveProducedOutput;
             var retry = !ambiguousPhysicalOutput && job.Attempts < job.MaxAttempts;
             var status = retry ? "retrying" : "failed";
@@ -320,9 +358,13 @@ internal sealed class BridgeEngine : IAsyncDisposable
                     error.Message,
                     new
                     {
-                        output = usesNetworkPrinter
-                            ? $"{networkHost}:{networkPort}"
-                            : printerName,
+                        output = simulateOnly
+                            ? "simulation"
+                            : usesNetworkPrinter
+                                ? $"{networkHost}:{networkPort}"
+                                : printerName,
+                        simulated = simulateOnly,
+                        no_physical_output = simulateOnly,
                         ambiguous_physical_output = ambiguousPhysicalOutput,
                         auto_retry = retry
                     },
@@ -336,6 +378,20 @@ internal sealed class BridgeEngine : IAsyncDisposable
             _log.Error($"Печатът на задача {job.Id} се провали: {error.Message}");
             return false;
         }
+    }
+
+    private bool IsNoPrintMode() =>
+        _config?.Restaurant.OperatingMode == BridgeModes.TestNoPrint;
+
+    private string GetPrinterTargetLabel(string destination)
+    {
+        if (destination.Equals("kitchen", StringComparison.OrdinalIgnoreCase)
+            && TryGetNetworkEndpoint(destination, out var host, out var port))
+        {
+            return $"{host}:{port}";
+        }
+
+        return GetPrinterName(destination) ?? destination;
     }
 
     private bool TryGetNetworkEndpoint(string destination, out string host, out int port)
@@ -385,7 +441,7 @@ internal sealed class BridgeEngine : IAsyncDisposable
             ? $"{host}:{port}"
             : DefaultKitchenEndpoint;
 
-    private string GetPrinterName(string destination) =>
+    private string? GetPrinterName(string destination) =>
         destination == "kitchen" ? _settings.KitchenPrinterName : _settings.StaffPrinterName;
 
     private string RequireDeviceToken()
