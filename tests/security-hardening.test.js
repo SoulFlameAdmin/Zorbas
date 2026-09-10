@@ -47,7 +47,7 @@ for (const [name, html] of [['waiter', waiter], ['kitchen', kitchen], ['print', 
 }
 assert(admin.indexOf('/login-challenge-guard.js?v=20260905-1') < admin.indexOf('/admin-login-stability.js'), 'admin must load login guard before login handler');
 
-assert(sw.includes('zorbas-v63-stable-p0p1-20260910'), 'service-worker cache must advance with the stable P0/P1 rollout');
+assert(sw.includes('zorbas-v64-hero-exact-20260910'), 'service-worker cache must match the current stable rollout generation');
 assert(sw.includes('/login-challenge-guard.js?v=20260905-1'), 'offline staff shell must include login guard');
 assert(sw.includes("url.pathname==='/login-challenge-guard.js'"), 'login guard must be network-first while online');
 

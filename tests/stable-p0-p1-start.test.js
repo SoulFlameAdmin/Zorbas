@@ -45,7 +45,7 @@ assert(notesJs.includes('textarea.maxLength = 160'), 'item note draft must keep 
 assert(notesJs.includes('orderNote.maxLength = 500'), 'order note draft must match backend size bound');
 
 // The service worker must actually deliver this release rather than an older cached JS file.
-assert(sw.includes("const CACHE='zorbas-v63-stable-p0p1-20260910'"), 'stable rollout must advance the PWA cache namespace');
+assert(sw.includes("const CACHE='zorbas-v64-hero-exact-20260910'"), 'stable rollout must match the current PWA cache namespace');
 assert(sw.includes('/waiter-stable-notes.css?v=20260910-1'), 'offline waiter must cache the note wrapping stylesheet');
 assert(sw.includes('/waiter-stable-notes.js?v=20260910-1'), 'offline waiter must cache the note auto-grow module');
 const orderScript = orderHtml.match(/<script src="(\/order\.js\?v=[^"]+)"/i)?.[1];
