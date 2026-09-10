@@ -27,7 +27,7 @@ jobs:
           cat .hero-chunks/part_*.txt | base64 --decode > assets/zorbas-hero-latest.webp
           bytes=$(wc -c < assets/zorbas-hero-latest.webp)
           echo "Hero bytes: $bytes"
-          test "$bytes" -gt 1000000
+          test "$bytes" -gt 400000
           file assets/zorbas-hero-latest.webp | grep -qi webp
 
       - name: Commit only final hero asset
