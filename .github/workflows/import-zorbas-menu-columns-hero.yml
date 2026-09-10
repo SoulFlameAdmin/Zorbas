@@ -1,4 +1,4 @@
-name: Build high-density Zorbas hero
+name: Install final Zorbas hero
 
 on:
   push:
@@ -11,129 +11,82 @@ permissions:
   contents: write
 
 jobs:
-  build-2x-hero:
+  install-final-hero:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout main
+      - name: Checkout latest main
         uses: actions/checkout@v4
         with:
           ref: main
+          fetch-depth: 0
 
-      - name: Verify exact source image
+      - name: Fetch exact generated hero blob
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          test -s ZORBASMENUCOLUMNS.png
-          ACTUAL_SHA="$(sha256sum ZORBASMENUCOLUMNS.png | awk '{print $1}')"
-          EXPECTED_SHA='fcb4200270db7f35965e203310a5806eb818ef0191dd269797259cfecec14355'
-          echo "SOURCE_SHA256=$ACTUAL_SHA"
-          test "$ACTUAL_SHA" = "$EXPECTED_SHA"
+          curl -fsSL \
+            -H "Authorization: Bearer ${GH_TOKEN}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/git/blobs/f788bcd1ef79af36b9ee74ce2138d1b11d522776" \
+            -o /tmp/final-hero-blob.json
+          jq -r '.content' /tmp/final-hero-blob.json | tr -d '\n' | base64 --decode > zorbas-hero-final.webp
+          test -s zorbas-hero-final.webp
+          ACTUAL_SHA="$(sha256sum zorbas-hero-final.webp | awk '{print $1}')"
+          EXPECTED_SHA='9edfd30b3bca79a752474ccbf7fd9d2a68def016e749318605a809175c07bb1a'
+          echo "FINAL_HERO_SHA256=${ACTUAL_SHA}"
+          test "${ACTUAL_SHA}" = "${EXPECTED_SHA}"
+          file zorbas-hero-final.webp
+          ls -lh zorbas-hero-final.webp
 
-      - name: Build lossless 2x high-density hero
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 -m pip install --quiet pillow
-          python3 - <<'PY'
-          from PIL import Image, ImageFilter
-          src = Image.open('ZORBASMENUCOLUMNS.png').convert('RGBA')
-          assert src.size == (1672, 941), src.size
-          hi = src.resize((3344, 1882), Image.Resampling.LANCZOS)
-          hi = hi.filter(ImageFilter.UnsharpMask(radius=1.0, percent=115, threshold=2))
-          hi.save('ZORBASMENUCOLUMNS-2X.png', format='PNG', compress_level=0)
-          print('OUTPUT_SIZE=', hi.size)
-          PY
-          file ZORBASMENUCOLUMNS-2X.png
-          ls -lh ZORBASMENUCOLUMNS-2X.png
-          sha256sum ZORBASMENUCOLUMNS-2X.png
-
-      - name: Use 2x asset for sharp high-DPI rendering
+      - name: Set final sharp homepage hero
         shell: bash
         run: |
           cat > site.css <<'CSS'
-          @import url('/site-base.css?v=hero-2x-sharp-20260910');
-
-          /* High-density lossless hero. The source is 2x so the browser downscales instead of upscaling on 125%/150% displays. */
-          .hero{
-            transform:none!important;
-            filter:none!important;
-            backdrop-filter:none!important;
-            -webkit-backdrop-filter:none!important;
-            will-change:auto!important;
-            background:#111!important;
-          }
-
-          .hero:before{
-            inset:0!important;
-            left:0!important;
-            top:0!important;
-            width:100%!important;
-            height:100%!important;
-            background-image:url('/ZORBASMENUCOLUMNS-2X.png?v=2x-sharp-20260910')!important;
-            background-position:center center!important;
-            background-size:cover!important;
-            background-repeat:no-repeat!important;
-            transform:none!important;
-            animation:none!important;
-            filter:none!important;
-            backdrop-filter:none!important;
-            -webkit-backdrop-filter:none!important;
-            will-change:auto!important;
-            opacity:1!important;
-            image-rendering:auto!important;
-          }
-
-          .hero:after{
-            background:transparent!important;
-            filter:none!important;
-            backdrop-filter:none!important;
-            -webkit-backdrop-filter:none!important;
-            opacity:0!important;
-          }
-
-          .home:before{
-            display:none!important;
-            background:none!important;
-            filter:none!important;
-            backdrop-filter:none!important;
-            -webkit-backdrop-filter:none!important;
-          }
-
-          @media(max-width:680px){
-            .hero:before{
-              inset:0!important;
-              left:0!important;
-              top:0!important;
-              width:100%!important;
-              height:100%!important;
-              background-image:url('/ZORBASMENUCOLUMNS-2X.png?v=2x-sharp-20260910')!important;
-              background-position:center center!important;
-              background-size:cover!important;
-              background-repeat:no-repeat!important;
-              transform:none!important;
-              animation:none!important;
-              filter:none!important;
-              backdrop-filter:none!important;
-              -webkit-backdrop-filter:none!important;
-              will-change:auto!important;
-              opacity:1!important;
-              image-rendering:auto!important;
-            }
-            .hero:after{background:transparent!important;opacity:0!important}
-            .home:before{display:none!important}
-          }
+          @import url('/site-base.css?v=hero-final-2324-20260910');
+          html body .hero.hero{transform:none!important;filter:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;will-change:auto!important;background:#111!important}
+          html body .hero.hero::before{content:""!important;position:absolute!important;inset:0!important;width:100%!important;height:100%!important;background:url('/zorbas-hero-final.webp?v=20260910-2324') center/cover no-repeat!important;transform:none!important;animation:none!important;filter:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important;opacity:1!important;z-index:0!important}
+          html body .hero.hero::after,html body .home.home::before{content:none!important;display:none!important;filter:none!important;backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
           CSS
 
-      - name: Commit 2x hero and CSS
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('config.js')
+          s = p.read_text(encoding='utf-8')
+          old = ".hero:before{background-image:url('/zorbas-entrance-home.jpg?v=20260910-1')!important;background-position:center center!important}"
+          new = ".hero:before{background-image:url('/zorbas-hero-final.webp?v=20260910-2324')!important;background-position:center center!important;background-size:cover!important;filter:none!important;transform:none!important}"
+          if old not in s:
+              raise SystemExit('Legacy hero injector pattern not found; refusing unsafe blind edit')
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          PY
+
+      - name: Make installer workflow inert after this run
+        shell: bash
+        run: |
+          cat > .github/workflows/import-zorbas-menu-columns-hero.yml <<'YAML'
+          name: Zorbas hero asset maintenance
+
+          on:
+            workflow_dispatch:
+
+          permissions:
+            contents: read
+
+          jobs:
+            info:
+              runs-on: ubuntu-latest
+              steps:
+                - run: echo 'Final Zorbas homepage hero is installed.'
+          YAML
+
+      - name: Commit final hero
         shell: bash
         run: |
           set -euo pipefail
           git config user.name 'SoulFlameAdmin'
           git config user.email 'soulflame.mitko@gmail.com'
-          git add ZORBASMENUCOLUMNS-2X.png site.css
-          if git diff --cached --quiet; then
-            echo 'No changes to commit.'
-            exit 0
-          fi
-          git commit -m 'Use lossless 2x Zorbas hero for sharp high-DPI rendering'
+          git add zorbas-hero-final.webp site.css config.js .github/workflows/import-zorbas-menu-columns-hero.yml
+          git commit -m 'Install final generated Zorbas homepage hero'
           git push origin main
