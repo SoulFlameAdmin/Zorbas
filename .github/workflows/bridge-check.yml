@@ -30,3 +30,15 @@ jobs:
 
       - name: Build Bridge
         run: dotnet build bridge/ZorbasBridge/ZorbasBridge.csproj -c Release --no-restore
+
+      - name: Verify test-no-print physical safety
+        shell: pwsh
+        run: |
+          $source = Get-Content 'bridge/ZorbasBridge/BridgeEngine.cs' -Raw
+          if ($source -notmatch 'var simulateOnly = IsNoPrintMode\(\);') { throw 'test_no_print simulation gate missing' }
+          if ($source -notmatch 'if \(simulateOnly\)') { throw 'simulation branch missing' }
+          if ($source -notmatch 'no_physical_output = true') { throw 'simulation ACK must declare no physical output' }
+          if ($source -notmatch 'operating_mode = BridgeModes.TestNoPrint') { throw 'simulation metadata must identify test_no_print' }
+          if ($source -notmatch 'Never enter sending/printing in test_no_print') { throw 'physical-stage invariant missing' }
+          if ($source -notmatch 'if \(!simulateOnly\s*&& !usesNetworkPrinter') { throw 'hardware availability must be bypassed only for simulation' }
+          if ($source -notmatch 'var ambiguousPhysicalOutput = !simulateOnly') { throw 'simulation failures must never be marked physically ambiguous' }
