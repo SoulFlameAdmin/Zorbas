@@ -10,6 +10,15 @@
   let installPrompt = null;
   let installReadyPromise = null;
 
+  function applyHomepageHero() {
+    if (!document.querySelector('.hero')) return;
+    if (document.getElementById('zorbas-home-hero-image')) return;
+    const style = document.createElement('style');
+    style.id = 'zorbas-home-hero-image';
+    style.textContent = ".hero:before{background-image:url('/zorbas-entrance-home.jpg?v=20260910-1')!important;background-position:center center!important}";
+    document.head.appendChild(style);
+  }
+
   function hardenLegacyLoginFields() {
     document.querySelectorAll('input[name="username"]').forEach(input => {
       if (input.value === 'admin' || input.getAttribute('value') === 'admin') input.value = '';
@@ -24,8 +33,10 @@
 
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', hardenLegacyLoginFields, {once: true});
+    document.addEventListener('DOMContentLoaded', applyHomepageHero, {once: true});
   } else {
     hardenLegacyLoginFields();
+    applyHomepageHero();
   }
 
   async function rpc(name, payload = {}, options = {}) {
