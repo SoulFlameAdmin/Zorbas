@@ -3,7 +3,8 @@ const assert = require('assert');
 
 const read = path => fs.readFileSync(path, 'utf8');
 
-const migration = read('supabase/migrations/20260910184500_zorbas_public_pickup_price_quantity_guard_v1.sql');
+const pickupMigration = read('supabase/migrations/20260910184500_zorbas_public_pickup_price_quantity_guard_v1.sql');
+const resetMigration = read('supabase/migrations/20260910185500_zorbas_daily_reset_close_stale_visits_v1.sql');
 const order = read('order.js');
 const cart = read('cart.js');
 const waiter = read('waiter.html');
@@ -14,13 +15,13 @@ const orderHtml = read('order.html');
 const cartHtml = read('cart.html');
 
 // Backend is authoritative for public pickup.
-assert(migration.includes("coalesce(v_menu.price_pending, false) or coalesce(v_menu.price, 0) <= 0"), 'backend must reject pending or zero prices');
-assert(migration.includes("v_quantity < 1 or v_quantity > 99"), 'backend must constrain public quantity');
-assert(migration.includes("v_quantity <> trunc(v_quantity)"), 'public quantity must be an integer');
-assert(migration.includes('for share;'), 'menu rows must be locked while the order is validated and inserted');
-assert(migration.indexOf('for v_item in') < migration.indexOf('insert into public.zorbas_orders('), 'all cart rows must be validated before creating the order');
-assert(migration.includes("length(trim(coalesce(p_note,''))) > 500"), 'order notes must have a server-side size limit');
-assert(migration.includes("length(trim(coalesce(v_item.note,''))) > 160"), 'item notes must have a server-side size limit');
+assert(pickupMigration.includes("coalesce(v_menu.price_pending, false) or coalesce(v_menu.price, 0) <= 0"), 'backend must reject pending or zero prices');
+assert(pickupMigration.includes("v_quantity < 1 or v_quantity > 99"), 'backend must constrain public quantity');
+assert(pickupMigration.includes("v_quantity <> trunc(v_quantity)"), 'public quantity must be an integer');
+assert(pickupMigration.includes('for share;'), 'menu rows must be locked while the order is validated and inserted');
+assert(pickupMigration.indexOf('for v_item in') < pickupMigration.indexOf('insert into public.zorbas_orders('), 'all cart rows must be validated before creating the order');
+assert(pickupMigration.includes("length(trim(coalesce(p_note,''))) > 500"), 'order notes must have a server-side size limit');
+assert(pickupMigration.includes("length(trim(coalesce(v_item.note,''))) > 160"), 'item notes must have a server-side size limit');
 
 // Public UI must agree with backend rules.
 for (const [name, source] of [['order', order], ['cart', cart]]) {
@@ -52,4 +53,12 @@ const cartScript = cartHtml.match(/<script src="(\/cart\.js\?v=[^"]+)"/i)?.[1];
 assert(orderScript && sw.includes(`'${orderScript}'`), 'service worker must pre-cache the exact order.js URL loaded by order.html');
 assert(cartScript && sw.includes(`'${cartScript}'`), 'service worker must pre-cache the exact cart.js URL loaded by cart.html');
 
-console.log('PASS Zorbas stable start: pickup guard, full note wrapping and PWA delivery are protected.');
+// 05:00 rollover closes stale operational visits without inventing a payment.
+assert(resetMigration.includes("opened_at < v_day_start"), 'daily reset must target only visits from a previous service day');
+assert(resetMigration.includes("status = 'completed'"), 'stale visits must stop remaining operationally active');
+assert(resetMigration.includes("'auto_closed_reason', 'service_day_rollover'"), 'automatic rollover must be traceable in visit metadata');
+assert(resetMigration.includes("'bill_status_at_auto_close', bill_status"), 'automatic rollover must record the bill state it found');
+assert(!resetMigration.includes("bill_status = 'paid'"), 'daily reset must never pretend an unpaid visit was paid');
+assert(!resetMigration.includes('paid_at = now()'), 'daily reset must never fabricate a payment timestamp');
+
+console.log('PASS Zorbas stable start: pickup guard, full note wrapping, PWA delivery and safe 05:00 rollover are protected.');
