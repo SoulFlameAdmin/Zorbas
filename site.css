@@ -1,6 +1,6 @@
-@import url('/site-base.css?v=hero-force-permanent-20260910');
+@import url('/site-base.css?v=hero-final-2324-20260910');
 
-/* Permanent forced homepage hero. High specificity prevents later legacy rules from restoring the old image. */
+/* Final Zorbas homepage hero — generated from the requested reference, no blur/legacy overlay. */
 html body .hero.hero{
   transform:none!important;
   filter:none!important;
@@ -18,7 +18,7 @@ html body .hero.hero::before{
   top:0!important;
   width:100%!important;
   height:100%!important;
-  background:url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=3840&q=95') center center/cover no-repeat!important;
+  background:url('/zorbas-hero-final.webp?v=20260910-2324') center center/cover no-repeat!important;
   transform:none!important;
   animation:none!important;
   filter:none!important;
@@ -56,7 +56,7 @@ html body .home.home::before{
     inset:0!important;
     width:100%!important;
     height:100%!important;
-    background:url('https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=3840&q=95') center center/cover no-repeat!important;
+    background:url('/zorbas-hero-final.webp?v=20260910-2324') center center/cover no-repeat!important;
     transform:none!important;
     animation:none!important;
     filter:none!important;
