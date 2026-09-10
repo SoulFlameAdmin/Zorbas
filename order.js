@@ -66,8 +66,12 @@
     return catalog.items.filter(item => activeCategory === 'all' || item.category_id === activeCategory);
   }
 
+  function isOrderable(item) {
+    return Boolean(item?.available_for_pickup) && !Boolean(item?.price_pending) && Number(item?.price || 0) > 0;
+  }
+
   function priceText(item) {
-    return item.price_pending ? 'Цена на място' : Z.money(item.price);
+    return isOrderable(item) ? Z.money(item.price) : 'Цена предстои';
   }
 
   function foodEmoji(item) {
@@ -119,6 +123,10 @@
       return '<span class="restaurant-only">Само в ресторанта</span>';
     }
 
+    if (!isOrderable(item)) {
+      return '<span class="restaurant-only">Изчаква цена</span>';
+    }
+
     const row = cartRowById(item.id);
     if (!row) {
       return `<button class="add-button" type="button" data-add="${Z.esc(item.id)}" aria-label="Добави ${Z.esc(item.name)} в количката">+</button>`;
@@ -149,7 +157,7 @@
         ? `<img src="${Z.esc(item.image_url)}" alt="" loading="lazy">`
         : `<span aria-hidden="true">${foodEmoji(item)}</span>`;
       return `
-        <article class="menu-item ${cartRowById(item.id) ? 'has-quantity' : ''}">
+        <article class="menu-item ${cartRowById(item.id) ? 'has-quantity' : ''} ${!isOrderable(item) && item.available_for_pickup ? 'price-pending' : ''}">
           <div class="item-visual">${visual}</div>
           <div class="item-copy">
             <h3>${Z.esc(item.name)}</h3>
@@ -186,7 +194,10 @@
 
   function addItem(id) {
     const item = itemById(id);
-    if (!item || !item.available_for_pickup) return;
+    if (!item || !isOrderable(item)) {
+      if (item?.available_for_pickup) Z.toast('Този продукт още няма потвърдена цена.', 'error');
+      return;
+    }
 
     const row = cartRowById(id);
     if (row) {
@@ -207,6 +218,14 @@
   }
 
   function changeQuantity(id, delta) {
+    const item = itemById(id);
+    if (!item || !isOrderable(item)) {
+      cart = cart.filter(entry => entry.menu_item_id !== id);
+      renderCartSummary();
+      renderMenu();
+      return;
+    }
+
     const row = cartRowById(id);
     if (!row) {
       if (delta > 0) addItem(id);
@@ -226,8 +245,16 @@
   }
 
   function setQuantity(id, value) {
+    const item = itemById(id);
     const row = cartRowById(id);
     if (!row) return;
+
+    if (!item || !isOrderable(item)) {
+      cart = cart.filter(entry => entry.menu_item_id !== id);
+      renderCartSummary();
+      renderMenu();
+      return;
+    }
 
     const parsed = Number.parseInt(value, 10);
     if (!Number.isFinite(parsed) || parsed <= 0) {
@@ -243,7 +270,7 @@
   function renderCartSummary() {
     cart = cart.filter(row => {
       const item = itemById(row.menu_item_id);
-      return item && item.available_for_pickup;
+      return item && isOrderable(item);
     });
     saveCart();
 
@@ -251,13 +278,9 @@
       const item = itemById(row.menu_item_id);
       if (!item) return result;
       result.count += row.quantity;
-      if (item.price_pending) {
-        result.hasPendingPrice = true;
-      } else {
-        result.total += Number(item.price || 0) * row.quantity;
-      }
+      result.total += Number(item.price || 0) * row.quantity;
       return result;
-    }, {count: 0, total: 0, hasPendingPrice: false});
+    }, {count: 0, total: 0});
 
     shortcutCount.textContent = summary.count;
     mobileCartCount.textContent = summary.count;
@@ -266,9 +289,7 @@
       node.hidden = summary.count === 0;
     });
     mobileCartBar.hidden = summary.count === 0;
-    mobileCartTotal.textContent = summary.hasPendingPrice
-      ? `${Z.money(summary.total)} + цена на място`
-      : Z.money(summary.total);
+    mobileCartTotal.textContent = Z.money(summary.total);
   }
 
   async function boot() {
