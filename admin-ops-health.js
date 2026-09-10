@@ -26,6 +26,7 @@
       <div class="panel-body">
         <div class="stats-grid" id="opsHealthCards"></div>
         <p class="empty" id="opsHealthMessage">Отвори „Система“, за да провериш текущото състояние.</p>
+        <div class="toolbar" id="opsHealthActions" hidden></div>
       </div>
     </section>`;
   main.appendChild(section);
@@ -34,10 +35,14 @@
   const checked = document.getElementById('opsHealthChecked');
   const cards = document.getElementById('opsHealthCards');
   const message = document.getElementById('opsHealthMessage');
+  const actions = document.getElementById('opsHealthActions');
   const refreshButton = document.getElementById('opsHealthRefresh');
 
+  const BRIDGE_RELEASE_BASE = 'https://github.com/SoulFlameAdmin/Zorbas/releases/download';
   const number = value => Number.isFinite(Number(value)) ? Number(value) : 0;
   const dateText = value => value ? new Date(value).toLocaleString('bg-BG') : 'няма';
+  const validVersion = value => /^\d+\.\d+\.\d+$/.test(String(value || ''));
+  const bridgeSetupUrl = version => `${BRIDGE_RELEASE_BASE}/zorbas-bridge-v${encodeURIComponent(version)}/Zorbas-Bridge-Setup.exe`;
   const card = (label, value, note = '') => {
     const node = document.createElement('article');
     node.className = 'stat-card';
@@ -89,8 +94,22 @@
       card('Изтекли сесии', number(maintenance.expired_sessions), 'Информационна стойност за поддръжка.')
     );
 
+    actions.replaceChildren();
+    actions.hidden = true;
+
+    if (!safeTestReady && validVersion(requiredVersion)) {
+      const download = document.createElement('a');
+      download.className = 'btn primary';
+      download.href = bridgeSetupUrl(requiredVersion);
+      download.target = '_blank';
+      download.rel = 'noopener noreferrer';
+      download.textContent = `Свали Bridge ${requiredVersion}`;
+      actions.append(download);
+      actions.hidden = false;
+    }
+
     if (!safeTestReady && state !== 'action_required') {
-      message.textContent = `Bridge е онлайн, но safe test-no-print не е готов. Инсталирай Bridge ${requiredVersion}+ преди тест без физически печат.`;
+      message.textContent = `Bridge е онлайн, но safe test-no-print не е готов. Инсталирай Bridge ${requiredVersion}+ и после натисни „Провери“, докато heartbeat покаже новата версия.`;
     } else {
       message.textContent = state === 'ok'
         ? 'Няма открит текущ блокиращ проблем. Bridge, принтери и lifecycle са в норма.'
@@ -113,6 +132,8 @@
       title.textContent = '🔴 Проверка неуспешна';
       checked.textContent = new Date().toLocaleString('bg-BG');
       cards.replaceChildren();
+      actions.replaceChildren();
+      actions.hidden = true;
       message.textContent = error?.message || 'Неуспешна оперативна проверка.';
     } finally {
       refreshButton.disabled = false;
