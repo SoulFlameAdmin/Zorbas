@@ -51,23 +51,28 @@
     return node;
   };
 
-  function render(data) {
+  function render(data, versionHealth = {}) {
     const printing = data?.printing || {};
     const bridge = data?.bridge || {};
     const service = data?.service || {};
     const maintenance = data?.maintenance || {};
-    const state = data?.status || 'action_required';
     const bridgeRequired = Boolean(bridge.required);
     const bridgeOnline = number(bridge.online);
     const bridgeState = !bridgeRequired ? 'НЕ СЕ ИЗИСКВА' : bridgeOnline > 0 ? 'ONLINE' : 'OFFLINE';
     const printerValue = `${number(printing.active_printers)}/${number(printing.expected_printers)}`;
+    const safeTestReady = Boolean(versionHealth.safe_test_no_print_ready);
+    const rawState = data?.status || 'action_required';
+    const state = rawState === 'ok' && !safeTestReady ? 'warning' : rawState;
+    const currentVersion = versionHealth.current_version || 'неизвестна';
+    const requiredVersion = versionHealth.required_version || '1.2.4';
 
     title.textContent = state === 'ok' ? '🟢 Системата е здрава' : state === 'warning' ? '🟡 Има предупреждение' : '🔴 Нужно е действие';
     checked.textContent = data?.checked_at ? new Date(data.checked_at).toLocaleString('bg-BG') : '—';
 
     cards.replaceChildren(
       card('Bridge', bridgeState, `Режим: ${bridge.operating_mode || '—'} · последно: ${dateText(bridge.last_seen_at)}`),
-      card('Bridge устройства', `${bridgeOnline}/${number(bridge.devices)}`, `Стари/offline: ${number(bridge.stale)}`),
+      card('Bridge версия', currentVersion, safeTestReady ? `Safe test-no-print: ГОТОВ · минимум ${requiredVersion}` : `ОБНОВИ до ${requiredVersion}+ преди test_no_print`),
+      card('Bridge устройства', `${bridgeOnline}/${number(bridge.devices)}`, `Стари/offline: ${number(bridge.stale)} · outdated: ${number(versionHealth.outdated_devices)}`),
       card('Активни принтери', printerValue, `Невалидна конфигурация: ${number(printing.bad_printer_config)}`),
       card('Успешни печати · 24ч', number(printing.printed_last_24h), `Последен успешен: ${dateText(printing.last_printed_at)}`),
       card('Непотвърден физически печат', number(printing.ambiguous_last_48h), 'Изисква физическа проверка преди повторение.'),
@@ -84,19 +89,26 @@
       card('Изтекли сесии', number(maintenance.expired_sessions), 'Информационна стойност за поддръжка.')
     );
 
-    message.textContent = state === 'ok'
-      ? 'Няма открит текущ блокиращ проблем. Bridge, принтери и lifecycle са в норма.'
-      : state === 'warning'
-        ? 'Има исторически или неблокиращи записи за почистване. Системата може да работи, но провери жълтите показатели.'
-        : 'Има текущ operational риск. Провери Bridge, принтерите и lifecycle конфликтите преди натоварена смяна.';
+    if (!safeTestReady && state !== 'action_required') {
+      message.textContent = `Bridge е онлайн, но safe test-no-print не е готов. Инсталирай Bridge ${requiredVersion}+ преди тест без физически печат.`;
+    } else {
+      message.textContent = state === 'ok'
+        ? 'Няма открит текущ блокиращ проблем. Bridge, принтери и lifecycle са в норма.'
+        : state === 'warning'
+          ? 'Има исторически или неблокиращи записи за почистване. Системата може да работи, но провери жълтите показатели.'
+          : 'Има текущ operational риск. Провери Bridge, принтерите и lifecycle конфликтите преди натоварена смяна.';
+    }
   }
 
   async function loadHealth() {
     refreshButton.disabled = true;
-    message.textContent = 'Проверка на Bridge, принтерите, базата и текущото обслужване…';
+    message.textContent = 'Проверка на Bridge, версията, принтерите, базата и текущото обслужване…';
     try {
-      const data = await Z.rpc('zorbas_ops_health_v1', { p_token: Z.token() });
-      render(data);
+      const [data, versionHealth] = await Promise.all([
+        Z.rpc('zorbas_ops_health_v1', { p_token: Z.token() }),
+        Z.rpc('zorbas_bridge_version_health_v1', { p_token: Z.token() })
+      ]);
+      render(data, versionHealth);
     } catch (error) {
       title.textContent = '🔴 Проверка неуспешна';
       checked.textContent = new Date().toLocaleString('bg-BG');
