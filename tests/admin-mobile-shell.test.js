@@ -36,7 +36,7 @@ assert(navigation.includes("new Set(['order', 'orders', 'manager'])"), 'Owner bu
 assert(navigation.includes("adminStats: 'Отчети'"), 'Admin stats must be presented as Reports');
 assert(navigation.includes("ops: 'Система'"), 'Operational health must be presented as System');
 
-assert(serviceWorker.includes('zorbas-v63-stable-p0p1-20260910'), 'PWA cache must be on the stable P0/P1 generation');
+assert(serviceWorker.includes('zorbas-v64-hero-exact-20260910'), 'PWA cache must match the current stable rollout generation');
 assert(serviceWorker.includes('/zorbas-white-ui.css?v=20260906-white1'), 'PWA must cache the white UI theme');
 assert(serviceWorker.includes('/admin-mobile.css?v=20260904-mobile-admin1'), 'PWA must cache mobile CSS');
 assert(serviceWorker.includes('/admin-mobile-nav.js?v=20260906-owner1'), 'PWA must cache current mobile navigation');
