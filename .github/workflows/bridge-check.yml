@@ -5,11 +5,13 @@ on:
     branches: [main]
     paths:
       - 'bridge/ZorbasBridge/**'
+      - 'supabase/migrations/20260910184500_zorbas_test_no_print_global_safety_v1.sql'
       - '.github/workflows/bridge-check.yml'
   pull_request:
     branches: [main]
     paths:
       - 'bridge/ZorbasBridge/**'
+      - 'supabase/migrations/20260910184500_zorbas_test_no_print_global_safety_v1.sql'
       - '.github/workflows/bridge-check.yml'
   workflow_dispatch:
 
@@ -36,11 +38,17 @@ jobs:
         run: |
           $engine = Get-Content 'bridge/ZorbasBridge/BridgeEngine.cs' -Raw
           $models = Get-Content 'bridge/ZorbasBridge/Models.cs' -Raw
-          $claim = Get-Content 'supabase/migrations/20260910172500_zorbas_bridge_claim_mode_v1.sql' -Raw
+          $safety = Get-Content 'supabase/migrations/20260910184500_zorbas_test_no_print_global_safety_v1.sql' -Raw
 
           if ($models -notmatch 'JsonPropertyName\("operating_mode"\)') { throw 'claimed job must deserialize authoritative operating mode' }
-          if ($claim -notmatch "jsonb_build_object\('operating_mode',v_mode\)") { throw 'claim RPC must return authoritative operating mode' }
-          if ($claim -notmatch "operating_mode_at_claim") { throw 'claim audit metadata must preserve operating mode' }
+          if ($safety -notmatch "jsonb_build_object\('operating_mode',v_mode\)") { throw 'claim RPC must return authoritative operating mode' }
+          if ($safety -notmatch "operating_mode_at_claim") { throw 'claim audit metadata must preserve operating mode' }
+          if ($safety -notmatch "v_required_number integer := 1002004") { throw 'test_no_print must enforce the minimum safe Bridge version' }
+          if ($safety -notmatch "TEST_NO_PRINT_REQUIRES_EMPTY_QUEUE") { throw 'mode transition must require an empty unresolved print queue' }
+          if ($safety -notmatch "TEST_NO_PRINT_BROWSER_CLAIM_BLOCKED") { throw 'browser Print Center claims must be blocked in test_no_print' }
+          if ($safety -notmatch "TEST_NO_PRINT_BROWSER_PHYSICAL_STATE_BLOCKED") { throw 'browser physical ACK states must be blocked in test_no_print' }
+          $modeLocks = ([regex]::Matches($safety, "hashtextextended\('zorbas-print-mode:'")).Count
+          if ($modeLocks -lt 4) { throw 'mode set, Bridge claim, browser claim and browser ACK must share the mode advisory lock' }
           if ($engine -notmatch 'var authoritativeMode = job\.OperatingMode;') { throw 'Bridge must use mode returned with each claim' }
           if ($engine -notmatch 'var simulateOnly = authoritativeMode == BridgeModes\.TestNoPrint;') { throw 'simulation gate must use authoritative claim mode' }
           if ($engine -notmatch 'var physicalAllowed = authoritativeMode is BridgeModes\.Parallel or BridgeModes\.SoulFlame;') { throw 'physical output must be explicitly allowlisted' }
