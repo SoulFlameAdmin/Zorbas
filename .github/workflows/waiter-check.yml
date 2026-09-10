@@ -32,9 +32,12 @@ jobs:
           node --check login-challenge-guard.js
           node --check live-sync.js
           node --check waiter-stable.js
+          node --check waiter-stable-notes.js
           node --check waiter-order-idempotency.js
           node --check waiter-reservation-guests.js
           node --check waiter-reservation-status.js
+          node --check order.js
+          node --check cart.js
           node --check print-browser-safety.js
           node --check print.js
           node --check kitchen.js
@@ -56,6 +59,9 @@ jobs:
 
       - name: Test security hardening
         run: node tests/security-hardening.test.js
+
+      - name: Test stable P0/P1 start
+        run: node tests/stable-p0-p1-start.test.js
 
       - name: Test public photo gallery
         run: node tests/gallery.test.js

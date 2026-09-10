@@ -51,22 +51,22 @@
     return catalog.items.find(item => item.id === id);
   }
 
+  function isOrderable(item) {
+    return Boolean(item?.available_for_pickup) && !Boolean(item?.price_pending) && Number(item?.price || 0) > 0;
+  }
+
   function priceText(item) {
-    return item.price_pending ? 'Цена на място' : Z.money(item.price);
+    return isOrderable(item) ? Z.money(item.price) : 'Цена предстои';
   }
 
   function cartSummary() {
     return cart.reduce((summary, row) => {
       const item = itemById(row.menu_item_id);
-      if (!item) return summary;
+      if (!item || !isOrderable(item)) return summary;
       summary.count += row.quantity;
-      if (item.price_pending) {
-        summary.hasPendingPrice = true;
-      } else {
-        summary.total += Number(item.price || 0) * row.quantity;
-      }
+      summary.total += Number(item.price || 0) * row.quantity;
       return summary;
-    }, {count: 0, total: 0, hasPendingPrice: false});
+    }, {count: 0, total: 0});
   }
 
   function updateNavigationCount(count) {
@@ -77,11 +77,20 @@
   }
 
   function renderCart() {
+    const removedInvalid = cart.some(row => {
+      const item = itemById(row.menu_item_id);
+      return !item || !isOrderable(item);
+    });
+
     cart = cart.filter(row => {
       const item = itemById(row.menu_item_id);
-      return item && item.available_for_pickup;
+      return item && isOrderable(item);
     });
     saveCart();
+
+    if (removedInvalid) {
+      Z.toast('Продукт без потвърдена цена беше премахнат от количката.', 'error');
+    }
 
     const summary = cartSummary();
     const hasItems = summary.count > 0;
@@ -91,7 +100,7 @@
     checkoutPanel.hidden = !hasItems;
     updateNavigationCount(summary.count);
     cartTotal.textContent = Z.money(summary.total);
-    priceNote.hidden = !summary.hasPendingPrice;
+    priceNote.hidden = true;
 
     cartItems.innerHTML = cart.map((row, index) => {
       const item = itemById(row.menu_item_id);
@@ -147,6 +156,12 @@
   function changeQuantity(index, change) {
     const row = cart[index];
     if (!row) return;
+    const item = itemById(row.menu_item_id);
+    if (!item || !isOrderable(item)) {
+      cart.splice(index, 1);
+      renderCart();
+      return;
+    }
     row.quantity += change;
     if (row.quantity <= 0) cart.splice(index, 1);
     if (row.quantity > 99) row.quantity = 99;
@@ -169,6 +184,16 @@
       return;
     }
 
+    const invalidRow = cart.find(row => {
+      const item = itemById(row.menu_item_id);
+      return !item || !isOrderable(item) || !Number.isInteger(Number(row.quantity)) || Number(row.quantity) < 1 || Number(row.quantity) > 99;
+    });
+    if (invalidRow) {
+      Z.toast('Количката съдържа невалиден продукт или количество. Обновете поръчката.', 'error');
+      renderCart();
+      return;
+    }
+
     const form = new FormData(pickupForm);
     const button = pickupForm.querySelector('[type="submit"]');
     button.disabled = true;
@@ -180,7 +205,7 @@
         p_phone: form.get('phone'),
         p_ready_at: new Date(form.get('ready')).toISOString(),
         p_items: cart,
-        p_note: form.get('note') || null
+        p_note: String(form.get('note') || '').slice(0, 500) || null
       });
       pickupSuccess.innerHTML = `
         <h3>Поръчката е приета.</h3>
