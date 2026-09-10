@@ -27,6 +27,7 @@ jobs:
           node --check admin-order.js
           node --check admin-manager.js
           node --check admin-live-state.js
+          node --check live-sync.js
           node --check kitchen.js
           node --check print.js
       - name: Manager screen wiring
@@ -53,6 +54,7 @@ jobs:
       - name: Operational health wiring
         run: |
           node tests/admin-ops-health.test.js
+          node tests/operational-core-p1.test.js
       - name: Correction print wiring
         run: |
           grep -q "type === 'correction'" print.js
