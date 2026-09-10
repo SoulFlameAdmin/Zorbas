@@ -34,11 +34,18 @@ jobs:
       - name: Verify test-no-print physical safety
         shell: pwsh
         run: |
-          $source = Get-Content 'bridge/ZorbasBridge/BridgeEngine.cs' -Raw
-          if ($source -notmatch 'var simulateOnly = IsNoPrintMode\(\);') { throw 'test_no_print simulation gate missing' }
-          if ($source -notmatch 'if \(simulateOnly\)') { throw 'simulation branch missing' }
-          if ($source -notmatch 'no_physical_output = true') { throw 'simulation ACK must declare no physical output' }
-          if ($source -notmatch 'operating_mode = BridgeModes.TestNoPrint') { throw 'simulation metadata must identify test_no_print' }
-          if ($source -notmatch 'Never enter sending/printing in test_no_print') { throw 'physical-stage invariant missing' }
-          if ($source -notmatch 'if \(!simulateOnly\s*&& !usesNetworkPrinter') { throw 'hardware availability must be bypassed only for simulation' }
-          if ($source -notmatch 'var ambiguousPhysicalOutput = !simulateOnly') { throw 'simulation failures must never be marked physically ambiguous' }
+          $engine = Get-Content 'bridge/ZorbasBridge/BridgeEngine.cs' -Raw
+          $models = Get-Content 'bridge/ZorbasBridge/Models.cs' -Raw
+          $claim = Get-Content 'supabase/migrations/20260910172500_zorbas_bridge_claim_mode_v1.sql' -Raw
+
+          if ($models -notmatch 'JsonPropertyName\("operating_mode"\)') { throw 'claimed job must deserialize authoritative operating mode' }
+          if ($claim -notmatch "jsonb_build_object\('operating_mode',v_mode\)") { throw 'claim RPC must return authoritative operating mode' }
+          if ($claim -notmatch "operating_mode_at_claim") { throw 'claim audit metadata must preserve operating mode' }
+          if ($engine -notmatch 'var authoritativeMode = job\.OperatingMode;') { throw 'Bridge must use mode returned with each claim' }
+          if ($engine -notmatch 'var simulateOnly = authoritativeMode == BridgeModes\.TestNoPrint;') { throw 'simulation gate must use authoritative claim mode' }
+          if ($engine -notmatch 'var physicalAllowed = authoritativeMode is BridgeModes\.Parallel or BridgeModes\.SoulFlame;') { throw 'physical output must be explicitly allowlisted' }
+          if ($engine -notmatch '\[SAFE_NO_OUTPUT\].*authoritative operating mode') { throw 'unknown mode must fail closed before physical output' }
+          if ($engine -notmatch 'no_physical_output = true') { throw 'simulation ACK must declare no physical output' }
+          if ($engine -notmatch 'Never enter sending/printing in test_no_print') { throw 'physical-stage invariant missing' }
+          if ($engine -notmatch 'var ambiguousPhysicalOutput = physicalAllowed') { throw 'physical ambiguity must be impossible outside physical modes' }
+          if ($engine -notmatch 'RefreshOperatingModeAsync') { throw 'direct hardware test must refresh server mode before deciding' }
