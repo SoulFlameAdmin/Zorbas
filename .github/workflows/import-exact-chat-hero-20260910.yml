@@ -1,0 +1,64 @@
+name: Import exact ChatGPT Zorbas hero
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/import-exact-chat-hero-20260910.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  import-exact-hero:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Download exact uploaded PNG from Adobe transfer URL
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl -fL --retry 3 --retry-delay 2 \
+            'https://at.adobe.com/acxKy8TAPQTkxJNJ' \
+            -o ZORBASMENUCOLUMNS.png
+          test -s ZORBASMENUCOLUMNS.png
+          file ZORBASMENUCOLUMNS.png
+          ACTUAL_SHA="$(sha256sum ZORBASMENUCOLUMNS.png | awk '{print $1}')"
+          EXPECTED_SHA='fcb4200270db7f35965e203310a5806eb818ef0191dd269797259cfecec14355'
+          echo "SHA256=$ACTUAL_SHA"
+          test "$ACTUAL_SHA" = "$EXPECTED_SHA"
+
+      - name: Force homepage to use this exact asset
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          p = Path('site.css')
+          s = p.read_text(encoding='utf-8')
+          s = re.sub(
+              r"background-image:url\('/ZORBASMENUCOLUMNS\.png\?v=[^']+'\)!important",
+              "background-image:url('/ZORBASMENUCOLUMNS.png?v=exact-fcb4200270db')!important",
+              s,
+          )
+          if "exact-fcb4200270db" not in s:
+              s += "\n.hero:before{background-image:url('/ZORBASMENUCOLUMNS.png?v=exact-fcb4200270db')!important;background-position:center center!important;background-size:cover!important;background-repeat:no-repeat!important;transform:none!important;animation:none!important;filter:none!important;opacity:1!important}\n"
+          p.write_text(s, encoding='utf-8')
+
+      - name: Commit exact hero image
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'SoulFlameAdmin'
+          git config user.email 'soulflame.mitko@gmail.com'
+          git add ZORBASMENUCOLUMNS.png site.css
+          if git diff --cached --quiet; then
+            echo 'No changes to commit.'
+            exit 0
+          fi
+          git commit -m 'Use exact latest uploaded ZORBASMENUCOLUMNS hero'
+          git push origin main
