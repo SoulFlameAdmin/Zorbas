@@ -1,0 +1,41 @@
+name: Temporary fetch latest Canva hero
+
+on:
+  push:
+    branches:
+      - tmp-hero-canva-source-test
+    paths:
+      - tmp-canva-hero-fetch-trigger.txt
+
+permissions:
+  contents: write
+
+jobs:
+  fetch-hero:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: tmp-hero-canva-source-test
+          fetch-depth: 0
+
+      - name: Fetch candidate full-size hero
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p assets
+          URL='https://media.canva.com/v2/image-resize/format:PNG/height:1254/quality:100/uri:ifs%3A%2F%2FM%2F11ea874a-368c-4ce7-a7b4-b0a97919b695/watermark:F/width:1254?csig=AAAAAAAAAAAAAAAAAAAAABhHm0SeQqCQdr4jNpEdAyOVmwbTdPsu-s6InVf8579Z&exp=1789081170&osig=AAAAAAAAAAAAAAAAAAAAAKIxTFXxf0S87DNFP5dKyFocZPgCP-lFnK69e7q7YnQJ&signer=media-rpc&x-canva-quality=thumbnail'
+          curl -L --fail --retry 2 "$URL" -o assets/zorbas-hero-latest.png
+          file assets/zorbas-hero-latest.png
+          bytes=$(wc -c < assets/zorbas-hero-latest.png)
+          echo "Downloaded bytes: $bytes"
+          test "$bytes" -gt 500000
+
+      - name: Commit fetched hero on temp branch
+        shell: bash
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/zorbas-hero-latest.png
+          git commit -m 'Fetch latest 1254px Zorbas hero asset' || exit 0
+          git push origin HEAD:tmp-hero-canva-source-test
