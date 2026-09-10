@@ -26,6 +26,7 @@ internal sealed class BridgeEngine : IAsyncDisposable
         _settingsStore = settingsStore;
         _client = client;
         _printerService = printerService;
+        _networkPrinterService = new NetworkPrinterService();
         _log = log;
     }
 
@@ -100,12 +101,18 @@ internal sealed class BridgeEngine : IAsyncDisposable
 
     public async Task PrintTestAsync(string destination, CancellationToken cancellationToken = default)
     {
-        if (IsNoPrintMode())
+        var mode = await RefreshOperatingModeAsync(cancellationToken).ConfigureAwait(false);
+        if (mode == BridgeModes.TestNoPrint)
         {
             _ = ReceiptFormatter.TestReceipt(destination, GetPrinterTargetLabel(destination));
             _log.Info($"Тест без печат за {destination}: документът е форматиран успешно; физически изход не е изпращан.");
             ActivityChanged?.Invoke("Тест без печат: документът е валидиран, без хартия.");
             return;
+        }
+
+        if (mode is not BridgeModes.Parallel and not BridgeModes.SoulFlame)
+        {
+            throw new InvalidOperationException("Физически тест е разрешен само в Parallel или SoulFlame режим.");
         }
 
         if (destination.Equals("kitchen", StringComparison.OrdinalIgnoreCase)
@@ -218,17 +225,16 @@ internal sealed class BridgeEngine : IAsyncDisposable
 
     private async Task<bool> ProcessDestinationAsync(string destination, CancellationToken cancellationToken)
     {
-        var simulateOnly = IsNoPrintMode();
+        var cachedNoPrint = IsNoPrintMode();
         var networkHost = string.Empty;
         var networkPort = 0;
         var usesNetworkPrinter = destination.Equals("kitchen", StringComparison.OrdinalIgnoreCase)
             && TryGetNetworkEndpoint(destination, out networkHost, out networkPort);
         var printerName = GetPrinterName(destination);
 
-        // A no-print simulation must be able to validate queue/formatting even if the
-        // physical printer is powered off. Hardware availability matters only when
-        // bytes may actually be sent.
-        if (!simulateOnly
+        // This is only an optimization before claim. The authoritative decision to
+        // simulate or print comes from job.OperatingMode returned atomically by SQL.
+        if (!cachedNoPrint
             && !usesNetworkPrinter
             && (string.IsNullOrWhiteSpace(printerName) || !_printerService.IsPrinterAvailable(printerName)))
         {
@@ -247,12 +253,20 @@ internal sealed class BridgeEngine : IAsyncDisposable
 
         if (job is null) return false;
 
+        var authoritativeMode = job.OperatingMode;
+        var simulateOnly = authoritativeMode == BridgeModes.TestNoPrint;
+        var physicalAllowed = authoritativeMode is BridgeModes.Parallel or BridgeModes.SoulFlame;
         var orderNumber = ReadOrderNumber(job);
         ActivityChanged?.Invoke($"{(destination == "kitchen" ? "Print 2" : "Print 1")}: бележка №{orderNumber}");
-        _log.Info($"Взета е задача {job.Id} за {destination}, №{orderNumber}, опит {job.Attempts}/{job.MaxAttempts}.");
+        _log.Info($"Взета е задача {job.Id} за {destination}, №{orderNumber}, опит {job.Attempts}/{job.MaxAttempts}, mode={authoritativeMode}.");
 
         try
         {
+            if (!simulateOnly && !physicalAllowed)
+            {
+                throw new InvalidOperationException("[SAFE_NO_OUTPUT] Claim-ът няма валиден authoritative operating mode. Физическият печат е блокиран.");
+            }
+
             await _client.AckAsync(
                 _settings.DeviceId,
                 token,
@@ -277,7 +291,7 @@ internal sealed class BridgeEngine : IAsyncDisposable
                     {
                         simulated = true,
                         no_physical_output = true,
-                        operating_mode = BridgeModes.TestNoPrint,
+                        operating_mode = authoritativeMode,
                         destination,
                         receipt_profile = "icash-photo-match-v1"
                     },
@@ -308,6 +322,7 @@ internal sealed class BridgeEngine : IAsyncDisposable
                 printedMetadata = new
                 {
                     network_printer = endpoint,
+                    operating_mode = authoritativeMode,
                     receipt_profile = "icash-photo-match-v1"
                 };
                 _log.Info($"Задача {job.Id} е изпратена директно към кухненския принтер {endpoint}.");
@@ -315,13 +330,14 @@ internal sealed class BridgeEngine : IAsyncDisposable
             else
             {
                 await _printerService.PrintReceiptAsync(
-                    printerName,
+                    printerName!,
                     receipt,
                     $"Zorbas {job.JobType} {orderNumber}",
                     cancellationToken).ConfigureAwait(false);
                 printedMetadata = new
                 {
                     windows_printer = printerName,
+                    operating_mode = authoritativeMode,
                     receipt_profile = "icash-photo-match-v1"
                 };
                 _log.Info($"Задача {job.Id} е приета от Windows spooler на „{printerName}“.");
@@ -343,7 +359,7 @@ internal sealed class BridgeEngine : IAsyncDisposable
         }
         catch (Exception error)
         {
-            var ambiguousPhysicalOutput = !simulateOnly
+            var ambiguousPhysicalOutput = physicalAllowed
                 && error is PrinterDeliveryException deliveryError
                 && deliveryError.MayHaveProducedOutput;
             var retry = !ambiguousPhysicalOutput && job.Attempts < job.MaxAttempts;
@@ -358,13 +374,14 @@ internal sealed class BridgeEngine : IAsyncDisposable
                     error.Message,
                     new
                     {
-                        output = simulateOnly
-                            ? "simulation"
+                        output = simulateOnly || !physicalAllowed
+                            ? "simulation-or-blocked"
                             : usesNetworkPrinter
                                 ? $"{networkHost}:{networkPort}"
                                 : printerName,
+                        operating_mode = authoritativeMode,
                         simulated = simulateOnly,
-                        no_physical_output = simulateOnly,
+                        no_physical_output = simulateOnly || !physicalAllowed,
                         ambiguous_physical_output = ambiguousPhysicalOutput,
                         auto_retry = retry
                     },
@@ -378,6 +395,18 @@ internal sealed class BridgeEngine : IAsyncDisposable
             _log.Error($"Печатът на задача {job.Id} се провали: {error.Message}");
             return false;
         }
+    }
+
+    private async Task<string> RefreshOperatingModeAsync(CancellationToken cancellationToken)
+    {
+        var token = RequireDeviceToken();
+        _config = await _client.GetConfigAsync(
+            _settings.DeviceId,
+            token,
+            cancellationToken).ConfigureAwait(false);
+        SaveRestaurantIdentity(_config);
+        ConfigChanged?.Invoke(_config);
+        return _config.Restaurant.OperatingMode;
     }
 
     private bool IsNoPrintMode() =>
