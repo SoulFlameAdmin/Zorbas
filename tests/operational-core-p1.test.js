@@ -17,6 +17,12 @@ assert(migration.includes("update public.zorbas_table_visits"), 'stale visits mu
 assert(!migration.includes("bill_status = 'paid'"), 'automatic rollover must never invent payment');
 assert(!migration.includes("paid_at = now()"), 'automatic rollover must not set payment timestamp');
 
+// A delayed 05:00 cron must never close records created in the new service day.
+assert((migration.match(/started_at < v_day_start/g) || []).length >= 2, 'both shift tables must protect new-day shifts');
+assert(migration.includes("public.zorbas_private_table_has_live_records(t.restaurant_id,t.id) then 'occupied'"), 'table state must be recomputed from live records');
+assert(migration.includes("t.status <> 'blocked'"), 'blocked tables must never be freed by rollover reconciliation');
+assert(!migration.includes("set status = 'free', updated_at = now()\n  where status in ('occupied','cleaning')"), 'rollover must not blindly free every occupied table');
+
 // Operational health must cover the physical bridge and lifecycle integrity.
 assert(migration.includes('public.sf_device_heartbeats'), 'health must inspect bridge heartbeat state');
 assert(migration.includes("interval '3 minutes'"), 'bridge freshness needs a bounded heartbeat window');
@@ -26,6 +32,7 @@ assert(migration.includes('v_expected_printers'), 'health must compare configure
 assert(migration.includes('v_stale_nonfinal_orders'), 'health must reveal stale live orders');
 assert(migration.includes('v_lifecycle_conflicts'), 'health must detect impossible kitchen/order combinations');
 assert(migration.includes("v_bridge_online = 0"), 'required offline bridge must be action-required');
+assert(migration.includes("or v_bridge_stale > 0"), 'extra stale bridge registrations should be a warning, not silently ignored');
 
 // Owner system view must expose the new health signals without rendering raw RPC HTML.
 assert(health.includes("card('Bridge'"), 'owner system view must show bridge state');
@@ -45,4 +52,4 @@ assert(live.includes('lastPollOkAt'), 'polling success must participate in conne
 assert(live.includes('isPollFresh()'), 'a fresh polling fallback must count as connected');
 assert(!live.includes('get connected() { return Boolean(realtimeChannel); }'), 'channel allocation alone must not claim healthy realtime');
 
-console.log('PASS Zorbas operational core P1: rollover, bridge health and reconnect invariants are protected.');
+console.log('PASS Zorbas operational core P1: rollover, race guards, bridge health and reconnect invariants are protected.');
