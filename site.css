@@ -1,29 +1,36 @@
-@import url('/site-base.css?v=hero-raw-sharp-20260910');
+@import url('/site-base.css?v=hero-native-pixels-20260910');
 
-/* Exact ZORBASMENUCOLUMNS hero: raw image, no blur, no GPU softening, no haze. */
+/* Exact ZORBASMENUCOLUMNS hero at its native 1672x941 pixel size. */
 .hero{
   transform:none!important;
   filter:none!important;
   backdrop-filter:none!important;
   -webkit-backdrop-filter:none!important;
   will-change:auto!important;
+  background:#111!important;
 }
 
 .hero:before{
-  background-image:url('/ZORBASMENUCOLUMNS.png?v=exact-fcb4200270db')!important;
+  inset:auto!important;
+  left:50%!important;
+  top:50%!important;
+  width:1672px!important;
+  height:941px!important;
+  background-image:url('/ZORBASMENUCOLUMNS.png?v=native-fcb4200270db')!important;
   background-position:center center!important;
-  background-size:cover!important;
+  background-size:1672px 941px!important;
   background-repeat:no-repeat!important;
-  transform:none!important;
+  transform:translate(-50%,-50%)!important;
   animation:none!important;
   filter:none!important;
   backdrop-filter:none!important;
   -webkit-backdrop-filter:none!important;
   will-change:auto!important;
   opacity:1!important;
+  image-rendering:auto!important;
 }
 
-/* Remove every visual layer that can make the photo look hazy/soft. */
+/* No visual layer over the source image. */
 .hero:after{
   background:transparent!important;
   filter:none!important;
@@ -48,17 +55,23 @@
     -webkit-backdrop-filter:none!important;
   }
   .hero:before{
-    background-image:url('/ZORBASMENUCOLUMNS.png?v=exact-fcb4200270db')!important;
+    inset:auto!important;
+    left:50%!important;
+    top:50%!important;
+    width:1672px!important;
+    height:941px!important;
+    background-image:url('/ZORBASMENUCOLUMNS.png?v=native-fcb4200270db')!important;
     background-position:center center!important;
-    background-size:cover!important;
+    background-size:1672px 941px!important;
     background-repeat:no-repeat!important;
-    transform:none!important;
+    transform:translate(-50%,-50%)!important;
     animation:none!important;
     filter:none!important;
     backdrop-filter:none!important;
     -webkit-backdrop-filter:none!important;
     will-change:auto!important;
     opacity:1!important;
+    image-rendering:auto!important;
   }
   .hero:after{background:transparent!important;opacity:0!important}
   .home:before{display:none!important}
