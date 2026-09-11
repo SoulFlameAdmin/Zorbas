@@ -1,0 +1,49 @@
+/* ZORBAS role panels — shared visual layer */
+:root{
+  --rp-navy:#0f3f73;--rp-navy2:#174f8c;--rp-gold:#c99b35;--rp-green:#0b9f77;
+  --rp-red:#d94a4a;--rp-ink:#112e4e;--rp-muted:#72849a;--rp-line:#dbe4ed;
+  --rp-bg:#f4f8fc;--rp-card:#fff;--rp-shadow:0 16px 42px rgba(20,54,88,.10)
+}
+*{box-sizing:border-box}
+body.zr-role-hub-page{margin:0;min-height:100dvh;background:radial-gradient(circle at 15% 0%,rgba(201,155,53,.08),transparent 24%),linear-gradient(180deg,#fbfdff,#eef4f9);font-family:Inter,Manrope,"Segoe UI",system-ui,sans-serif;color:var(--rp-ink)}
+.zr-role-hub{width:min(1180px,calc(100% - 32px));margin:0 auto;padding:36px 0 42px}
+.zr-role-hub-head{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:28px}
+.zr-role-hub-head small{color:var(--rp-gold);font-weight:900;letter-spacing:.18em;font-size:10px}
+.zr-role-hub-head h1{margin:5px 0 4px;font-size:clamp(30px,4vw,50px);letter-spacing:-.04em}
+.zr-role-hub-head p{margin:0;color:var(--rp-muted)}
+.zr-role-site-link{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 14px;border:1px solid var(--rp-line);border-radius:11px;background:#fff;color:var(--rp-ink);text-decoration:none;font-weight:800;box-shadow:0 5px 16px rgba(20,54,88,.05)}
+.zr-role-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.zr-role-card{position:relative;display:grid;grid-template-columns:58px 1fr auto;align-items:center;gap:16px;min-height:180px;padding:24px;border:1px solid var(--rp-line);border-radius:18px;background:rgba(255,255,255,.94);color:var(--rp-ink);text-decoration:none;box-shadow:var(--rp-shadow);overflow:hidden;transition:.18s ease}
+.zr-role-card::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--rp-navy)}
+.zr-role-card:hover{transform:translateY(-3px);box-shadow:0 22px 52px rgba(20,54,88,.14);border-color:#c8d6e4}
+.zr-role-card .zr-role-icon{display:grid;place-items:center;width:58px;height:58px;border-radius:16px;background:#edf4fb;color:var(--rp-navy);font-size:28px;font-weight:900}
+.zr-role-card small{font-size:9px;font-weight:900;letter-spacing:.14em;color:var(--rp-muted)}
+.zr-role-card h2{margin:4px 0 6px;font-size:25px;letter-spacing:-.03em}
+.zr-role-card p{margin:0;color:var(--rp-muted);font-size:13px;line-height:1.55}
+.zr-role-card>b{align-self:end;color:var(--rp-navy);font-size:12px;white-space:nowrap}
+.zr-role-card.zr-owner::before{background:var(--rp-gold)}.zr-role-card.zr-owner .zr-role-icon{background:#fbf4e4;color:#9a741f}
+.zr-role-card.zr-manager::before{background:#226ab2}.zr-role-card.zr-manager .zr-role-icon{background:#e8f2fd;color:#165d9f}
+.zr-role-card.zr-waiter::before{background:#6d7f92}.zr-role-card.zr-waiter .zr-role-icon{background:#eef2f5;color:#516579}
+.zr-role-card.zr-kitchen::before{background:var(--rp-green)}.zr-role-card.zr-kitchen .zr-role-icon{background:#e9f8f3;color:#08785a}
+.zr-role-hub-foot{margin-top:18px;padding:14px 16px;border:1px dashed #cbd8e4;border-radius:12px;color:var(--rp-muted);font-size:12px;text-align:center;background:rgba(255,255,255,.6)}
+
+/* Shared button linking each work screen back to the role hub */
+.zr-panels-link{display:inline-flex!important;align-items:center!important;justify-content:center!important;min-height:42px!important;padding:0 13px!important;border:1px solid #cbd6e1!important;border-radius:10px!important;background:#fff!important;color:#183b61!important;text-decoration:none!important;font-size:11px!important;font-weight:850!important;box-shadow:0 2px 8px rgba(20,54,88,.05)!important}
+
+/* Split the former Manager/Kitchen shared screen visually without changing data flow. */
+html[data-zorbas-panel="kitchen"] .manager-handoff,
+html[data-zorbas-panel="kitchen"] .manager-complete,
+html[data-zorbas-panel="kitchen"] .manager-order-summary{display:none!important}
+html[data-zorbas-panel="kitchen"] .kitchen-item{grid-template-columns:auto 1fr auto!important}
+html[data-zorbas-panel="kitchen"] #kitchenSidebar .side-title::after{content:" · КУХНЯ";color:#0b9f77}
+html[data-zorbas-panel="manager"] #kitchenSidebar .side-title::after{content:" · MANAGER";color:#226ab2}
+html[data-zorbas-panel="manager"] .manager-handoff{border-left:3px solid rgba(34,106,178,.28);padding-left:10px}
+
+@media(max-width:760px){
+  .zr-role-hub{width:min(100% - 20px,1180px);padding-top:20px}
+  .zr-role-hub-head{align-items:flex-start;flex-direction:column}
+  .zr-role-grid{grid-template-columns:1fr}
+  .zr-role-card{grid-template-columns:48px 1fr;min-height:154px;padding:18px}
+  .zr-role-card .zr-role-icon{width:48px;height:48px;border-radius:13px;font-size:23px}
+  .zr-role-card>b{grid-column:2;margin-top:4px}
+}
