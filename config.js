@@ -12,11 +12,20 @@
 
   function applyHomepageHero() {
     if (!document.querySelector('.hero')) return;
-    if (document.getElementById('zorbas-home-hero-image')) return;
-    const style = document.createElement('style');
-    style.id = 'zorbas-home-hero-image';
-    style.textContent = ".hero:before{background-image:url('/zorbas-entrance-home.jpg?v=20260910-1')!important;background-position:center center!important}";
-    document.head.appendChild(style);
+    if (!document.getElementById('zorbas-home-hero-image')) {
+      const style = document.createElement('style');
+      style.id = 'zorbas-home-hero-image';
+      style.textContent = ".hero:before{background-image:url('/zorbas-entrance-home.jpg?v=20260910-1')!important;background-position:center center!important}";
+      document.head.appendChild(style);
+    }
+
+    /* Public site -> role hub. The four role cards then open the real systems. */
+    document.querySelectorAll('a').forEach(link => {
+      const label = String(link.textContent || '').trim().toLocaleUpperCase('bg-BG');
+      if (label === 'УПРАВЛЕНИЕ' || label === 'MANAGEMENT') {
+        link.href = '/panels.html';
+      }
+    });
   }
 
   function hardenLegacyLoginFields() {
