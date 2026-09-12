@@ -352,3 +352,83 @@ html body .home.home::after{
     filter:none!important;
   }
 }
+
+/* =========================================================
+   ZORBAS PROMO POLISH · BIGGER CARDS + PERIODIC LIGHT STRIPS
+   Added on top of the existing fluid-letter animation.
+   ========================================================= */
+.hero .zr-promo-cta,
+.hero .header-action.install.zr-promo-cta{
+  min-height:64px!important;
+  padding:10px 16px!important;
+  gap:11px!important;
+  border-radius:19px!important;
+}
+
+.hero .zr-cta-icon{
+  min-width:28px;
+  height:28px;
+  font-size:19px;
+}
+.hero .zr-cta-main{font-size:11px}
+.hero .zr-cta-sub{font-size:9px}
+
+@keyframes zorbasPromoLightSweep{
+  0%,56%{left:-72%;opacity:0}
+  60%{opacity:.25}
+  64%{opacity:1}
+  78%{left:128%;opacity:.95}
+  82%,100%{left:128%;opacity:0}
+}
+
+.hero .zr-promo-cta::after{
+  content:"";
+  position:absolute;
+  z-index:3;
+  top:-40%;
+  bottom:-40%;
+  left:-72%;
+  width:42%;
+  pointer-events:none;
+  transform:skewX(-17deg);
+  background:
+    linear-gradient(102deg,
+      transparent 0 18%,
+      rgba(255,255,255,.10) 26%,
+      rgba(255,255,255,.48) 38%,
+      rgba(255,248,218,.95) 49%,
+      rgba(255,255,255,.62) 54%,
+      rgba(255,255,255,.18) 66%,
+      transparent 80% 100%),
+    repeating-linear-gradient(90deg,
+      rgba(255,255,255,.15) 0 1px,
+      transparent 1px 6px);
+  box-shadow:0 0 18px rgba(255,255,255,.18);
+  mix-blend-mode:screen;
+  animation:zorbasPromoLightSweep 2.8s ease-in-out infinite;
+}
+.hero .zr-promo-phone::after{animation-delay:-.15s}
+.hero .zr-promo-app::after{animation-delay:-.62s}
+.hero .zr-promo-map::after{animation-delay:-1.09s}
+
+@media(max-width:680px){
+  .hero .header-actions{
+    width:min(82vw,390px)!important;
+    gap:6px!important;
+  }
+  .hero .zr-promo-cta,
+  .hero .header-action.install.zr-promo-cta{
+    min-height:54px!important;
+    padding:7px 9px!important;
+    border-radius:14px!important;
+  }
+  .hero .zr-promo-cta .zr-cta-main{font-size:7.5px!important}
+  .hero .zr-promo-cta .zr-cta-sub{font-size:6.5px!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  .hero .zr-promo-cta::after{
+    animation:none!important;
+    display:none!important;
+  }
+}
