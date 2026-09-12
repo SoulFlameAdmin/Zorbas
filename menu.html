@@ -23,9 +23,9 @@
     .logo-stage::before,.logo-stage::after{display:none!important}
     .menu-hero-art{
       position:relative;
-      width:min(1120px,calc(100% - 48px));
-      aspect-ratio:782/451;
-      margin:28px auto 20px;
+      width:min(980px,calc(100% - 48px));
+      aspect-ratio:4/3;
+      margin:24px auto 18px;
       overflow:hidden;
       background:#fdfbf5;
     }
@@ -33,28 +33,24 @@
       content:"";
       position:absolute;
       inset:0;
-      background-image:url('/assets/25_menu_quartz_topbar_columns.webp?v=20260912-ref1');
+      background-image:url('/assets/menu-hero-zorbas-final.webp?v=20260912-final1');
       background-repeat:no-repeat;
-      background-size:162% auto;
-      background-position:50% 15%;
+      background-size:contain;
+      background-position:center;
     }
     .menu-heading{display:none!important}
     .temple-menu{
       margin:0!important;
-      padding-top:8px!important;
+      padding-top:6px!important;
     }
     .printed-menu{margin-top:0!important}
     @media(max-width:760px){
       .menu-hero-art{
         width:calc(100% - 20px);
         aspect-ratio:4/3;
-        margin:16px auto 12px;
+        margin:14px auto 10px;
       }
-      .menu-hero-art::before{
-        background-size:220% auto;
-        background-position:50% 16%;
-      }
-      .temple-menu{padding-top:4px!important}
+      .temple-menu{padding-top:2px!important}
     }
   </style>
 </head>
