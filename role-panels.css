@@ -11,12 +11,7 @@ body.zr-role-hub-page{
   min-height:100dvh;
   font-family:Manrope,Inter,"Segoe UI",system-ui,sans-serif;
   color:var(--rp-ink);
-  background-color:#182636;
-  background-image:url('https://frhletkiuupgksmgxoxc.supabase.co/storage/v1/object/public/zorbas-public-assets/homepage/zorbas-hero-final-20260910.png?v=fcb4200270db');
-  background-position:38% center;
-  background-size:auto 100%;
-  background-attachment:fixed;
-  background-repeat:no-repeat;
+  background:#182636 url('https://frhletkiuupgksmgxoxc.supabase.co/storage/v1/object/public/zorbas-public-assets/homepage/zorbas-hero-final-20260910.png?v=fcb4200270db') center/cover fixed no-repeat;
   position:relative;
   overflow-x:hidden;
 }
@@ -68,14 +63,8 @@ html[data-zorbas-panel="kitchen"] #kitchenSidebar .side-title::after{content:" Â
 html[data-zorbas-panel="manager"] #kitchenSidebar .side-title::after{content:" Â· MANAGER";color:#226ab2}
 html[data-zorbas-panel="manager"] .manager-handoff{border-left:3px solid rgba(34,106,178,.28);padding-left:10px}
 
-@media(max-aspect-ratio:16/10){
-  body.zr-role-hub-page{background-size:auto 108%;background-position:36% center}
-}
-@media(min-aspect-ratio:21/10){
-  body.zr-role-hub-page{background-size:cover;background-position:center center}
-}
 @media(max-width:760px){
-  body.zr-role-hub-page{background-attachment:scroll;background-size:auto 100%;background-position:36% top}
+  body.zr-role-hub-page{background-attachment:scroll;background-position:center top}
   .zr-role-hub{width:min(100% - 20px,1180px);padding:18px 0 22px}
   .zr-role-brand{margin-bottom:16px}.zr-role-brand strong{font-size:46px}.zr-role-brand span{font-size:7px}
   .zr-role-hub-head{align-items:flex-start;flex-direction:column;padding:22px 20px;border-radius:21px}
