@@ -664,3 +664,18 @@ html body .hero.hero::after{
 @media(max-width:680px){
   html body .hero.hero::after{opacity:.075!important}
 }
+
+/* Restore the original Zorbas layout positions after the wind layer. */
+.hero > .header{
+  position:absolute!important;
+  z-index:5!important;
+}
+.hero > .home{
+  position:relative!important;
+  z-index:2!important;
+}
+.hero > .footer,
+.hero > .staff-links{
+  position:absolute!important;
+  z-index:4!important;
+}
