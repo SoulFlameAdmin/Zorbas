@@ -594,3 +594,73 @@ html body .hero.hero::after{
     opacity:.025!important;
   }
 }
+
+/* =========================================================
+   ZORBAS FINAL TUNE · restore previous promo arrangement
+   Keep the newer, clearer lettering while returning card placement/size to
+   the compact arrangement used before the clarity pass.
+   ========================================================= */
+.hero .header-actions{
+  gap:10px!important;
+  align-items:stretch!important;
+}
+.hero .zr-promo-cta,
+.hero .header-action.install.zr-promo-cta{
+  min-width:0!important;
+  min-height:64px!important;
+  padding:10px 16px!important;
+  gap:11px!important;
+  border-radius:19px!important;
+}
+@media(max-width:1100px) and (min-width:681px){
+  .hero .header-actions{gap:10px!important}
+  .hero .zr-promo-cta,
+  .hero .header-action.install.zr-promo-cta{
+    min-width:0!important;
+    min-height:64px!important;
+    padding:10px 16px!important;
+  }
+}
+@media(max-width:680px){
+  .hero .header-actions{
+    width:min(82vw,390px)!important;
+    gap:6px!important;
+  }
+  .hero .zr-promo-cta,
+  .hero .header-action.install.zr-promo-cta{
+    min-width:0!important;
+    min-height:54px!important;
+    padding:7px 9px!important;
+    border-radius:14px!important;
+  }
+}
+
+/* Wind intensity +15% over the current cinematic layer. */
+@keyframes zorbasWindFlow{
+  0%{background-position:-34vw 0,-10vw 0,0 0;opacity:.0575}
+  35%{opacity:.161}
+  58%{background-position:46vw -8px,24vw 5px,0 0;opacity:.115}
+  100%{background-position:118vw -14px,72vw 8px,0 0;opacity:.0575}
+}
+@keyframes zorbasWindPulse{
+  0%,100%{filter:blur(.1725px);transform:skewX(-2.3deg) translateX(-.23%)}
+  50%{filter:blur(.483px);transform:skewX(1.725deg) translateX(.2875%)}
+}
+html body .hero.hero::after{
+  background-image:
+    repeating-linear-gradient(108deg,
+      transparent 0 72px,
+      rgba(255,255,255,.00) 78px,
+      rgba(255,255,255,.196) 82px,
+      rgba(255,246,218,.092) 85px,
+      transparent 91px 150px),
+    repeating-linear-gradient(112deg,
+      transparent 0 128px,
+      rgba(220,244,255,.092) 132px,
+      transparent 138px 220px),
+    radial-gradient(ellipse at 18% 8%,rgba(255,248,210,.092),transparent 28%);
+  opacity:.092!important;
+}
+@media(max-width:680px){
+  html body .hero.hero::after{opacity:.075!important}
+}
