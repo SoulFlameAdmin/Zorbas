@@ -31,12 +31,10 @@ html body .home.home::after{
 
 /* =========================================================
    ZORBAS · FLUID TEXT
-   No glass boxes. The image remains visible right up to the letters.
-   Distortion is stronger while the pointer is over the text, inspired by
-   the supplied Fluid Text Hover reference.
+   No glass boxes on the main navigation. The image remains visible right up
+   to the letters. Distortion is stronger while the pointer is over the text.
    ========================================================= */
 
-/* Remove the previous glass / outlined containers completely. */
 .hero .brand,
 .hero .header-action,
 .hero .address,
@@ -92,10 +90,10 @@ html body .home.home::after{
   opacity:.72!important;
 }
 
-/* Keep maximum contrast without a box behind the letters. */
+/* Maximum contrast without putting boxes behind the main letters. */
 .hero .brand span,
 .hero .brand strong,
-.hero .header-action,
+.hero .header-action:not(.zr-promo-cta),
 .hero .address,
 .hero .home-link,
 .hero .footer,
@@ -109,13 +107,11 @@ html body .home.home::after{
   transform:translateZ(0);
 }
 
-/* Preserve the small secondary label under ZA VKASHTI / buttons. */
 .hero .home-link small{
   color:rgba(255,255,255,.94)!important;
   text-shadow:0 2px 8px rgba(0,0,0,.82)!important;
 }
 
-/* Remove the old outlined underline slab feeling. */
 .hero .home-link::before{content:none!important}
 .hero .home-link::after{
   height:1px!important;
@@ -123,7 +119,6 @@ html body .home.home::after{
   box-shadow:0 0 10px rgba(255,255,255,.38)!important;
 }
 
-/* Fluid letter movement: swap between several displacement fields. */
 @keyframes zorbasFluidLetters{
   0%,100%{filter:url('/fluid-text-filter.svg#fluidA')}
   32%{filter:url('/fluid-text-filter.svg#fluidB')}
@@ -132,8 +127,8 @@ html body .home.home::after{
 
 .hero .brand:hover span,
 .hero .brand:hover strong,
-.hero .header-action:hover,
-.hero .header-action:focus-visible,
+.hero .header-action:not(.zr-promo-cta):hover,
+.hero .header-action:not(.zr-promo-cta):focus-visible,
 .hero .address:hover,
 .hero .home-link:hover,
 .hero .home-link:focus-visible,
@@ -143,9 +138,8 @@ html body .home.home::after{
   animation:zorbasFluidLetters .72s steps(1,end) infinite!important;
 }
 
-/* The actual controls still react physically, while only the letters warp. */
-.hero .header-action:hover,
-.hero .header-action:focus-visible{
+.hero .header-action:not(.zr-promo-cta):hover,
+.hero .header-action:not(.zr-promo-cta):focus-visible{
   opacity:1!important;
   transform:translateY(-3px)!important;
 }
@@ -160,10 +154,140 @@ html body .home.home::after{
   border-color:rgba(255,255,255,.8)!important;
 }
 
-/* Mobile: no boxes, same readable text; touch stays stable. */
+/* =========================================================
+   ZORBAS HEADER PROMOS · PHONE / APP / MAP
+   Functions and destinations stay exactly the same. Only the presentation
+   changes. Fluid distortion is applied to their letters, not to the cards.
+   ========================================================= */
+.hero .header-actions{
+  gap:10px!important;
+  align-items:stretch!important;
+}
+
+.hero .zr-promo-cta,
+.hero .header-action.install.zr-promo-cta{
+  --zr-accent:255,217,126;
+  position:relative!important;
+  display:grid!important;
+  grid-template-columns:auto 1fr;
+  align-items:center!important;
+  gap:9px!important;
+  min-height:58px!important;
+  padding:8px 13px!important;
+  border:1px solid rgba(255,255,255,.22)!important;
+  border-radius:17px!important;
+  background:
+    linear-gradient(145deg,rgba(8,15,20,.64),rgba(35,29,21,.34))!important;
+  box-shadow:
+    0 10px 30px rgba(0,0,0,.22),
+    inset 0 1px 0 rgba(255,255,255,.14),
+    0 0 24px rgba(var(--zr-accent),.07)!important;
+  -webkit-backdrop-filter:blur(8px) saturate(120%)!important;
+  backdrop-filter:blur(8px) saturate(120%)!important;
+  opacity:1!important;
+  color:#fff!important;
+  text-transform:none!important;
+  letter-spacing:normal!important;
+  overflow:hidden!important;
+  cursor:pointer;
+  transition:transform .24s ease,box-shadow .24s ease,border-color .24s ease!important;
+}
+
+.hero .zr-promo-cta::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:
+    radial-gradient(circle at 12% 0,rgba(var(--zr-accent),.23),transparent 38%),
+    linear-gradient(100deg,rgba(255,255,255,.08),transparent 42%);
+}
+
+.hero .zr-promo-phone{--zr-accent:255,205,108}
+.hero .zr-promo-app{--zr-accent:143,219,165}
+.hero .zr-promo-map{--zr-accent:150,204,255}
+
+.hero .zr-cta-icon{
+  position:relative;
+  z-index:1;
+  display:grid!important;
+  place-items:center;
+  min-width:25px;
+  height:25px;
+  color:#fff;
+  font-size:17px;
+  line-height:1;
+  text-shadow:0 2px 8px rgba(0,0,0,.72);
+}
+
+.hero .zr-cta-copy{
+  position:relative;
+  z-index:1;
+  display:grid!important;
+  gap:3px;
+  text-align:left;
+  line-height:1;
+}
+
+.hero .zr-cta-main{
+  display:block;
+  font-family:'Ruslan Display',sans-serif;
+  font-size:10px;
+  font-weight:400;
+  letter-spacing:.10em;
+  line-height:1.08;
+  color:#fff7e3;
+  white-space:nowrap;
+  text-shadow:0 2px 8px rgba(0,0,0,.76),0 0 15px rgba(0,0,0,.3);
+}
+
+.hero .zr-cta-sub{
+  display:block!important;
+  font-family:Manrope,sans-serif;
+  font-size:8px;
+  font-weight:700;
+  letter-spacing:.07em;
+  line-height:1.25;
+  color:rgba(255,255,255,.84);
+  white-space:nowrap;
+  text-shadow:0 2px 7px rgba(0,0,0,.76);
+}
+
+/* Preserve the moving-liquid-letter effect on all three promo controls. */
+.hero .zr-promo-cta .zr-cta-main,
+.hero .zr-promo-cta .zr-cta-sub,
+.hero .zr-promo-cta .zr-cta-icon{
+  filter:url('/fluid-text-filter.svg#fluidSoft');
+  transform:translateZ(0);
+}
+
+.hero .zr-promo-cta:hover .zr-cta-main,
+.hero .zr-promo-cta:hover .zr-cta-sub,
+.hero .zr-promo-cta:hover .zr-cta-icon,
+.hero .zr-promo-cta:focus-visible .zr-cta-main,
+.hero .zr-promo-cta:focus-visible .zr-cta-sub,
+.hero .zr-promo-cta:focus-visible .zr-cta-icon{
+  animation:zorbasFluidLetters .72s steps(1,end) infinite!important;
+}
+
+.hero .zr-promo-cta:hover,
+.hero .zr-promo-cta:focus-visible{
+  opacity:1!important;
+  transform:translateY(-5px) scale(1.025)!important;
+  border-color:rgba(255,232,174,.58)!important;
+  box-shadow:
+    0 18px 42px rgba(0,0,0,.30),
+    inset 0 1px 0 rgba(255,255,255,.22),
+    0 0 28px rgba(var(--zr-accent),.18)!important;
+}
+
+.hero .zr-promo-cta:disabled{
+  cursor:default;
+  opacity:.72!important;
+}
+
 @media(max-width:680px){
   .hero .brand{padding:0!important}
-  .hero .header-action{padding:0!important}
   .hero .address{width:auto!important;max-width:92vw!important;padding:0!important}
   .hero .home-link,
   .hero .secondary-link .home-link{
@@ -172,16 +296,43 @@ html body .home.home::after{
     padding:0 0 8px!important;
   }
   .hero .staff-links a{padding:0 0 3px!important}
+
+  .hero .header-actions{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:5px!important;
+    width:min(76vw,350px);
+    margin-top:4px!important;
+  }
+  .hero .zr-promo-cta,
+  .hero .header-action.install.zr-promo-cta{
+    min-height:49px!important;
+    padding:6px 7px!important;
+    border-radius:13px!important;
+    grid-template-columns:1fr!important;
+    gap:2px!important;
+    justify-items:center!important;
+  }
+  .hero .zr-promo-cta .zr-cta-copy{
+    display:grid!important;
+    text-align:center;
+  }
+  .hero .zr-promo-cta .zr-cta-icon{display:none!important}
+  .hero .zr-promo-cta .zr-cta-main{font-size:7px!important}
+  .hero .zr-promo-cta .zr-cta-sub{display:block!important;font-size:6px!important}
 }
 
 @media(hover:none),(pointer:coarse){
   .hero .brand span,
   .hero .brand strong,
-  .hero .header-action,
+  .hero .header-action:not(.zr-promo-cta),
   .hero .address,
   .hero .home-link,
   .hero .footer,
-  .hero .staff-links a{
+  .hero .staff-links a,
+  .hero .zr-promo-cta .zr-cta-main,
+  .hero .zr-promo-cta .zr-cta-sub,
+  .hero .zr-promo-cta .zr-cta-icon{
     filter:url('/fluid-text-filter.svg#fluidSoft');
   }
 }
@@ -189,11 +340,14 @@ html body .home.home::after{
 @media(prefers-reduced-motion:reduce){
   .hero .brand span,
   .hero .brand strong,
-  .hero .header-action,
+  .hero .header-action:not(.zr-promo-cta),
   .hero .address,
   .hero .home-link,
   .hero .footer,
-  .hero .staff-links a{
+  .hero .staff-links a,
+  .hero .zr-promo-cta .zr-cta-main,
+  .hero .zr-promo-cta .zr-cta-sub,
+  .hero .zr-promo-cta .zr-cta-icon{
     animation:none!important;
     filter:none!important;
   }
