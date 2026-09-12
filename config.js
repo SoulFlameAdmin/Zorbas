@@ -10,6 +10,53 @@
   let installPrompt = null;
   let installReadyPromise = null;
 
+  function buildHeaderPromo(element, kind, icon, title, subtitle, dynamicInstallLabel = false) {
+    if (!element || element.classList.contains('zr-promo-cta')) return;
+    element.classList.add('zr-promo-cta', `zr-promo-${kind}`);
+    element.textContent = '';
+
+    const iconNode = document.createElement('span');
+    iconNode.className = 'zr-cta-icon';
+    iconNode.setAttribute('aria-hidden', 'true');
+    iconNode.textContent = icon;
+
+    const copy = document.createElement('span');
+    copy.className = 'zr-cta-copy';
+
+    const main = document.createElement('strong');
+    main.className = 'zr-cta-main';
+    main.textContent = title;
+
+    const sub = document.createElement('small');
+    sub.className = 'zr-cta-sub';
+    sub.textContent = subtitle;
+    if (dynamicInstallLabel) sub.dataset.installLabel = '';
+
+    copy.append(main, sub);
+    element.append(iconNode, copy);
+  }
+
+  function enhanceHeaderPromos() {
+    const phone = document.querySelector('.header-action.phone');
+    const install = document.querySelector('.header-action.install[data-install-pwa], .header-action[data-install-pwa]');
+    const map = document.querySelector('.header-action.map');
+
+    if (phone && !phone.classList.contains('zr-promo-cta')) {
+      const rawPhone = String(phone.textContent || '').replace(/\s+/g, ' ').trim();
+      const phoneMatch = rawPhone.match(/(?:\+?\d[\d\s().-]{5,}\d)/);
+      buildHeaderPromo(phone, 'phone', '☎', 'ПОРЪЧАЙ СЕГА', phoneMatch?.[0]?.trim() || '089 233 2017');
+    }
+
+    if (install && !install.classList.contains('zr-promo-cta')) {
+      const currentLabel = String(install.textContent || '').replace(/\s+/g, ' ').trim() || '⬇ Изтегли';
+      buildHeaderPromo(install, 'app', '↓', 'ZORBAS APP', currentLabel.replace(/^⬇\s*/, ''), true);
+    }
+
+    if (map && !map.classList.contains('zr-promo-cta')) {
+      buildHeaderPromo(map, 'map', '⌖', 'НАМЕРИ НИ', 'ОТВОРИ КАРТА');
+    }
+  }
+
   function applyHomepageHero() {
     if (!document.querySelector('.hero')) return;
     if (!document.getElementById('zorbas-home-hero-image')) {
@@ -26,6 +73,9 @@
         link.href = '/panels.html';
       }
     });
+
+    /* Keep the same phone/PWA/map functions, only upgrade their presentation. */
+    enhanceHeaderPromos();
   }
 
   function hardenLegacyLoginFields() {
@@ -155,7 +205,9 @@
     document.querySelectorAll('[data-install-pwa]').forEach(btn => {
       btn.hidden = false;
       btn.disabled = disabled;
-      btn.textContent = label;
+      const labelTarget = btn.querySelector('[data-install-label]');
+      if (labelTarget) labelTarget.textContent = label.replace(/^⬇\s*/, '');
+      else btn.textContent = label;
       btn.setAttribute('aria-label', label.replace(/^[^\p{L}\p{N}]+/u, ''));
     });
   }
