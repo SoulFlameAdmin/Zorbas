@@ -10,7 +10,7 @@
   <link rel="icon" type="image/png" href="/icon-192.png?v=tower6">
   <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=tower6">
   <link rel="stylesheet" href="/browse-menu.css?v=20260729-aegean6">
-  <link rel="stylesheet" href="/menu-zorbas-20260912.css?v=20260912-5">
+  <link rel="stylesheet" href="/menu-zorbas-20260912.css?v=20260912-6">
   <style>
     .browse-shell::before,.browse-shell::after{display:none!important}
     .logo-stage{
@@ -24,17 +24,22 @@
     .logo-stage::before,.logo-stage::after{display:none!important}
 
     .menu-hero-1to1{
+      position:relative;
       width:min(1080px,calc(100% - 44px));
+      aspect-ratio:1448/1086;
       margin:24px auto 18px;
+      overflow:hidden;
       background:#fdfbf5;
     }
     .menu-hero-1to1 img{
+      position:absolute;
+      inset:0;
       display:block;
       width:100%;
-      height:auto;
-      margin:0 auto;
+      height:100%;
       object-fit:contain;
-      background:#fdfbf5;
+      pointer-events:none;
+      user-select:none;
     }
 
     .menu-heading{display:none!important}
@@ -77,13 +82,13 @@
 
   <main class="browse-shell">
     <section class="logo-stage" aria-label="Zorbas Greek Grill House — Нашето меню">
-      <div class="menu-hero-1to1">
-        <img
-          src="https://raw.githubusercontent.com/SoulFlameAdmin/Zorbas/main/assets/menu-hero-zorbas-final.webp?raw=1&v=20260912-exact1"
-          alt="Zorbas Greek Grill House — Нашето меню"
-          loading="eager"
-          decoding="sync"
-        >
+      <div class="menu-hero-1to1" role="img" aria-label="Zorbas Greek Grill House — Нашето меню">
+        <img src="/assets/menu-hero-layer-1.svg?v=20260912-v1" alt="">
+        <img src="/assets/menu-hero-layer-2.svg?v=20260912-v1" alt="">
+        <img src="/assets/menu-hero-layer-3.svg?v=20260912-v1" alt="">
+        <img src="/assets/menu-hero-layer-4.svg?v=20260912-v1" alt="">
+        <img src="/assets/menu-hero-layer-5.svg?v=20260912-v1" alt="">
+        <img src="/assets/menu-hero-layer-6.svg?v=20260912-v1" alt="">
       </div>
     </section>
 
@@ -118,7 +123,7 @@
 
     <section class="order-callout">
       <div>
-        <p>ΘΕΛΕΤΕ ΓΙΑ ΤΟ ΣΠΙΤΙ;</p>
+        <p>ΘΕΛΕΤΕ ΓΙΑ ΤΟ ΣΠΙΤИ;</p>
         <h2>Искате го за вкъщи?</h2>
         <span>Добавете ястия в количката, изберете час и платете при вземане от ресторанта.</span>
       </div>
