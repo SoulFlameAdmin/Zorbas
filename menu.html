@@ -11,6 +11,53 @@
   <link rel="apple-touch-icon" href="/apple-touch-icon.png?v=tower6">
   <link rel="stylesheet" href="/browse-menu.css?v=20260729-aegean6">
   <link rel="stylesheet" href="/menu-zorbas-20260912.css?v=20260912-2">
+  <style>
+    /* Exact supplied 25_menu_quartz_topbar_columns visual as the live menu hero. */
+    .browse-shell::before,.browse-shell::after{display:none!important}
+    .logo-stage{
+      min-height:0!important;
+      margin:0!important;
+      padding:0!important;
+      overflow:hidden!important;
+      background:#fdfbf5!important;
+    }
+    .logo-stage::before,.logo-stage::after{display:none!important}
+    .menu-reference-crop{
+      position:relative;
+      width:100%;
+      aspect-ratio:1672/690;
+      overflow:hidden;
+      background:#fdfbf5;
+    }
+    .menu-reference-crop img{
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:auto;
+      max-width:none;
+      display:block;
+      transform:translateY(-10.63%);
+      transform-origin:50% 0;
+      user-select:none;
+      pointer-events:none;
+    }
+    .menu-heading{display:none!important}
+    .temple-menu{
+      margin:0!important;
+      padding-top:34px!important;
+    }
+    .printed-menu{margin-top:0!important}
+    @media(max-width:760px){
+      .menu-reference-crop{aspect-ratio:4/3}
+      .menu-reference-crop img{
+        width:184%;
+        left:50%;
+        transform:translate(-50%,-10.63%);
+      }
+      .temple-menu{padding-top:18px!important}
+    }
+  </style>
 </head>
 <body>
   <header class="browse-topbar">
@@ -39,20 +86,9 @@
   </header>
 
   <main class="browse-shell">
-    <section class="logo-stage" aria-label="Zorbas Greek Grill House">
-      <div class="menu-side-note left" aria-hidden="true">
-        ПОВЕЧЕ<br>ОТ РЕСТОРАНТ<br>—<br>ЕДНО ПЪТУВАНЕ<br>ДО ГЪРЦИЯ
-      </div>
-
-      <div class="menu-hero-brand">
-        <div class="menu-script-logo">Zorbas</div>
-        <div class="menu-greek-house">Greek Grill House</div>
-        <div class="menu-olive" aria-hidden="true">❧</div>
-      </div>
-
-      <div class="menu-side-note right" aria-hidden="true">
-        <strong>Калимера!</strong>
-        ДОБРА ХРАНА<br>ДОБРИ ХОРА<br>ПО-КРАСИВ ЖИВОТ
+    <section class="logo-stage" aria-label="Zorbas Greek Grill House — Нашето меню">
+      <div class="menu-reference-crop" aria-hidden="true">
+        <img src="/assets/25_menu_quartz_topbar_columns.webp?v=20260912-ref1" alt="">
       </div>
     </section>
 
