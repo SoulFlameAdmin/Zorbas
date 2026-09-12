@@ -37,6 +37,14 @@
     'Мекотели и продукти от тях'
   ];
 
+  const IMAGE_BY_CODE = {
+    'grucka-salata': '/menu-images/grucka-salata.webp',
+    'grucka-musaka': '/menu-images/grucka-musaka.webp',
+    'panseta-pandjari': '/menu-images/panseta-pandjari.webp',
+    'purjeni-midi': '/menu-images/purjeni-midi.webp',
+    'skaridi-vanamei': '/menu-images/skaridi-vanamei.webp'
+  };
+
   let catalog = {categories: [], items: [], settings: {}};
 
   const menuState = document.getElementById('menuState');
@@ -79,6 +87,19 @@
     return 'Цена на място';
   }
 
+  function imageFor(item) {
+    const schema = item?.option_schema && typeof item.option_schema === 'object' ? item.option_schema : {};
+    const candidate =
+      item?.image_url ||
+      item?.photo_url ||
+      schema.image_url ||
+      schema.photo_url ||
+      schema.image ||
+      IMAGE_BY_CODE[item?.code];
+
+    return typeof candidate === 'string' && candidate.trim() ? candidate.trim() : '';
+  }
+
   function visibleItems() {
     return catalog.items.filter(item => !HIDDEN_PUBLIC_CODES.has(item.code));
   }
@@ -89,12 +110,17 @@
       .map(category => ({
         id: category.id,
         name: category.name,
-        items: items.filter(item => item.category_id === category.id)
+        items: items
+          .filter(item => item.category_id === category.id)
+          .sort((a, b) => Number(Boolean(imageFor(b))) - Number(Boolean(imageFor(a))))
       }))
       .filter(group => group.items.length);
 
     const knownIds = new Set(catalog.categories.map(category => category.id));
-    const uncategorized = items.filter(item => !knownIds.has(item.category_id));
+    const uncategorized = items
+      .filter(item => !knownIds.has(item.category_id))
+      .sort((a, b) => Number(Boolean(imageFor(b))) - Number(Boolean(imageFor(a))));
+
     if (uncategorized.length) {
       groups.push({id: 'other', name: 'Други предложения', items: uncategorized});
     }
@@ -105,16 +131,23 @@
     const restaurantOnly = item.available_for_pickup
       ? ''
       : '<span class="restaurant-note">само в ресторанта</span>';
+    const image = imageFor(item);
+    const media = image
+      ? `<figure class="dish-media"><img src="${Z.esc(image)}" alt="${Z.esc(item.name)}" loading="lazy" decoding="async"></figure>`
+      : '';
 
     return `
-      <article class="printed-dish">
-        <div class="dish-title-line">
-          <h3>${Z.esc(item.name)}</h3>
-          <i aria-hidden="true"></i>
-          <strong>${priceText(item)}</strong>
+      <article class="printed-dish ${image ? 'has-photo' : ''}" data-item-code="${Z.esc(item.code || '')}">
+        ${media}
+        <div class="dish-copy">
+          <div class="dish-title-line">
+            <h3>${Z.esc(item.name)}</h3>
+            <i aria-hidden="true"></i>
+            <strong>${priceText(item)}</strong>
+          </div>
+          ${item.description ? `<p>${Z.esc(item.description)}</p>` : ''}
+          ${restaurantOnly}
         </div>
-        ${item.description ? `<p>${Z.esc(item.description)}</p>` : ''}
-        ${restaurantOnly}
       </article>
     `;
   }
@@ -151,8 +184,10 @@
         <div class="printed-dishes">
           ${ALLERGENS.map((allergen, allergenIndex) => `
             <article class="printed-dish">
-              <div class="dish-title-line">
-                <h3>${allergenIndex + 1}. ${Z.esc(allergen)}</h3>
+              <div class="dish-copy">
+                <div class="dish-title-line">
+                  <h3>${allergenIndex + 1}. ${Z.esc(allergen)}</h3>
+                </div>
               </div>
             </article>
           `).join('')}
@@ -188,16 +223,29 @@
         <div class="printed-dishes">
           ${rows.map(([label, value]) => `
             <article class="printed-dish">
-              <div class="dish-title-line">
-                <h3>${Z.esc(label)}</h3>
-                <i aria-hidden="true"></i>
-                <strong>${Z.esc(value)}</strong>
+              <div class="dish-copy">
+                <div class="dish-title-line">
+                  <h3>${Z.esc(label)}</h3>
+                  <i aria-hidden="true"></i>
+                  <strong>${Z.esc(value)}</strong>
+                </div>
               </div>
             </article>
           `).join('')}
         </div>
       </section>
     `;
+  }
+
+  function wireDishImages() {
+    menuSections.querySelectorAll('.dish-media img').forEach(img => {
+      img.addEventListener('error', () => {
+        const media = img.closest('.dish-media');
+        const dish = img.closest('.printed-dish');
+        media?.remove();
+        dish?.classList.remove('has-photo');
+      }, {once: true});
+    });
   }
 
   function renderMenu() {
@@ -214,6 +262,7 @@
 
     const menuHtml = groups.map(renderCategory).join('');
     menuSections.innerHTML = `${menuHtml}${renderAllergens(groups.length)}${renderRestaurantInfo(groups.length + 1)}`;
+    wireDishImages();
   }
 
   async function boot() {
