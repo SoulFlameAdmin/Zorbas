@@ -1,5 +1,5 @@
-#define MyAppName "Zorbas Bridge"
-#define MyAppVersion "1.2.5"
+#define MyAppName "SoulFlame Restaurant Bridge"
+#define MyAppVersion "1.2.6"
 #define MyAppPublisher "SoulFlame"
 #define MyAppExeName "ZorbasBridge.exe"
 
@@ -9,12 +9,12 @@ AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
 AppPublisherURL=https://soulflame-twins.vercel.app/
-AppSupportURL=https://zorbas-seven.vercel.app/
-DefaultDirName={autopf}\SoulFlame\Zorbas Bridge
+AppSupportURL=https://soulflame-twins.vercel.app/
+DefaultDirName={autopf}\SoulFlame\Restaurant Bridge
 DefaultGroupName=SoulFlame
 DisableProgramGroupPage=yes
 OutputDir=..\artifacts\installer
-OutputBaseFilename=Zorbas-Bridge-Setup
+OutputBaseFilename=SoulFlame-Restaurant-Bridge-Setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -30,22 +30,19 @@ RestartApplications=no
 Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Tasks]
-Name: "autostart"; Description: "Стартирай Zorbas Bridge автоматично с Windows"; GroupDescription: "Автоматично стартиране:"; Flags: checkedonce
-Name: "openmanagement"; Description: "Отваряй Zorbas Управление при включване на компютъра"; GroupDescription: "Автоматично стартиране:"; Flags: checkedonce
+Name: "autostart"; Description: "Стартирай SoulFlame Restaurant Bridge автоматично с Windows"; GroupDescription: "Автоматично стартиране:"; Flags: checkedonce
 Name: "desktopicon"; Description: "Създай икона на работния плот"; GroupDescription: "Икони:"; Flags: unchecked
 
 [Files]
 Source: "..\artifacts\win-x64\ZorbasBridge.exe"; DestDir: "{app}"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\Zorbas Bridge"; Filename: "{app}\{#MyAppExeName}"
-Name: "{autodesktop}\Zorbas Bridge"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
-Name: "{userstartup}\Zorbas Bridge"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: autostart
-Name: "{userstartup}\Zorbas Управление"; Filename: "https://zorbas-seven.vercel.app/admin.html?view=manager"; Tasks: openmanagement
+Name: "{group}\SoulFlame Restaurant Bridge"; Filename: "{app}\{#MyAppExeName}"
+Name: "{autodesktop}\SoulFlame Restaurant Bridge"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
+Name: "{userstartup}\SoulFlame Restaurant Bridge"; Filename: "{app}\{#MyAppExeName}"; WorkingDir: "{app}"; Tasks: autostart
 
 [Run]
-Filename: "{app}\{#MyAppExeName}"; Description: "Стартирай Zorbas Bridge"; Flags: nowait postinstall skipifsilent
-Filename: "https://zorbas-seven.vercel.app/admin.html?view=manager"; Description: "Отвори Zorbas Управление"; Flags: shellexec nowait postinstall skipifsilent; Tasks: openmanagement
+Filename: "{app}\{#MyAppExeName}"; Description: "Стартирай SoulFlame Restaurant Bridge"; Flags: nowait postinstall skipifsilent
 
 [UninstallRun]
-Filename: "{cmd}"; Parameters: "/C taskkill /IM ZorbasBridge.exe /F"; Flags: runhidden; RunOnceId: "StopZorbasBridge"
+Filename: "{cmd}"; Parameters: "/C taskkill /IM ZorbasBridge.exe /F"; Flags: runhidden; RunOnceId: "StopSoulFlameRestaurantBridge"

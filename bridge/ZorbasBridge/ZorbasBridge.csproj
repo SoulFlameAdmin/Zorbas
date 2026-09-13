@@ -14,15 +14,17 @@
     <PublishSingleFile>true</PublishSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <Version>1.2.5</Version>
-    <AssemblyVersion>1.2.5.0</AssemblyVersion>
-    <FileVersion>1.2.5.0</FileVersion>
-    <Product>Zorbas Bridge by SoulFlame</Product>
+    <Version>1.2.6</Version>
+    <AssemblyVersion>1.2.6.0</AssemblyVersion>
+    <FileVersion>1.2.6.0</FileVersion>
+    <Product>SoulFlame Restaurant Bridge</Product>
     <Company>SoulFlame</Company>
-    <Description>Print 1 receives the complete order, Print 2 receives kitchen items only, ambiguous physical print outcomes require manual review, and test_no_print never sends physical printer output.</Description>
+    <Description>Tenant-aware Restaurant OS bridge. Fresh installs have no Zorbas or printer defaults; LAN printing is used only when explicitly configured, otherwise the selected Windows printer is used.</Description>
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Remove="BridgeEngine.cs" />
+    <Compile Remove="MainForm.cs" />
     <PackageReference Include="System.Security.Cryptography.ProtectedData" Version="8.0.0" />
   </ItemGroup>
 </Project>
