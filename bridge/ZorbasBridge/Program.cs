@@ -9,8 +9,8 @@ internal static class Program
         if (!isFirstInstance)
         {
             MessageBox.Show(
-                "Zorbas Bridge вече работи до часовника.",
-                "Zorbas Bridge",
+                "SoulFlame Restaurant Bridge вече работи до часовника.",
+                "SoulFlame Restaurant Bridge",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);
             return;
