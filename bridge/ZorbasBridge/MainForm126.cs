@@ -50,14 +50,14 @@ internal sealed class MainForm : Form
         base.OnShown(e);
         if (_booted) return; _booted=true;
         RefreshPrinters();
-        _code.Text=_settings.RestaurantCode;
+        _code.Text=string.Empty;
         UpdateIdentity();
         if (_settings.IsPaired && !string.IsNullOrWhiteSpace(_store.GetDeviceToken(_settings)))
         {
             await StartSafe();
             if (_settings.StartMinimized) HideToTray(false);
         }
-        else SetConnection(false,"Въведи pairing code от Restaurant OS.");
+        else SetConnection(false,"Генерирай еднократен Pair Code в Restaurant OS.");
     }
 
     private void BuildUi()
@@ -83,16 +83,16 @@ internal sealed class MainForm : Form
         status.Controls.Add(_restaurant,0,0); status.Controls.Add(_connection,1,0); status.Controls.Add(_activity,2,0);
         root.Controls.Add(status,0,1);
 
-        var pairBox=Group("1. Pairing");
+        var pairBox=Group("1. Secure pairing");
         var pairLayout=new TableLayoutPanel{Dock=DockStyle.Fill,AutoSize=true,ColumnCount=3,Padding=new Padding(10)};
         pairLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); pairLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100)); pairLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-        pairLayout.Controls.Add(Field("Restaurant pairing code"),0,0);
-        Input(_code); _code.PlaceholderText="sf-xxxxxxxxxxxx"; pairLayout.Controls.Add(_code,1,0);
+        pairLayout.Controls.Add(Field("One-time Pair Code"),0,0);
+        Input(_code); _code.PlaceholderText="SF-AB12-CD34"; _code.CharacterCasing=CharacterCasing.Upper; pairLayout.Controls.Add(_code,1,0);
         ButtonStyle(_pair,"СВЪРЖИ",Color.FromArgb(32,115,78)); pairLayout.Controls.Add(_pair,2,0);
-        var hint=new Label{AutoSize=true,Text="Кодът свързва този Windows компютър само с конкретния Restaurant OS tenant.",ForeColor=Color.FromArgb(145,160,183),Margin=new Padding(3,8,3,0)};
+        var hint=new Label{AutoSize=true,Text="Генерирай кода в Restaurant OS. Валиден е 10 минути и само за едно свързване. Restaurant Code не е парола.",ForeColor=Color.FromArgb(145,160,183),Margin=new Padding(3,8,3,0)};
         pairLayout.SetColumnSpan(hint,3); pairLayout.Controls.Add(hint,0,1); pairBox.Controls.Add(pairLayout); root.Controls.Add(pairBox,0,2);
 
-        var printBox=Group("2. Windows принтери");
+        var printBox=Group("2. Windows принтери · по-късно");
         var printLayout=new TableLayoutPanel{Dock=DockStyle.Fill,AutoSize=true,ColumnCount=3,RowCount=3,Padding=new Padding(10)};
         printLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize)); printLayout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100)); printLayout.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
         printLayout.Controls.Add(Field("Сервитьори"),0,0); Combo(_staff); printLayout.Controls.Add(_staff,1,0);
@@ -110,7 +110,7 @@ internal sealed class MainForm : Form
 
         var logGroup=Group("Диагностика"); logGroup.Height=250; _logBox.Dock=DockStyle.Fill; _logBox.ReadOnly=true; _logBox.BackColor=Color.FromArgb(7,11,18); _logBox.ForeColor=Color.FromArgb(190,211,199); _logBox.BorderStyle=BorderStyle.None; _logBox.Font=new Font(FontFamily.GenericMonospace,8.5f); logGroup.Controls.Add(_logBox); root.Controls.Add(logGroup,0,5);
 
-        var footer=new Label{AutoSize=true,Text=$"SoulFlame Restaurant Bridge v{Application.ProductVersion} · Fresh installs contain no restaurant/printer defaults.",ForeColor=Color.FromArgb(125,143,169)}; root.Controls.Add(footer,0,6);
+        var footer=new Label{AutoSize=true,Text=$"SoulFlame Restaurant Bridge v{Application.ProductVersion} · Pair Code → protected device token · no restaurant/printer defaults.",ForeColor=Color.FromArgb(125,143,169)}; root.Controls.Add(footer,0,6);
     }
 
     private void Wire()
@@ -127,7 +127,8 @@ internal sealed class MainForm : Form
 
     private async Task PairSafe()
     {
-        var code=_code.Text.Trim().ToLowerInvariant(); if(string.IsNullOrWhiteSpace(code)){Error("Въведи pairing code.");return;}
+        var code=_code.Text.Trim().ToUpperInvariant();
+        if(string.IsNullOrWhiteSpace(code)){Error("Въведи еднократния Pair Code от Restaurant OS.");return;}
         _pair.Enabled=false;
         try
         {
@@ -135,8 +136,14 @@ internal sealed class MainForm : Form
             using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(20));
             var result=await _client.PairAsync(code,_settings.DeviceId,Environment.MachineName,Application.ProductVersion,timeout.Token);
             if(!result.Ok||string.IsNullOrWhiteSpace(result.DeviceToken))throw new InvalidOperationException("Pairing failed.");
-            _settings.RestaurantCode=result.RestaurantCode;_settings.RestaurantName=result.RestaurantName;_store.SetDeviceToken(_settings,result.DeviceToken);_store.Save(_settings);UpdateIdentity();
-            _log.Info($"Paired → {result.RestaurantName} ({result.RestaurantCode})"); await StartSafe();
+            _settings.RestaurantCode=result.RestaurantCode;
+            _settings.RestaurantName=result.RestaurantName;
+            _store.SetDeviceToken(_settings,result.DeviceToken);
+            _store.Save(_settings);
+            _code.Clear();
+            UpdateIdentity();
+            _log.Info($"Secure pairing → {result.RestaurantName} ({result.RestaurantCode}) · entitlement {result.EntitlementState}");
+            await StartSafe();
         }
         catch(Exception ex){_log.Error(ex.Message);Error(ex.Message);} finally{_pair.Enabled=true;}
     }
@@ -144,7 +151,7 @@ internal sealed class MainForm : Form
     private async Task StartSafe()
     {
         SavePrinters();
-        if(!_settings.IsPaired||string.IsNullOrWhiteSpace(_store.GetDeviceToken(_settings))){Error("Първо свържи Restaurant OS pairing code.");return;}
+        if(!_settings.IsPaired||string.IsNullOrWhiteSpace(_store.GetDeviceToken(_settings))){Error("Първо свържи еднократния Pair Code от Restaurant OS.");return;}
         try{await _engine.StartAsync();}catch(Exception ex){_log.Error(ex.Message);Error(ex.Message);}
     }
 
