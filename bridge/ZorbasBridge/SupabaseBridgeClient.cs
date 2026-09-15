@@ -21,16 +21,16 @@ internal sealed class SupabaseBridgeClient : IDisposable
     };
 
     public Task<PairResponse> PairAsync(
-        string restaurantCode,
+        string pairCode,
         string deviceId,
         string deviceName,
         string appVersion,
         CancellationToken cancellationToken = default) =>
         RpcRequiredAsync<PairResponse>(
-            "sf_pair_restaurant_device",
+            "sf_pair_restaurant_device_v2",
             new
             {
-                p_restaurant_code = restaurantCode,
+                p_pair_code = pairCode,
                 p_device_id = deviceId,
                 p_device_name = deviceName,
                 p_platform = "windows",
