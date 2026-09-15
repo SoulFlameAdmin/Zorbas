@@ -14,12 +14,12 @@
     <PublishSingleFile>true</PublishSingleFile>
     <PublishTrimmed>false</PublishTrimmed>
     <IncludeNativeLibrariesForSelfExtract>true</IncludeNativeLibrariesForSelfExtract>
-    <Version>1.2.6</Version>
-    <AssemblyVersion>1.2.6.0</AssemblyVersion>
-    <FileVersion>1.2.6.0</FileVersion>
+    <Version>1.2.7</Version>
+    <AssemblyVersion>1.2.7.0</AssemblyVersion>
+    <FileVersion>1.2.7.0</FileVersion>
     <Product>SoulFlame Restaurant Bridge</Product>
     <Company>SoulFlame</Company>
-    <Description>Tenant-aware Restaurant OS bridge. Fresh installs have no Zorbas or printer defaults; LAN printing is used only when explicitly configured, otherwise the selected Windows printer is used.</Description>
+    <Description>Tenant-aware Restaurant OS bridge with secure one-time pairing, protected device tokens and entitlement-aware queue access. Fresh installs contain no restaurant or printer defaults.</Description>
   </PropertyGroup>
 
   <ItemGroup>

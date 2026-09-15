@@ -70,6 +70,9 @@ internal sealed class BridgeEngine
         SaveIdentity(_config);
         ConfigChanged?.Invoke(_config);
 
+        if (!_config.Entitlement.Allowed)
+            throw new InvalidOperationException($"Subscription {_config.Entitlement.State}: {_config.Entitlement.Reason}");
+
         if (TryGetNetworkEndpoint(destination,out var host,out var port))
         {
             var receipt=ReceiptFormatter.TestReceipt(destination,$"{host}:{port}");
@@ -112,11 +115,19 @@ internal sealed class BridgeEngine
                         installed_printers=installed,
                         staff_printer=_settings.StaffPrinterName,
                         kitchen_printer=_settings.KitchenPrinterName,
+                        entitlement_state=_config.Entitlement.State,
                         kitchen_transport=TryGetNetworkEndpoint("kitchen",out var h,out var p) ? "lan" : "windows",
                         kitchen_endpoint=!string.IsNullOrWhiteSpace(h) ? $"{h}:{p}" : null
                     },ct).ConfigureAwait(false);
                     heartbeatAt=now.AddSeconds(15);
                     ConnectionChanged?.Invoke(true,"Bridge online");
+                }
+
+                if (!_config.Entitlement.Allowed)
+                {
+                    ActivityChanged?.Invoke($"Subscription {_config.Entitlement.State} · {_config.Entitlement.Reason} · queue paused");
+                    await Task.Delay(2500,ct).ConfigureAwait(false);
+                    continue;
                 }
 
                 var mode=_config.Restaurant.OperatingMode;
@@ -230,7 +241,7 @@ internal sealed class BridgeEngine
     private string RequireToken()
     {
         var token=_settingsStore.GetDeviceToken(_settings);
-        if (string.IsNullOrWhiteSpace(token)) throw new InvalidOperationException("Bridge не е свързан. Въведи pairing code.");
+        if (string.IsNullOrWhiteSpace(token)) throw new InvalidOperationException("Bridge не е свързан. Генерирай еднократен Pair Code в Restaurant OS.");
         return token;
     }
 

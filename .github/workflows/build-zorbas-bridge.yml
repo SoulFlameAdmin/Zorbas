@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - main
-      - feat/soulflame-bridge-1-2-6
+      - feat/soulflame-bridge-1-2-7
     paths:
       - "bridge/**"
       - ".github/workflows/build-zorbas-bridge.yml"
@@ -87,7 +87,7 @@ jobs:
       - name: Upload Windows package
         uses: actions/upload-artifact@v4
         with:
-          name: SoulFlame-Restaurant-Bridge-windows-x64-v1.2.6
+          name: SoulFlame-Restaurant-Bridge-windows-x64-v1.2.7
           path: |
             bridge/artifacts/win-x64/ZorbasBridge.exe
             bridge/artifacts/installer/SoulFlame-Restaurant-Bridge-Setup.exe
@@ -95,13 +95,13 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-      - name: Publish immutable v1.2.6 release assets
+      - name: Publish immutable v1.2.7 release assets
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         shell: pwsh
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          $tag = "soulflame-restaurant-bridge-v1.2.6"
+          $tag = "soulflame-restaurant-bridge-v1.2.7"
           $setup = "bridge/artifacts/installer/SoulFlame-Restaurant-Bridge-Setup.exe"
           $exe = "bridge/artifacts/win-x64/ZorbasBridge.exe"
           $checksums = "bridge/artifacts/SHA256SUMS.txt"
@@ -114,6 +114,6 @@ jobs:
 
           gh release create $tag $setup $exe $checksums `
             --target $env:GITHUB_SHA `
-            --title "SoulFlame Restaurant Bridge v1.2.6" `
-            --notes "Universal tenant-aware Restaurant OS bridge. Fresh installs have no Zorbas/printer defaults. Kitchen uses LAN only when explicitly configured; otherwise it uses the selected Windows printer. Includes printer discovery and physical E2E test support." `
+            --title "SoulFlame Restaurant Bridge v1.2.7" `
+            --notes "Secure Restaurant OS Bridge: one-time 10-minute Pair Code, DPAPI-protected device token, entitlement-aware queue access, and compatibility with already-paired installations. Physical printer certification remains a separate final hardware step." `
             --latest
