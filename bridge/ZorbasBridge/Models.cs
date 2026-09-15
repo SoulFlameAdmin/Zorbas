@@ -28,6 +28,9 @@ internal sealed class PairResponse
 
     [JsonPropertyName("operating_mode")]
     public string OperatingMode { get; set; } = BridgeModes.TestNoPrint;
+
+    [JsonPropertyName("entitlement_state")]
+    public string EntitlementState { get; set; } = string.Empty;
 }
 
 internal sealed class BridgeConfig
@@ -38,8 +41,26 @@ internal sealed class BridgeConfig
     [JsonPropertyName("device_record_id")]
     public Guid DeviceRecordId { get; set; }
 
+    [JsonPropertyName("entitlement")]
+    public EntitlementConfig Entitlement { get; set; } = new();
+
     [JsonPropertyName("printers")]
     public List<PrinterDefinition> Printers { get; set; } = [];
+}
+
+internal sealed class EntitlementConfig
+{
+    [JsonPropertyName("state")]
+    public string State { get; set; } = string.Empty;
+
+    [JsonPropertyName("allowed")]
+    public bool Allowed { get; set; }
+
+    [JsonPropertyName("reason")]
+    public string Reason { get; set; } = string.Empty;
+
+    [JsonPropertyName("current_period_end")]
+    public DateTimeOffset? CurrentPeriodEnd { get; set; }
 }
 
 internal sealed class RestaurantConfig
